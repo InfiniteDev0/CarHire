@@ -1,0 +1,25 @@
+meta {
+  name: 3. Get User
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{supabaseUrl}}/auth/v1/user
+  body: none
+  auth: none
+}
+
+headers {
+  apikey: {{anonKey}}
+  Authorization: Bearer {{accessToken}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.email: eq {{testEmail}}
+}
+
+docs {
+  Verifies the access token maps to the logged-in user. Run Login first.
+}

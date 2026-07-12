@@ -1,0 +1,20 @@
+meta {
+  name: 6. Logout
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{supabaseUrl}}/auth/v1/logout
+  body: none
+  auth: none
+}
+
+headers {
+  apikey: {{anonKey}}
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Revokes the current session's refresh token. Returns 204 No Content.
+}

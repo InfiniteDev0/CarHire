@@ -1,0 +1,38 @@
+meta {
+  name: 5. Refresh Token
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{supabaseUrl}}/auth/v1/token?grant_type=refresh_token
+  body: json
+  auth: none
+}
+
+params:query {
+  grant_type: refresh_token
+}
+
+headers {
+  apikey: {{anonKey}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "refresh_token": "{{refreshToken}}"
+  }
+}
+
+script:post-response {
+  if (res.body.access_token) {
+    bru.setEnvVar("accessToken", res.body.access_token);
+    bru.setEnvVar("refreshToken", res.body.refresh_token);
+  }
+}
+
+docs {
+  Exchanges the refresh token for a fresh access token — the same rotation the
+  app's proxy.js performs on every request.
+}

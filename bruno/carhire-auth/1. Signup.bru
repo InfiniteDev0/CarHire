@@ -1,0 +1,37 @@
+meta {
+  name: 1. Signup
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{supabaseUrl}}/auth/v1/signup
+  body: json
+  auth: none
+}
+
+headers {
+  apikey: {{anonKey}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "email": "{{testEmail}}",
+    "password": "{{testPassword}}",
+    "data": { "full_name": "Test User" }
+  }
+}
+
+script:post-response {
+  // If email confirmation is OFF, a session comes back immediately.
+  if (res.body.access_token) {
+    bru.setEnvVar("accessToken", res.body.access_token);
+    bru.setEnvVar("refreshToken", res.body.refresh_token);
+  }
+}
+
+docs {
+  Creates a user. If "Confirm email" is ON in Supabase, no session is returned
+  until the emailed link is clicked — use Login afterwards.
+}
