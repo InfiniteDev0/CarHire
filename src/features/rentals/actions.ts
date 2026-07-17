@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { assertUnderLimit } from "@/lib/limits";
 import {
   createContractSchema,
   checkoutSchema,
@@ -51,6 +52,7 @@ export async function createContract(
   input: CreateContractInput
 ): Promise<{ contractId: string }> {
   const { supabase, user, isAdmin } = await assertMember(orgId);
+  await assertUnderLimit(supabase, orgId, "rentals");
 
   const parsed = createContractSchema.safeParse(input);
   if (!parsed.success) throw new Error(firstIssue(parsed.error));

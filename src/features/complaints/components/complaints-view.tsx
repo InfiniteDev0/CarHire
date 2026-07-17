@@ -33,6 +33,7 @@ export interface ComplaintRow {
   is_resolved: boolean;
   created_at: string;
   resolved_at: string | null;
+  created_by: string | null;
   cars: { reg_number: string; make: string | null; model: string | null } | null;
   contracts: { id: string; clients: { full_name: string } | null } | null;
 }
@@ -56,11 +57,13 @@ export function ComplaintsView({
   complaints,
   contractPicks,
   carPicks,
+  staffNames,
 }: {
   orgId: string;
   complaints: ComplaintRow[];
   contractPicks: ComplaintContractPick[];
   carPicks: ComplaintCarPick[];
+  staffNames?: Record<string, string>;
 }) {
   const router = useRouter();
   const [filter, setFilter] = useState<"OPEN" | "RESOLVED" | "ALL">("OPEN");
@@ -209,6 +212,11 @@ export function ComplaintsView({
                     </span>
                   )}
                   <span className="text-xs text-muted-foreground">· {fmt(c.created_at)}</span>
+                  {c.created_by && staffNames?.[c.created_by] && (
+                    <span className="text-xs text-muted-foreground">
+                      · filed by {staffNames[c.created_by]}
+                    </span>
+                  )}
                 </div>
                 <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{c.description}</p>
                 {c.is_resolved && c.resolved_at && (

@@ -16,7 +16,7 @@ export function StepFleetSize({ api }: { api: OnboardingApi }) {
       title="How big is your fleet?"
       subtitle="A rough estimate — this just helps us tune your workspace."
     >
-      <div className="grid grid-cols-2 gap-3">
+      <div className="flex w-full flex-col gap-3">
         {FLEET_SIZES.map((option) => {
           const Icon = option.icon;
           const selected = api.fleetSize === option.id;
@@ -26,20 +26,29 @@ export function StepFleetSize({ api }: { api: OnboardingApi }) {
               type="button"
               onClick={() => api.set("fleetSize", option.id)}
               className={cn(
-                "relative flex flex-col items-start gap-2 rounded-xl border p-4 text-left transition",
+                "flex w-full items-center gap-4 rounded-xl border p-4 text-left transition-colors",
                 selected
-                  ? "border-white bg-white/5"
-                  : "border-zinc-800 bg-zinc-900 hover:border-zinc-700"
+                  ? "border-foreground bg-muted/50"
+                  : "hover:border-muted-foreground/40 hover:bg-muted/30"
               )}
             >
+              <span
+                className={cn(
+                  "flex size-11 shrink-0 items-center justify-center rounded-lg border",
+                  selected ? "border-foreground/20 bg-background" : "bg-muted/50"
+                )}
+              >
+                <Icon className="size-5 text-muted-foreground" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-foreground">{option.label}</p>
+                <p className="text-sm text-muted-foreground">{option.description}</p>
+              </div>
               {selected && (
-                <span className="absolute right-3 top-3 flex size-5 items-center justify-center rounded-full bg-white text-black">
+                <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-foreground text-background">
                   <Check size={12} strokeWidth={3} />
                 </span>
               )}
-              <Icon size={22} className="text-zinc-300" />
-              <span className="font-medium text-white">{option.label}</span>
-              <span className="text-xs text-zinc-500">{option.description}</span>
             </button>
           );
         })}

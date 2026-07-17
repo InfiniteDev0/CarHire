@@ -1,7 +1,9 @@
 "use server";
 
+import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
-import type { OrgPlan } from "@/lib/limits";
+import { initializeTransaction, paystackConfigured } from "@/lib/paystack";
+import { planAmount, type PaidPlan, type Billing } from "./pricing";
 
 async function assertAdmin(orgId: string) {
   const supabase = await createClient();
@@ -20,38 +22,44 @@ async function assertAdmin(orgId: string) {
   if (!data || data.role !== "admin" || !data.is_active) {
     throw new Error("Only admins can change the workspace plan.");
   }
-  return supabase;
+  return { supabase, user };
 }
 
 /**
- * Activate a plan after checkout.
- *
- * NOTE: real charging is not wired yet — Card needs a Stripe/Paystack key,
- * M-Pesa needs Daraja (STK push) credentials, PayPal needs a client ID.
- * Until those keys exist, checkout completes as a simulated payment and the
- * plan activates immediately. The server action is the single place to swap
- * a real gateway call in.
+ * Start a Paystack checkout for a paid plan. Returns the hosted-checkout URL —
+ * the client redirects there; Paystack handles card / M-Pesa / bank, then
+ * bounces back to the verify route which activates the plan only on success.
  */
-export async function activatePlan(
+export async function initPaystackCheckout(
   orgId: string,
-  plan: Exclude<OrgPlan, "FREE">,
-  method: "CARD" | "MPESA" | "PAYPAL"
-): Promise<void> {
-  const supabase = await assertAdmin(orgId);
-
+  plan: PaidPlan,
+  billing: Billing
+): Promise<{ authorizationUrl: string }> {
+  const { user } = await assertAdmin(orgId);
   if (!["PRO", "BUSINESS"].includes(plan)) throw new Error("Unknown plan.");
-  if (!["CARD", "MPESA", "PAYPAL"].includes(method)) throw new Error("Unknown payment method.");
+  if (!paystackConfigured()) {
+    throw new Error("Payments aren't set up yet — add your Paystack keys to enable checkout.");
+  }
+  if (!user.email) throw new Error("Your account has no email for the receipt.");
 
-  const { error } = await supabase
-    .from("organizations")
-    .update({ plan, plan_activated_at: new Date().toISOString() })
-    .eq("id", orgId);
-  if (error) throw new Error(error.message);
+  const h = await headers();
+  const origin = h.get("origin") ?? (h.get("host") ? `https://${h.get("host")}` : "");
+  const callbackUrl = `${origin}/workspace/${orgId}/pricing/checkout/verify`;
+
+  const { authorizationUrl } = await initializeTransaction({
+    email: user.email,
+    amount: planAmount(plan, billing),
+    currency: "KES",
+    callbackUrl,
+    metadata: { orgId, plan, billing, userId: user.id },
+  });
+
+  return { authorizationUrl };
 }
 
 /** Drop back to the Free plan (limits apply again immediately). */
 export async function downgradeToFree(orgId: string): Promise<void> {
-  const supabase = await assertAdmin(orgId);
+  const { supabase } = await assertAdmin(orgId);
   const { error } = await supabase
     .from("organizations")
     .update({ plan: "FREE", plan_activated_at: null })

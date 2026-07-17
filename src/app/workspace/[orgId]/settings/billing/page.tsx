@@ -14,6 +14,7 @@ const USAGE_LABEL: Record<LimitKey, string> = {
   staff: "Staff members",
   vehicles: "Vehicles",
   clients: "Clients",
+  rentals: "Rentals",
 };
 
 export default async function BillingSettingsPage({

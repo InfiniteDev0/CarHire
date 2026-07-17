@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Free-tier caps. Beyond these an org must upgrade to Pro.
-export const FREE_LIMITS = { staff: 5, vehicles: 5, clients: 5 } as const;
+export const FREE_LIMITS = { staff: 5, vehicles: 5, clients: 5, rentals: 5 } as const;
 export type LimitKey = keyof typeof FREE_LIMITS;
 
 export type OrgPlan = "FREE" | "PRO" | "BUSINESS";
@@ -29,12 +29,14 @@ export interface OrgUsage {
   staff: number;
   vehicles: number;
   clients: number;
+  rentals: number;
 }
 
 const LIMIT_LABEL: Record<LimitKey, string> = {
   staff: "staff members",
   vehicles: "vehicles",
   clients: "clients",
+  rentals: "rentals",
 };
 
 /** Current counts for an org. Errors (e.g. missing table) count as 0. */
@@ -42,7 +44,7 @@ export async function getOrgUsage(
   supabase: SupabaseClient,
   orgId: string
 ): Promise<OrgUsage> {
-  const [staff, vehicles, clients] = await Promise.all([
+  const [staff, vehicles, clients, rentals] = await Promise.all([
     supabase
       .from("org_members")
       .select("*", { count: "exact", head: true })
@@ -57,19 +59,22 @@ export async function getOrgUsage(
       .from("clients")
       .select("*", { count: "exact", head: true })
       .eq("org_id", orgId),
+    supabase
+      .from("contracts")
+      .select("*", { count: "exact", head: true })
+      .eq("org_id", orgId),
   ]);
   return {
     staff: staff.count ?? 0,
     vehicles: vehicles.count ?? 0,
     clients: clients.count ?? 0,
+    rentals: rentals.count ?? 0,
   };
 }
 
 export function isAnyLimitReached(usage: OrgUsage): boolean {
-  return (
-    usage.staff >= FREE_LIMITS.staff ||
-    usage.vehicles >= FREE_LIMITS.vehicles ||
-    usage.clients >= FREE_LIMITS.clients
+  return (Object.keys(FREE_LIMITS) as LimitKey[]).some(
+    (key) => usage[key] >= FREE_LIMITS[key]
   );
 }
 

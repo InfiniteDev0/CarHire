@@ -28,13 +28,14 @@ export interface ContractRow {
   contract_start: string | null;
   contract_expiration: string | null;
   created_at: string;
+  created_by: string | null;
   clients: { full_name: string; phone: string | null; is_blocked: boolean } | null;
   cars: { reg_number: string; make: string | null; model: string | null } | null;
   contract_extensions: { count: number }[] | null;
 }
 
 export const CONTRACT_COLUMNS =
-  "id, client_id, car_id, status, is_self_drive, driver_name, driver_dl_number, driver_dl_expiry, rate_per_day, duration_days, routing, domicile, total_amount, amount_paid, deposit_amount, refuel_penalty, contract_start, contract_expiration, created_at, clients(full_name, phone, is_blocked), cars(reg_number, make, model), contract_extensions(count)";
+  "id, client_id, car_id, status, is_self_drive, driver_name, driver_dl_number, driver_dl_expiry, rate_per_day, duration_days, routing, domicile, total_amount, amount_paid, deposit_amount, refuel_penalty, contract_start, contract_expiration, created_at, created_by, clients(full_name, phone, is_blocked), cars(reg_number, make, model), contract_extensions(count)";
 
 /**
  * DB only stores DRAFT/ACTIVE/COMPLETED/CANCELLED — OVERDUE (active past its

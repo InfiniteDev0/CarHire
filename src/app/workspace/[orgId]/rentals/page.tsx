@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getStaffNames } from "@/lib/staff-names";
 import { RentalsView } from "@/features/rentals/components/rentals-view";
 import { CONTRACT_COLUMNS, type ContractRow } from "@/features/rentals/helpers";
 import type { PickClient, PickCar, OrgRules } from "@/features/rentals/components/new-rental-wizard";
@@ -16,7 +17,7 @@ export default async function RentalsPage({
   const { new: newParam } = await searchParams;
   const supabase = await createClient();
 
-  const [contractsRes, clientsRes, carsRes, orgRes] = await Promise.all([
+  const [contractsRes, clientsRes, carsRes, orgRes, staffNames] = await Promise.all([
     supabase
       .from("contracts")
       .select(CONTRACT_COLUMNS)
@@ -39,6 +40,7 @@ export default async function RentalsPage({
       .select("curfew_start, curfew_end, rate_floor, rate_ceiling")
       .eq("id", orgId)
       .maybeSingle(),
+    getStaffNames(supabase, orgId),
   ]);
 
   const contracts = (contractsRes.data ?? []) as unknown as ContractRow[];
@@ -72,6 +74,7 @@ export default async function RentalsPage({
         rules={rules}
         openNewOnLoad={openNew}
         initialCarId={initialCarId}
+        staffNames={staffNames}
       />
     </div>
   );

@@ -4,9 +4,13 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
-import { Car } from "lucide-react";
 
 import { NavUser } from "@/components/workspace/nav-user";
+import {
+  WorkspaceSwitcher,
+  type WorkspaceEntry,
+} from "@/features/workspace/workspace-switcher";
+import type { OrgPlan } from "@/lib/limits";
 import {
   WORKSPACE_NAV_ITEMS,
   navItemUrl,
@@ -27,43 +31,49 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   orgId: string;
   orgName: string;
   user: { name: string; email: string; avatar: string };
+  plan: OrgPlan;
+  staffCount: number;
+  isAdmin: boolean;
+  workspaces: WorkspaceEntry[];
+  canCreateWorkspace: boolean;
 }
 
 export function AppSidebar({
   orgId,
   orgName,
   user,
+  plan,
+  staffCount,
+  isAdmin,
+  workspaces,
+  canCreateWorkspace,
   ...props
 }: AppSidebarProps) {
   const pathname = usePathname();
   const base = `/workspace/${orgId}`;
 
-  const items = WORKSPACE_NAV_ITEMS.map((item) => ({
-    ...item,
-    url: navItemUrl(base, item),
-  }));
+  const items = WORKSPACE_NAV_ITEMS
+    // The staff list is admin-only — staff shouldn't even see the entry.
+    .filter((item) => isAdmin || item.segment !== "staff")
+    .map((item) => ({
+      ...item,
+      url: navItemUrl(base, item),
+    }));
 
-  
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              size="lg"
-              className="bg-accent"
-              render={<Link href={base} />}
-            >
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                <Car className="size-4" />
-              </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{orgName}</span>
-                <span className="truncate text-xs text-muted-foreground">
-                  Workspace
-                </span>
-              </div>
-            </SidebarMenuButton>
+            <WorkspaceSwitcher
+              orgId={orgId}
+              orgName={orgName}
+              plan={plan}
+              staffCount={staffCount}
+              isAdmin={isAdmin}
+              workspaces={workspaces}
+              canCreateWorkspace={canCreateWorkspace}
+            />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>

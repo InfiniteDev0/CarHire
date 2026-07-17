@@ -114,6 +114,7 @@ const plans = [
 			"Up to 5 vehicles",
 			"Up to 5 staff members",
 			"Up to 5 clients",
+			"Up to 5 rentals",
 			"1 workspace",
 			"Fleet & rental tracking",
 			"Staff management",
@@ -132,7 +133,7 @@ const plans = [
 		features: [
 			"Unlimited vehicles",
 			"Unlimited staff members",
-			"Unlimited clients",
+			"Unlimited clients & rentals",
 			"Contracts & check-in / check-out",
 			"Complaints & incident log",
 			"Priority support",

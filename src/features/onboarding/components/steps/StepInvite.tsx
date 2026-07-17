@@ -46,13 +46,9 @@ export function StepInvite({ api }: { api: OnboardingApi }) {
               }
             }}
             placeholder="admin@example.com"
-            className="border-zinc-800 bg-zinc-900 text-white placeholder:text-zinc-600"
+            className="h-10"
           />
-          <Button
-            type="button"
-            onClick={add}
-            className="shrink-0 bg-white text-black hover:bg-zinc-200"
-          >
+          <Button type="button" onClick={add} className="h-10 shrink-0 md:h-10">
             <Plus size={16} /> Add
           </Button>
         </div>
@@ -62,13 +58,13 @@ export function StepInvite({ api }: { api: OnboardingApi }) {
             {api.inviteEmails.map((e) => (
               <li
                 key={e}
-                className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm"
+                className="flex items-center justify-between rounded-lg border bg-muted/40 px-3 py-2 text-sm"
               >
-                <span className="text-zinc-200">{e}</span>
+                <span className="text-foreground">{e}</span>
                 <button
                   type="button"
                   onClick={() => api.removeInviteEmail(e)}
-                  className="text-zinc-500 hover:text-white"
+                  className="text-muted-foreground transition-colors hover:text-foreground"
                   aria-label={`Remove ${e}`}
                 >
                   <X size={16} />
@@ -78,7 +74,7 @@ export function StepInvite({ api }: { api: OnboardingApi }) {
           </ul>
         )}
 
-        <p className="text-xs text-zinc-600">
+        <p className="text-xs text-muted-foreground">
           They&apos;ll get an email invite to set a password and join this workspace.
         </p>
       </div>

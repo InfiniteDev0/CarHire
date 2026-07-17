@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -86,12 +87,12 @@ export function OrgGeneralForm({
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="phone">Business phone</Label>
-          <Input
+          <PhoneInput
             id="phone"
-            type="tel"
-            value={form.phone}
-            onChange={(e) => set("phone", e.target.value)}
-            placeholder="+254 7XX XXX XXX"
+            value={(form.phone || undefined) as never}
+            onChange={(value) => set("phone", value ?? "")}
+            defaultCountry="KE"
+            placeholder="7XX XXX XXX"
             disabled={isLoading}
           />
         </div>

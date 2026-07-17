@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { createStaff } from "../actions";
 import { createStaffSchema } from "@/lib/validation/staff";
 import { photoError } from "@/lib/storage";
@@ -200,12 +201,12 @@ export function AddStaffDialog({ orgId }: { orgId: string }) {
               </Field>
               <Field>
                 <FieldLabel htmlFor="phone">Phone (optional)</FieldLabel>
-                <Input
+                <PhoneInput
                   id="phone"
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+254 7XX XXX XXX"
+                  value={(phone || undefined) as never}
+                  onChange={(value) => setPhone(value ?? "")}
+                  defaultCountry="KE"
+                  placeholder="7XX XXX XXX"
                   disabled={isLoading}
                 />
               </Field>

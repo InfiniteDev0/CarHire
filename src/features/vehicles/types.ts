@@ -25,8 +25,9 @@ export interface Vehicle {
   insurance_expiry: string | null;
   inspection_status: string | null;
   notes: string | null;
+  created_by: string | null;
 }
 
 // Columns selected for the vehicles list / sheets.
 export const VEHICLE_COLUMNS =
-  "id, reg_number, make, model, year, capacity, status, county, domicile, color, body_type, transmission, fuel_type, engine, mileage, rate_per_day, deposit, image_url, owner_name, owner_phone, num_owners, insurance_expiry, inspection_status, notes";
+  "id, reg_number, make, model, year, capacity, status, county, domicile, color, body_type, transmission, fuel_type, engine, mileage, rate_per_day, deposit, image_url, owner_name, owner_phone, num_owners, insurance_expiry, inspection_status, notes, created_by";

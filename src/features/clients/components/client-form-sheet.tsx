@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Textarea } from "@/components/ui/textarea";
 import { SidePanel } from "@/components/workspace/side-panel";
 import { clientSchema, type NextOfKin } from "@/lib/validation/client";
@@ -191,12 +192,12 @@ export function ClientFormSheet({
           </div>
           <div className={inputWrap}>
             <Label htmlFor="phone">Primary phone *</Label>
-            <Input id="phone" type="tel" value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+254 7XX XXX XXX" disabled={isLoading} aria-invalid={!!errors.phone} />
+            <PhoneInput id="phone" value={(form.phone || undefined) as never} onChange={(value) => set("phone", value ?? "")} defaultCountry="KE" placeholder="7XX XXX XXX" disabled={isLoading} aria-invalid={!!errors.phone} />
             {errors.phone && <span className="text-xs text-red-400">{errors.phone}</span>}
           </div>
           <div className={inputWrap}>
             <Label htmlFor="secondaryPhone">Secondary phone</Label>
-            <Input id="secondaryPhone" type="tel" value={form.secondaryPhone} onChange={(e) => set("secondaryPhone", e.target.value)} placeholder="Fallback contact" disabled={isLoading} aria-invalid={!!errors.secondaryPhone} />
+            <PhoneInput id="secondaryPhone" value={(form.secondaryPhone || undefined) as never} onChange={(value) => set("secondaryPhone", value ?? "")} defaultCountry="KE" placeholder="Fallback contact" disabled={isLoading} aria-invalid={!!errors.secondaryPhone} />
             {errors.secondaryPhone && <span className="text-xs text-red-400">{errors.secondaryPhone}</span>}
           </div>
           <div className={inputWrap}>
@@ -215,9 +216,9 @@ export function ClientFormSheet({
           <Label>Next of kin</Label>
           {kins.map((kin, i) => (
             <div key={i} className="flex items-start gap-2">
-              <div className="grid flex-1 grid-cols-3 gap-2">
+              <div className="grid flex-1 grid-cols-1 gap-2 sm:grid-cols-3">
                 <Input value={kin.name} onChange={(e) => setKin(i, "name", e.target.value)} placeholder="Name" disabled={isLoading} />
-                <Input type="tel" value={kin.phone} onChange={(e) => setKin(i, "phone", e.target.value)} placeholder="+254 …" disabled={isLoading} />
+                <PhoneInput value={(kin.phone || undefined) as never} onChange={(value) => setKin(i, "phone", value ?? "")} defaultCountry="KE" placeholder="7XX XXX XXX" disabled={isLoading} />
                 <Input value={kin.relationship} onChange={(e) => setKin(i, "relationship", e.target.value)} placeholder="Relationship" disabled={isLoading} />
               </div>
               {kins.length > 1 && (

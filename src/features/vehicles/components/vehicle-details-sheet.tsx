@@ -36,6 +36,7 @@ export function VehicleDetailsSheet({
   onEdit,
   onDecommission,
   onRentOut,
+  staffNames,
 }: {
   vehicle: Vehicle | null;
   open: boolean;
@@ -44,6 +45,7 @@ export function VehicleDetailsSheet({
   onEdit: (v: Vehicle) => void;
   onDecommission: (v: Vehicle) => void;
   onRentOut?: (v: Vehicle) => void;
+  staffNames?: Record<string, string>;
 }) {
   const [tab, setTab] = useState<TabId>("rent");
   // Reset to the first tab when a different vehicle is opened (render-time
@@ -156,8 +158,12 @@ export function VehicleDetailsSheet({
             {(vehicle.owner_name || vehicle.num_owners != null) && (
               <>
                 <InfoRow label="Owner" value={vehicle.owner_name} />
+                <InfoRow label="Owner phone" value={vehicle.owner_phone} />
                 <InfoRow label="No. of owners" value={vehicle.num_owners} />
               </>
+            )}
+            {vehicle.created_by && staffNames?.[vehicle.created_by] && (
+              <InfoRow label="Added by" value={staffNames[vehicle.created_by]} />
             )}
             {vehicle.notes && (
               <div className="pt-3">

@@ -35,10 +35,12 @@ export function VehiclesGrid({
   orgId,
   isAdmin,
   cars,
+  staffNames,
 }: {
   orgId: string;
   isAdmin: boolean;
   cars: Vehicle[];
+  staffNames?: Record<string, string>;
 }) {
   const router = useRouter();
   const [search, setSearch] = useState("");
@@ -134,6 +136,7 @@ export function VehiclesGrid({
         open={detailsOpen}
         onOpenChange={setDetailsOpen}
         isAdmin={isAdmin}
+        staffNames={staffNames}
         onEdit={openEdit}
         onDecommission={askDecommission}
         onRentOut={(v) => router.push(`/workspace/${orgId}/rentals?new=${v.id}`)}

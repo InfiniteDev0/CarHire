@@ -2,31 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Loader2,
-  CreditCard,
-  Smartphone,
-  Wallet,
-  CheckCircle2,
-  ShieldCheck,
-} from "lucide-react";
+import { Loader2, CheckCircle2, ShieldCheck, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { normalizeKenyanPhone } from "@/lib/validation/client";
-import { activatePlan } from "../actions";
+import { initPaystackCheckout } from "../actions";
 
 type PaidPlan = "PRO" | "BUSINESS";
-type Method = "CARD" | "MPESA" | "PAYPAL";
 type Billing = "MONTHLY" | "ANNUAL";
 
-const PLAN_META: Record<
-  PaidPlan,
-  { name: string; monthly: number; features: string[] }
-> = {
+const PLAN_META: Record<PaidPlan, { name: string; monthly: number; features: string[] }> = {
   PRO: {
     name: "Pro",
     monthly: 2500,
@@ -51,72 +37,50 @@ const PLAN_META: Record<
   },
 };
 
-const ANNUAL_DISCOUNT = 0.2; // commit for a year, save 20%
+const ANNUAL_DISCOUNT = 0.2;
 const kes = (n: number) => `KES ${n.toLocaleString()}`;
 
 export function CheckoutView({
   orgId,
   orgName,
   plan,
-  billedTo,
+  paymentsEnabled,
 }: {
   orgId: string;
   orgName: string;
   plan: PaidPlan;
-  billedTo: string;
+  paymentsEnabled: boolean;
 }) {
   const router = useRouter();
   const meta = PLAN_META[plan];
 
   const [billing, setBilling] = useState<Billing>("MONTHLY");
-  const [method, setMethod] = useState<Method>("CARD");
-  const [name, setName] = useState(billedTo);
-  const [cardNumber, setCardNumber] = useState("");
-  const [expiry, setExpiry] = useState("");
-  const [cvv, setCvv] = useState("");
-  const [mpesaPhone, setMpesaPhone] = useState("");
-  const [paypalEmail, setPaypalEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const monthlyPrice =
     billing === "ANNUAL" ? Math.round(meta.monthly * (1 - ANNUAL_DISCOUNT)) : meta.monthly;
+  const dueToday =
+    billing === "ANNUAL" ? Math.round(meta.monthly * (1 - ANNUAL_DISCOUNT) * 12) : meta.monthly;
 
-  const detailsOk = (() => {
-    if (name.trim().length < 2) return false;
-    if (method === "CARD") {
-      return (
-        cardNumber.replace(/\s/g, "").length >= 15 &&
-        /^\d{2}\s?\/\s?\d{2}$/.test(expiry) &&
-        /^\d{3,4}$/.test(cvv)
-      );
-    }
-    if (method === "MPESA") return normalizeKenyanPhone(mpesaPhone) !== null;
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(paypalEmail);
-  })();
-
-  async function handleSubscribe() {
-    if (isLoading || !detailsOk) return;
+  async function handlePay() {
+    if (isLoading || !paymentsEnabled) return;
     setIsLoading(true);
     try {
-      await activatePlan(orgId, plan, method);
-      toast.success(`${orgName} is now on ${meta.name} — everything is unlocked.`);
-      router.replace(`/workspace/${orgId}/pricing`);
-      router.refresh();
+      const { authorizationUrl } = await initPaystackCheckout(orgId, plan, billing);
+      // Hand off to Paystack's hosted checkout (card / M-Pesa / bank).
+      window.location.href = authorizationUrl;
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Something went wrong.");
-    } finally {
+      toast.error(err instanceof Error ? err.message : "Couldn't start the payment.");
       setIsLoading(false);
     }
   }
 
   return (
     <div className="mx-auto grid w-full max-w-4xl gap-10 py-6 md:grid-cols-2">
-      {/* Left — plan */}
+      {/* Left — plan + what you unlock */}
       <div className="flex flex-col gap-6">
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">
-            Activate CarHire {meta.name}
-          </h1>
+          <h1 className="text-2xl font-bold tracking-tight">Activate CarHire {meta.name}</h1>
           <p className="text-sm text-muted-foreground">
             Unlock everything for {orgName} in seconds.
           </p>
@@ -128,13 +92,13 @@ export function CheckoutView({
             [
               {
                 id: "MONTHLY" as Billing,
-                title: "Monthly plan",
+                title: "Monthly",
                 sub: "Flexible — cancel any time.",
                 price: meta.monthly,
               },
               {
                 id: "ANNUAL" as Billing,
-                title: "Annual plan",
+                title: "Annual",
                 sub: "Commit for a year and save 20%.",
                 price: Math.round(meta.monthly * (1 - ANNUAL_DISCOUNT)),
               },
@@ -167,14 +131,13 @@ export function CheckoutView({
                 </div>
                 <p className="shrink-0 text-sm">
                   <span className="text-lg font-bold">{kes(o.price)}</span>
-                  <span className="text-muted-foreground"> /month</span>
+                  <span className="text-muted-foreground"> /mo</span>
                 </p>
               </button>
             );
           })}
         </div>
 
-        {/* Unlocks */}
         <div className="space-y-2">
           <h2 className="text-sm font-semibold">What you&apos;ll unlock →</h2>
           <ul className="space-y-1.5">
@@ -188,145 +151,53 @@ export function CheckoutView({
         </div>
       </div>
 
-      {/* Right — payment */}
-      <div className="flex flex-col gap-4">
-        {/* Method tabs */}
-        <div className="grid grid-cols-3 gap-2">
-          {(
-            [
-              { id: "CARD" as Method, label: "Card", icon: CreditCard },
-              { id: "MPESA" as Method, label: "M-Pesa", icon: Smartphone },
-              { id: "PAYPAL" as Method, label: "PayPal", icon: Wallet },
-            ] as const
-          ).map((m) => (
-            <button
-              key={m.id}
-              type="button"
-              onClick={() => setMethod(m.id)}
-              className={cn(
-                "flex flex-col items-center gap-1.5 rounded-lg border p-3 text-sm transition-colors",
-                method === m.id
-                  ? "border-foreground bg-muted/50 font-medium"
-                  : "text-muted-foreground hover:border-muted-foreground/40"
-              )}
-            >
-              <m.icon className="size-4" />
-              {m.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="billedTo">Billed to</Label>
-          <Input
-            id="billedTo"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Full name"
-            disabled={isLoading}
-          />
-        </div>
-
-        {method === "CARD" && (
-          <div className="flex flex-col gap-3">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="cardNumber">Card number</Label>
-              <Input
-                id="cardNumber"
-                inputMode="numeric"
-                value={cardNumber}
-                onChange={(e) =>
-                  setCardNumber(
-                    e.target.value
-                      .replace(/\D/g, "")
-                      .slice(0, 16)
-                      .replace(/(\d{4})(?=\d)/g, "$1 ")
-                  )
-                }
-                placeholder="1234 5678 9012 3456"
-                disabled={isLoading}
-              />
+      {/* Right — summary + Paystack */}
+      <div className="flex h-fit flex-col gap-4 rounded-2xl border p-5">
+        <h2 className="text-sm font-semibold">Order summary</h2>
+        <div className="flex flex-col gap-2 text-sm">
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">
+              {meta.name} · {billing === "ANNUAL" ? "Annual" : "Monthly"}
+            </span>
+            <span>{kes(monthlyPrice)}/mo</span>
+          </div>
+          {billing === "ANNUAL" && (
+            <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
+              <span>Annual saving (20%)</span>
+              <span>−{kes(Math.round(meta.monthly * 12 * ANNUAL_DISCOUNT))}</span>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="expiry">MM / YY</Label>
-                <Input
-                  id="expiry"
-                  inputMode="numeric"
-                  value={expiry}
-                  onChange={(e) => {
-                    const d = e.target.value.replace(/\D/g, "").slice(0, 4);
-                    setExpiry(d.length > 2 ? `${d.slice(0, 2)} / ${d.slice(2)}` : d);
-                  }}
-                  placeholder="MM / YY"
-                  disabled={isLoading}
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="cvv">CVV</Label>
-                <Input
-                  id="cvv"
-                  inputMode="numeric"
-                  type="password"
-                  value={cvv}
-                  onChange={(e) => setCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                  placeholder="123"
-                  disabled={isLoading}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {method === "MPESA" && (
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="mpesaPhone">M-Pesa number</Label>
-            <Input
-              id="mpesaPhone"
-              type="tel"
-              value={mpesaPhone}
-              onChange={(e) => setMpesaPhone(e.target.value)}
-              placeholder="+254 7XX XXX XXX"
-              disabled={isLoading}
-            />
-            <p className="text-xs text-muted-foreground">
-              You&apos;ll get an STK push on this number to confirm the payment.
-            </p>
-          </div>
-        )}
-
-        {method === "PAYPAL" && (
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="paypalEmail">PayPal email</Label>
-            <Input
-              id="paypalEmail"
-              type="email"
-              value={paypalEmail}
-              onChange={(e) => setPaypalEmail(e.target.value)}
-              placeholder="you@example.com"
-              disabled={isLoading}
-            />
-            <p className="text-xs text-muted-foreground">
-              You&apos;ll be asked to approve the subscription in PayPal.
-            </p>
-          </div>
-        )}
-
-        {/* Total + subscribe */}
-        <div className="mt-2 flex items-center justify-between border-t pt-4">
-          <span className="text-sm text-muted-foreground">Total</span>
-          <span className="text-lg font-bold">
-            {kes(monthlyPrice)} <span className="text-sm font-normal text-muted-foreground">/month</span>
-          </span>
+          )}
         </div>
-        <Button className="w-full" disabled={isLoading || !detailsOk} onClick={handleSubscribe}>
+
+        <div className="flex items-center justify-between border-t pt-3">
+          <span className="text-sm text-muted-foreground">Due today</span>
+          <span className="text-lg font-bold">{kes(dueToday)}</span>
+        </div>
+
+        <Button className="w-full gap-2" disabled={isLoading || !paymentsEnabled} onClick={handlePay}>
           {isLoading && <Loader2 className="size-4 animate-spin" />}
-          Subscribe to {meta.name}
+          Pay with Paystack
         </Button>
+
+        {!paymentsEnabled && (
+          <p className="rounded-md bg-amber-50 p-2 text-xs text-amber-700 dark:bg-amber-950 dark:text-amber-300">
+            Payments aren&apos;t connected yet — add your Paystack keys
+            (PAYSTACK_SECRET_KEY + NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY) to enable checkout.
+          </p>
+        )}
+
+        <button
+          type="button"
+          onClick={() => router.replace(`/workspace/${orgId}`)}
+          className="flex items-center justify-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          Continue on the Free plan instead
+          <ArrowRight className="size-3.5" />
+        </button>
+
         <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
           <ShieldCheck className="mt-0.5 size-3.5 shrink-0" />
-          Test mode — no real charge is made until Stripe (card), Daraja (M-Pesa) or PayPal
-          API keys are connected. Subscribing activates the plan immediately.
+          Paystack handles card and M-Pesa securely — we never see your card details.
         </p>
       </div>
     </div>

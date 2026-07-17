@@ -21,7 +21,7 @@ export function StepName({ api }: { api: OnboardingApi }) {
           if (e.key === "Enter" && api.canAdvance()) api.goNext();
         }}
         placeholder="e.g. Acme Car Hire"
-        className="w-100 text-center text-lg text-white placeholder:text-zinc-600"
+        className="h-12 w-full text-base"
       />
     </OnboardingLayout>
   );

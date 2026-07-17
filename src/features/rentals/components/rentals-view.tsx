@@ -41,6 +41,7 @@ export function RentalsView({
   rules,
   openNewOnLoad,
   initialCarId,
+  staffNames,
 }: {
   orgId: string;
   contracts: ContractRow[];
@@ -49,6 +50,7 @@ export function RentalsView({
   rules: OrgRules;
   openNewOnLoad: boolean;
   initialCarId: string | null;
+  staffNames?: Record<string, string>;
 }) {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Filter>("ALL");
@@ -221,6 +223,7 @@ export function RentalsView({
         logs={logs}
         open={detailsOpen}
         onOpenChange={setDetailsOpen}
+        staffNames={staffNames}
       />
     </div>
   );

@@ -1,5 +1,6 @@
 import { getMembership } from "@/lib/auth/membership";
 import { createClient } from "@/lib/supabase/server";
+import { getStaffNames } from "@/lib/staff-names";
 import { VehiclesGrid } from "@/features/vehicles/components/vehicles-grid";
 import { VEHICLE_COLUMNS, type Vehicle } from "@/features/vehicles/types";
 
@@ -15,12 +16,15 @@ export default async function VehiclesPage({
   const isAdmin = membership?.role === "admin" && membership.is_active === true;
 
   const supabase = await createClient();
-  const { data: cars } = await supabase
-    .from("cars")
-    .select(VEHICLE_COLUMNS)
-    .eq("org_id", orgId)
-    .is("decommissioned_at", null)
-    .order("created_at", { ascending: false });
+  const [{ data: cars }, staffNames] = await Promise.all([
+    supabase
+      .from("cars")
+      .select(VEHICLE_COLUMNS)
+      .eq("org_id", orgId)
+      .is("decommissioned_at", null)
+      .order("created_at", { ascending: false }),
+    getStaffNames(supabase, orgId),
+  ]);
 
   const fleet = (cars ?? []) as Vehicle[];
 
@@ -33,7 +37,7 @@ export default async function VehiclesPage({
         </p>
       </div>
 
-      <VehiclesGrid orgId={orgId} isAdmin={isAdmin} cars={fleet} />
+      <VehiclesGrid orgId={orgId} isAdmin={isAdmin} cars={fleet} staffNames={staffNames} />
     </div>
   );
 }

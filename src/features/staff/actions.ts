@@ -124,6 +124,25 @@ export async function createStaff(
   return { tempPassword: password, photoWarning };
 }
 
+/**
+ * Remove a staff member from the workspace entirely (admin only). Their past
+ * work keeps its attribution (created_by/recorded_by store the user id), but
+ * they can no longer sign in to this workspace.
+ */
+export async function removeStaff(orgId: string, userId: string): Promise<void> {
+  const { user } = await assertAdmin(orgId);
+  if (userId === user.id) throw new Error("You can't remove yourself.");
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("org_members")
+    .delete()
+    .eq("org_id", orgId)
+    .eq("user_id", userId)
+    .eq("role", "staff"); // guard: only staff rows, never an admin
+  if (error) throw new Error(error.message);
+}
+
 /** Activate / deactivate a staff member (admin only). Never hard-deletes. */
 export async function setStaffActive(
   orgId: string,

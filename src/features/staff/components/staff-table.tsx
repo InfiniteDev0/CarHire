@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { MoreVertical, UserCheck, UserX, Loader2, IdCard } from "lucide-react";
+import { MoreVertical, UserCheck, UserX, UserMinus, Loader2, IdCard } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -28,7 +28,17 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { setStaffActive } from "../actions";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { setStaffActive, removeStaff } from "../actions";
 
 export interface StaffMember {
   user_id: string;
@@ -58,6 +68,7 @@ export function StaffTable({
   const router = useRouter();
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [idTarget, setIdTarget] = useState<StaffMember | null>(null);
+  const [removeTarget, setRemoveTarget] = useState<StaffMember | null>(null);
   const [, startTransition] = useTransition();
 
   function toggleActive(m: StaffMember) {
@@ -67,6 +78,24 @@ export function StaffTable({
         await setStaffActive(orgId, m.user_id, !m.is_active);
         toast.success(m.is_active ? "Staff deactivated" : "Staff reactivated");
         router.refresh();
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Something went wrong.");
+      } finally {
+        setPendingId(null);
+      }
+    });
+  }
+
+  function doRemove() {
+    const target = removeTarget;
+    if (!target) return;
+    setPendingId(target.user_id);
+    startTransition(async () => {
+      try {
+        await removeStaff(orgId, target.user_id);
+        toast.success(`${target.full_name ?? "Staff member"} removed from the workspace`);
+        router.refresh();
+        setRemoveTarget(null);
       } catch (err) {
         toast.error(err instanceof Error ? err.message : "Something went wrong.");
       } finally {
@@ -174,6 +203,13 @@ export function StaffTable({
                               </>
                             )}
                           </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-red-600 dark:text-red-400"
+                            onClick={() => setRemoveTarget(m)}
+                          >
+                            <UserMinus className="size-4" />
+                            Remove from workspace
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     )}
@@ -184,6 +220,39 @@ export function StaffTable({
           )}
         </TableBody>
       </Table>
+
+      {/* Remove confirm */}
+      <AlertDialog open={!!removeTarget} onOpenChange={(o) => !o && setRemoveTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Remove {removeTarget?.full_name ?? "this staff member"}?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              They lose access to this workspace immediately. Rentals, payments and
+              complaints they recorded keep their name on them.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={pendingId === removeTarget?.user_id}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 text-white hover:bg-red-700"
+              disabled={pendingId === removeTarget?.user_id}
+              onClick={(e) => {
+                e.preventDefault();
+                doRemove();
+              }}
+            >
+              {pendingId === removeTarget?.user_id && (
+                <Loader2 className="size-4 animate-spin" />
+              )}
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* ID photos dialog */}
       <Dialog open={!!idTarget} onOpenChange={(o) => !o && setIdTarget(null)}>

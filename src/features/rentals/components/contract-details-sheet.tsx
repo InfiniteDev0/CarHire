@@ -71,12 +71,14 @@ export function ContractDetailsSheet({
   logs,
   open,
   onOpenChange,
+  staffNames,
 }: {
   orgId: string;
   contract: ContractRow | null;
   logs: { checkout: CheckoutLog | null; checkin: CheckinLog | null } | null;
   open: boolean;
   onOpenChange: (o: boolean) => void;
+  staffNames?: Record<string, string>;
 }) {
   const router = useRouter();
   const [checkoutOpen, setCheckoutOpen] = useState(false);
@@ -166,6 +168,9 @@ export function ContractDetailsSheet({
         />
         <Row label="Routing" value={contract.routing} />
         <Row label="Domicile" value={contract.domicile} />
+        {contract.created_by && staffNames?.[contract.created_by] && (
+          <Row label="Created by" value={staffNames[contract.created_by]} />
+        )}
 
         {/* Logs */}
         <p className="mb-1 mt-4 text-xs font-medium uppercase tracking-wide text-zinc-500">

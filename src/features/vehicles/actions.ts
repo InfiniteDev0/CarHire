@@ -22,7 +22,7 @@ async function assertAdmin(orgId: string) {
   if (!data || data.role !== "admin" || !data.is_active) {
     throw new Error("Only admins can manage vehicles.");
   }
-  return supabase;
+  return { supabase, user };
 }
 
 function toRow(v: CarInput) {
@@ -62,10 +62,12 @@ function parseOrThrow(input: CarInput) {
 }
 
 export async function createCar(orgId: string, input: CarInput): Promise<void> {
-  const supabase = await assertAdmin(orgId);
+  const { supabase, user } = await assertAdmin(orgId);
   await assertUnderLimit(supabase, orgId, "vehicles");
   const v = parseOrThrow(input);
-  const { error } = await supabase.from("cars").insert({ org_id: orgId, ...toRow(v) });
+  const { error } = await supabase
+    .from("cars")
+    .insert({ org_id: orgId, created_by: user.id, ...toRow(v) });
   if (error) {
     throw new Error(
       /duplicate|unique/i.test(error.message)
@@ -80,7 +82,7 @@ export async function updateCar(
   carId: string,
   input: CarInput
 ): Promise<void> {
-  const supabase = await assertAdmin(orgId);
+  const { supabase } = await assertAdmin(orgId);
   const v = parseOrThrow(input);
   const { error } = await supabase
     .from("cars")
@@ -98,7 +100,7 @@ export async function updateCar(
 
 /** Soft-delete: keeps trip history intact by setting decommissioned_at. */
 export async function decommissionCar(orgId: string, carId: string): Promise<void> {
-  const supabase = await assertAdmin(orgId);
+  const { supabase } = await assertAdmin(orgId);
   const { error } = await supabase
     .from("cars")
     .update({ decommissioned_at: new Date().toISOString() })

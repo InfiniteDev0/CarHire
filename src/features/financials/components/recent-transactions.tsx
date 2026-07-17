@@ -22,6 +22,7 @@ export interface TransactionRow {
   kind: "DEPOSIT" | "PAYMENT" | "EXTENSION";
   method: "CASH" | "MPESA" | "BANK" | "OTHER";
   created_at: string;
+  recorded_by: string | null;
   contracts: {
     clients: { full_name: string } | null;
     cars: { reg_number: string } | null;
@@ -60,7 +61,13 @@ const METHOD_LABELS: Record<TransactionRow["method"], string> = {
   OTHER: "Other",
 };
 
-export function RecentTransactions({ transactions }: { transactions: TransactionRow[] }) {
+export function RecentTransactions({
+  transactions,
+  staffNames,
+}: {
+  transactions: TransactionRow[];
+  staffNames?: Record<string, string>;
+}) {
   const [tab, setTab] = useState<Tab>("ALL");
   const [search, setSearch] = useState("");
 
@@ -161,6 +168,7 @@ export function RecentTransactions({ transactions }: { transactions: Transaction
                 <TableHead className="hidden sm:table-cell">Vehicle</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead className="hidden sm:table-cell">Method</TableHead>
+                <TableHead className="hidden md:table-cell">Recorded by</TableHead>
                 <TableHead className="text-right">Amount</TableHead>
               </TableRow>
             </TableHeader>
@@ -183,6 +191,9 @@ export function RecentTransactions({ transactions }: { transactions: Transaction
                   </TableCell>
                   <TableCell className="hidden text-muted-foreground sm:table-cell">
                     {METHOD_LABELS[t.method]}
+                  </TableCell>
+                  <TableCell className="hidden text-muted-foreground md:table-cell">
+                    {(t.recorded_by && staffNames?.[t.recorded_by]) || "—"}
                   </TableCell>
                   <TableCell className="text-right font-medium tabular-nums">
                     {kes(t.amount)}

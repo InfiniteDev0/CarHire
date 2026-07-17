@@ -1,50 +1,81 @@
 "use client";
 
 import * as React from "react";
+import { Check, ChevronDown, Search } from "lucide-react";
+
 import type { OnboardingApi } from "../../types";
 import { OnboardingLayout } from "../OnboardingLayout";
 import { KENYA_COUNTIES } from "../../data/counties";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import {
-  Sheet,
-  SheetTrigger,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetFooter,
-  SheetClose,
-} from "@/components/ui/sheet";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Field,
-  FieldContent,
-  FieldDescription,
-  FieldLabel,
-  FieldTitle,
-} from "@/components/ui/field";
+  Drawer,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 export function StepLocation({ api }: { api: OnboardingApi }) {
+  const isMobile = useIsMobile();
   const [open, setOpen] = React.useState(false);
-  const [selectedCounty, setSelectedCounty] = React.useState(api.county || "");
+  const [query, setQuery] = React.useState("");
 
-  function handleConfirm() {
-    if (selectedCounty) {
-      api.set("county", selectedCounty);
-      setOpen(false);
-    }
+  const filtered = React.useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return KENYA_COUNTIES;
+    return KENYA_COUNTIES.filter((c) => c.toLowerCase().includes(q));
+  }, [query]);
+
+  function pick(county: string) {
+    api.set("county", county);
+    setOpen(false);
+    setQuery("");
   }
 
-  // Safaricom/Airtel local format: 9 digits after +254, first must be 7 or 1.
-  function handlePhone(raw: string) {
-    let digits = raw.replace(/\D/g, "").slice(0, 9);
-    if (digits.length > 0 && digits[0] !== "7" && digits[0] !== "1") {
-      digits = "";
-    }
-    api.set("phone", digits);
-  }
+  const list = (
+    <div className="flex-1 overflow-y-auto scrollbar-pill px-2">
+      {filtered.length === 0 ? (
+        <p className="py-10 text-center text-sm text-muted-foreground">
+          No county matches “{query}”.
+        </p>
+      ) : (
+        filtered.map((c) => {
+          const selected = api.county === c;
+          return (
+            <button
+              key={c}
+              type="button"
+              onClick={() => pick(c)}
+              className={cn(
+                "flex w-full items-center justify-between rounded-lg px-3 py-3 text-left text-sm transition-colors hover:bg-muted",
+                selected && "font-medium"
+              )}
+            >
+              {c}
+              {selected && <Check className="size-4 text-primary" />}
+            </button>
+          );
+        })
+      )}
+    </div>
+  );
+
+  const search = (
+    <div className="relative">
+      <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+      <Input
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Search county…"
+        className="h-11 rounded-full pl-9"
+      />
+    </div>
+  );
 
   return (
     <OnboardingLayout
@@ -56,89 +87,58 @@ export function StepLocation({ api }: { api: OnboardingApi }) {
       title="Where do you operate?"
       subtitle="Your home base and a contact number for the business."
     >
-      <div className="flex flex-col gap-4">
-        {/* County Sheet */}
-        <Label className="flex flex-col gap-1.5">
-          <span className="text-sm text-zinc-400">
-            Primary operating county
-          </span>
-          <Sheet open={open} onOpenChange={setOpen}>
-            <SheetTrigger
-              className="w-full"
-              render={
-                <Button
-                  variant="outline"
-                  className="h-8 w-full justify-between border-zinc-800 bg-zinc-900 text-white"
-                />
-              }
-            >
+      <div className="flex w-full flex-col gap-4">
+        {/* County — Sheet on desktop, Drawer on mobile */}
+        <div className="flex flex-col gap-1.5">
+          <span className="text-sm text-muted-foreground">Primary operating county</span>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setOpen(true)}
+            className="h-11 w-full justify-between font-normal"
+          >
+            <span className={cn(!api.county && "text-muted-foreground")}>
               {api.county || "Select a county…"}
-            </SheetTrigger>
-            <SheetContent side="right" className="w-[320px] sm:w-[400px]">
-              <SheetHeader>
-                <SheetTitle>Select your county</SheetTitle>
-                <SheetDescription>
-                  Choose the county where your business operates.
-                </SheetDescription>
-              </SheetHeader>
-              <div className="flex-1 overflow-y-auto scrollbar-pill p-4">
-                <RadioGroup
-                  value={selectedCounty}
-                  onValueChange={setSelectedCounty}
-                  className="gap-2"
-                >
-                  {KENYA_COUNTIES.map((c) => (
-                    <FieldLabel key={c} htmlFor={`county-${c}`}>
-                      <Field orientation="horizontal">
-                        <FieldContent>
-                          <FieldTitle>{c}</FieldTitle>
-                        </FieldContent>
-                        <RadioGroupItem value={c} id={`county-${c}`} />
-                      </Field>
-                    </FieldLabel>
-                  ))}
-                </RadioGroup>
-              </div>
-              <SheetFooter>
-                <Button onClick={handleConfirm} className="h-[34px]">
-                  Confirm County
-                </Button>
-                <SheetClose
-                  className="w-full"
-                  render={<Button variant="outline" className="w-full" />}
-                >
-                  Cancel
-                </SheetClose>
-              </SheetFooter>
-            </SheetContent>
-          </Sheet>
-        </Label>
+            </span>
+            <ChevronDown className="size-4 opacity-50" />
+          </Button>
 
-        {/* Phone Input */}
-        <label className="flex flex-col gap-1.5">
-          <span className="text-sm text-zinc-400">Business phone</span>
-          <div className="flex gap-2 w-full">
-            <Button className="w-fit">+254</Button>
-            <Input
-              type="tel"
-              inputMode="numeric"
-              maxLength={9}
-              value={api.phone}
-              onChange={(e) => handlePhone(e.target.value)}
-              placeholder="7XX XXX XXX"
-              className="border-zinc-800 bg-zinc-900 text-white placeholder:text-zinc-600"
-            />
-          </div>
-          {api.phone.length > 0 && api.phone.length < 9 ? (
-            <span className="text-xs text-amber-500">
-              Enter all 9 digits (starts with 7 or 1).
-            </span>
+          {isMobile ? (
+            <Drawer open={open} onOpenChange={setOpen}>
+              <DrawerContent className="max-h-[85vh]">
+                <DrawerHeader className="text-left">
+                  <DrawerTitle>Select county</DrawerTitle>
+                </DrawerHeader>
+                {list}
+                <DrawerFooter className="pt-2">{search}</DrawerFooter>
+              </DrawerContent>
+            </Drawer>
           ) : (
-            <span className="text-xs text-zinc-600">
-              Separate from your personal login — shown to staff and on contracts.
-            </span>
+            <Sheet open={open} onOpenChange={setOpen}>
+              <SheetContent side="right" className="w-80 gap-0 p-0 sm:max-w-sm">
+                <SheetHeader className="border-b p-4">
+                  <SheetTitle>Select county</SheetTitle>
+                </SheetHeader>
+                <div className="flex min-h-0 flex-1 flex-col py-2">{list}</div>
+                <div className="border-t p-4">{search}</div>
+              </SheetContent>
+            </Sheet>
           )}
-        </label>
+        </div>
+
+        {/* Business phone — country dropdown defaults to Kenya */}
+        <div className="flex flex-col gap-1.5">
+          <span className="text-sm text-muted-foreground">Business phone</span>
+          <PhoneInput
+            value={(api.phone || undefined) as never}
+            onChange={(value) => api.set("phone", value ?? "")}
+            defaultCountry="KE"
+            placeholder="7XX XXX XXX"
+          />
+          <span className="text-xs text-muted-foreground">
+            Separate from your personal login — shown to staff and on contracts.
+          </span>
+        </div>
       </div>
     </OnboardingLayout>
   );

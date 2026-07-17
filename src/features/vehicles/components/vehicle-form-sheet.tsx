@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -292,7 +293,14 @@ export function VehicleFormSheet({
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="ownerPhone">Owner phone</Label>
-            <Input id="ownerPhone" type="tel" value={form.ownerPhone} onChange={(e) => set("ownerPhone", e.target.value)} placeholder="+254 7XX XXX XXX" disabled={isLoading} />
+            <PhoneInput
+              id="ownerPhone"
+              value={(form.ownerPhone || undefined) as never}
+              onChange={(value) => set("ownerPhone", value ?? "")}
+              defaultCountry="KE"
+              placeholder="7XX XXX XXX"
+              disabled={isLoading}
+            />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="numOwners">No. of owners</Label>

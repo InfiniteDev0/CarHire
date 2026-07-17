@@ -10,6 +10,7 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
+import { getStaffNames } from "@/lib/staff-names";
 import {
   ExpensesSection,
   type ExpenseRow,
@@ -72,7 +73,8 @@ export default async function FinancialsPage({
   const { orgId } = await params;
   const supabase = await createClient();
 
-  const [contractsRes, debtRes, expensesRes, carsRes, paymentsRes] = await Promise.all([
+  const [contractsRes, debtRes, expensesRes, carsRes, paymentsRes, staffNames] =
+    await Promise.all([
     supabase
       .from("contracts")
       .select(
@@ -95,10 +97,13 @@ export default async function FinancialsPage({
       .order("reg_number"),
     supabase
       .from("payments")
-      .select("id, amount, kind, method, created_at, contracts(clients(full_name), cars(reg_number))")
+      .select(
+        "id, amount, kind, method, created_at, recorded_by, contracts(clients(full_name), cars(reg_number))"
+      )
       .eq("org_id", orgId)
       .order("created_at", { ascending: false })
       .limit(100),
+    getStaffNames(supabase, orgId),
   ]);
 
   const contracts = (contractsRes.data ?? []) as unknown as FinContract[];
@@ -202,7 +207,7 @@ export default async function FinancialsPage({
       />
 
       {/* Recent transactions */}
-      <RecentTransactions transactions={transactions} />
+      <RecentTransactions transactions={transactions} staffNames={staffNames} />
 
       {/* Ledger */}
       <h2 className="mt-2 text-sm font-medium">Rental ledger</h2>

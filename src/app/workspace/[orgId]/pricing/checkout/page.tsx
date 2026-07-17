@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth/membership";
 import { createClient } from "@/lib/supabase/server";
+import { paystackConfigured } from "@/lib/paystack";
 import { CheckoutView } from "@/features/billing/components/checkout-view";
 
 export const metadata = { title: "Checkout · CarHire" };
@@ -19,10 +20,11 @@ export default async function CheckoutPage({
   const plan = planParam?.toUpperCase() === "BUSINESS" ? "BUSINESS" : "PRO";
 
   const supabase = await createClient();
-  const [{ data: org }, { data: { user } }] = await Promise.all([
-    supabase.from("organizations").select("name, plan").eq("id", orgId).maybeSingle(),
-    supabase.auth.getUser(),
-  ]);
+  const { data: org } = await supabase
+    .from("organizations")
+    .select("name, plan")
+    .eq("id", orgId)
+    .maybeSingle();
   if (!org) redirect("/");
   if (org.plan === plan) redirect(`/workspace/${orgId}/pricing`);
 
@@ -31,7 +33,7 @@ export default async function CheckoutPage({
       orgId={orgId}
       orgName={org.name}
       plan={plan}
-      billedTo={(user?.user_metadata?.full_name as string) ?? ""}
+      paymentsEnabled={paystackConfigured()}
     />
   );
 }

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getStaffNames } from "@/lib/staff-names";
 import {
   ComplaintsView,
   type ComplaintRow,
@@ -16,11 +17,11 @@ export default async function ComplaintsPage({
   const { orgId } = await params;
   const supabase = await createClient();
 
-  const [complaintsRes, contractsRes, carsRes] = await Promise.all([
+  const [complaintsRes, contractsRes, carsRes, staffNames] = await Promise.all([
     supabase
       .from("complaints")
       .select(
-        "id, type, description, is_resolved, created_at, resolved_at, cars(reg_number, make, model), contracts(id, clients(full_name))"
+        "id, type, description, is_resolved, created_at, resolved_at, created_by, cars(reg_number, make, model), contracts(id, clients(full_name))"
       )
       .eq("org_id", orgId)
       .order("created_at", { ascending: false }),
@@ -36,6 +37,7 @@ export default async function ComplaintsPage({
       .eq("org_id", orgId)
       .is("decommissioned_at", null)
       .order("reg_number"),
+    getStaffNames(supabase, orgId),
   ]);
 
   const complaints = (complaintsRes.data ?? []) as unknown as ComplaintRow[];
@@ -74,6 +76,7 @@ export default async function ComplaintsPage({
         complaints={complaints}
         contractPicks={contractPicks}
         carPicks={carPicks}
+        staffNames={staffNames}
       />
     </div>
   );

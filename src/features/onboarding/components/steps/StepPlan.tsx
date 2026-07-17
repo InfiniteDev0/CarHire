@@ -5,6 +5,7 @@ import type { OnboardingApi } from "../../types";
 import { OnboardingLayout } from "../OnboardingLayout";
 import { PLAN_OPTIONS } from "../../config/onboarding.config";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 export function StepPlan({ api }: { api: OnboardingApi }) {
   return (
@@ -26,30 +27,32 @@ export function StepPlan({ api }: { api: OnboardingApi }) {
               type="button"
               onClick={() => api.set("plan", option.id)}
               className={cn(
-                "relative flex items-center justify-between gap-3 rounded-xl border p-4 text-left transition",
+                "relative flex items-center justify-between gap-3 rounded-xl border p-4 text-left transition-colors",
                 selected
-                  ? "border-white bg-white/5"
-                  : "border-zinc-800 bg-zinc-900 hover:border-zinc-700"
+                  ? "border-foreground bg-muted/50"
+                  : "hover:border-muted-foreground/40 hover:bg-muted/30"
               )}
             >
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="font-medium text-white">{option.name}</span>
+                  <span className="font-medium text-foreground">{option.name}</span>
                   {option.recommended && (
-                    <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
+                    <Badge className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400">
                       Recommended
-                    </span>
+                    </Badge>
                   )}
                 </div>
-                <p className="mt-0.5 text-xs text-zinc-500">{option.blurb}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">{option.blurb}</p>
               </div>
               <div className="flex shrink-0 items-center gap-3">
-                <span className="text-sm text-zinc-300">
+                <span className="text-sm text-foreground">
                   {option.price}
-                  {option.period && <span className="text-zinc-600">{option.period}</span>}
+                  {option.period && (
+                    <span className="text-muted-foreground">{option.period}</span>
+                  )}
                 </span>
                 {selected && (
-                  <span className="flex size-5 items-center justify-center rounded-full bg-white text-black">
+                  <span className="flex size-5 items-center justify-center rounded-full bg-foreground text-background">
                     <Check size={12} strokeWidth={3} />
                   </span>
                 )}

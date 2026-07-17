@@ -25,6 +25,27 @@ export async function completeOnboarding(
   } = await supabase.auth.getUser();
   if (!user) throw new Error("You need to be signed in.");
 
+  // Extra workspaces are a Business-plan feature: your first is always free,
+  // but creating another requires being admin of a BUSINESS-plan org.
+  const { data: existing } = await supabase
+    .from("org_members")
+    .select("role, organizations(plan)")
+    .eq("user_id", user.id)
+    .eq("is_active", true);
+  if (existing && existing.length > 0) {
+    const hasBusiness = (
+      existing as unknown as {
+        role: string;
+        organizations: { plan: string | null } | null;
+      }[]
+    ).some((m) => m.role === "admin" && m.organizations?.plan === "BUSINESS");
+    if (!hasBusiness) {
+      throw new Error(
+        "Upgrade to the Business plan to run more than one workspace."
+      );
+    }
+  }
+
   const parsed = createOrgSchema.safeParse(input);
   if (!parsed.success) {
     throw new Error(parsed.error.issues[0]?.message ?? "Invalid details.");
@@ -38,7 +59,7 @@ export async function completeOnboarding(
       owner_id: user.id,
       name: v.name,
       county: v.county || null,
-      phone: v.phone ? `+254${v.phone}` : null,
+      phone: v.phone || null, // already E.164 from the PhoneInput
       fleet_size: v.fleetSize || null,
       curfew_start: v.curfewStart || null,
       curfew_end: v.curfewEnd || null,

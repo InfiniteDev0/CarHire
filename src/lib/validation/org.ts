@@ -5,11 +5,11 @@ import { z } from "zod";
 export const createOrgSchema = z.object({
   name: z.string().trim().min(2, "Enter a business name").max(80),
   county: z.string().trim().max(60).optional().default(""),
-  // Empty, or 9 local digits (Kenya) starting with 7 or 1. +254 is added on save.
+  // Empty, or an E.164 number from the PhoneInput (e.g. +2547XXXXXXXX).
   phone: z
     .string()
     .trim()
-    .regex(/^$|^[17]\d{8}$/, "Enter 9 digits starting with 7 or 1")
+    .regex(/^$|^\+\d{7,15}$/, "Enter a valid phone number")
     .optional()
     .default(""),
   fleetSize: z.string().nullable().optional(),

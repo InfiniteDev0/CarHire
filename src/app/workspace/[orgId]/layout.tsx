@@ -58,11 +58,40 @@ export default async function WorkspaceLayout({
     .maybeSingle();
   const role = (membership?.role ?? null) as MemberRole | null;
 
-  const [usage, notifications] = await Promise.all([
-    getOrgUsage(supabase, orgId),
-    getWorkspaceNotifications(supabase, orgId),
-  ]);
+  const [usage, notifications, { data: myMemberships }, { count: staffCount }] =
+    await Promise.all([
+      getOrgUsage(supabase, orgId),
+      getWorkspaceNotifications(supabase, orgId),
+      supabase
+        .from("org_members")
+        .select("role, organizations(id, name, plan)")
+        .eq("user_id", user.id)
+        .eq("is_active", true),
+      supabase
+        .from("org_members")
+        .select("*", { count: "exact", head: true })
+        .eq("org_id", orgId)
+        .eq("is_active", true),
+    ]);
   const atLimit = plan === "FREE" && isAnyLimitReached(usage);
+
+  // Every business this user belongs to — powers the workspace switcher.
+  interface MembershipJoin {
+    role: "admin" | "staff";
+    organizations: { id: string; name: string; plan: OrgPlan | null } | null;
+  }
+  const workspaces = ((myMemberships ?? []) as unknown as MembershipJoin[])
+    .filter((m) => m.organizations)
+    .map((m) => ({
+      id: m.organizations!.id,
+      name: m.organizations!.name,
+      plan: (m.organizations!.plan ?? "FREE") as OrgPlan,
+      role: m.role,
+    }));
+  // Extra workspaces are a Business-plan feature.
+  const canCreateWorkspace = workspaces.some(
+    (w) => w.role === "admin" && w.plan === "BUSINESS"
+  );
 
   const displayName =
     (user.user_metadata?.full_name as string) || user.email || "User";
@@ -81,6 +110,11 @@ export default async function WorkspaceLayout({
           orgId={org.id}
           orgName={org.name}
           user={{ name: displayName, email: user.email ?? "", avatar: "" }}
+          plan={plan}
+          staffCount={staffCount ?? 0}
+          isAdmin={role === "admin"}
+          workspaces={workspaces}
+          canCreateWorkspace={canCreateWorkspace}
         />
         <SidebarInset className="h-svh overflow-hidden">
           <header className="flex h-12 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
