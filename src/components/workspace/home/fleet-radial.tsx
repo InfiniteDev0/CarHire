@@ -18,10 +18,11 @@ import {
 } from "@/components/ui/card";
 import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
 
+// Explicit color — independent of the theme's --chart-* variables.
 const chartConfig = {
   utilization: {
     label: "Utilization",
-    color: "var(--chart-2)",
+    color: "#3b82f6", // blue
   },
 } satisfies ChartConfig;
 

@@ -1,10 +1,26 @@
 "use client";
 
-import { Bell, Check, ArrowRight, XIcon, CheckCheck } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  Bell,
+  BellRing,
+  BellOff,
+  XIcon,
+  X,
+  TriangleAlert,
+  Clock3,
+  Banknote,
+  MessageSquareWarning,
+  Phone,
+  MessageCircle,
+  CheckCheck,
+  Trash2,
+  Loader2,
+} from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import {
   Sheet,
   SheetClose,
@@ -12,101 +28,308 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
+import {
+  savePushSubscription,
+  removePushSubscription,
+  dismissNotifications,
+} from "@/features/notifications/actions";
 
-interface StatusPillProps {
-  label: string;
-  dotClassName: string;
-}
-
-function StatusPill({ label, dotClassName }: StatusPillProps) {
-  return (
-    <Badge variant="outline" className="gap-1.5 font-normal text-foreground">
-      <span className={`size-1.5 shrink-0 rounded-full ${dotClassName}`} />
-      {label}
-    </Badge>
-  );
-}
-
-interface NotificationItemData {
+export interface WorkspaceNotification {
   id: string;
-  actorName: string;
-  actorAvatar?: string;
-  action: string;
-  target: string;
-  timestamp: string;
-  fromStatus?: { label: string; dotClassName: string };
-  toStatus?: { label: string; dotClassName: string };
+  kind: "OVERDUE" | "DUE_SOON" | "PAYMENT" | "COMPLAINT";
+  title: string;
+  detail: string;
+  at: string; // ISO
+  href?: string;
+  phone?: string | null;
+  clientName?: string | null;
 }
 
-// Placeholder feed — swap for a real notifications table/query once the
-// activity-log feature (staff actions, contract/complaint events) exists.
-const MOCK_NOTIFICATIONS: NotificationItemData[] = [
-  {
-    id: "1",
-    actorName: "Romina Yekani",
-    action: "updated the task",
-    target: "Design Sign-in/Login",
-    timestamp: "5 hours ago",
-    fromStatus: { label: "To-do", dotClassName: "bg-blue-500" },
-    toStatus: { label: "In Progress", dotClassName: "bg-orange-500" },
+const KIND_STYLE: Record<
+  WorkspaceNotification["kind"],
+  { icon: typeof Bell; className: string }
+> = {
+  OVERDUE: {
+    icon: TriangleAlert,
+    className: "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300",
   },
-  {
-    id: "2",
-    actorName: "James Otieno",
-    action: "checked in the vehicle",
-    target: "KDB 245Y",
-    timestamp: "Yesterday",
+  DUE_SOON: {
+    icon: Clock3,
+    className: "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
   },
-  {
-    id: "3",
-    actorName: "Amina Hassan",
-    action: "flagged a complaint on",
-    target: "Contract #A102",
-    timestamp: "2 days ago",
+  PAYMENT: {
+    icon: Banknote,
+    className: "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300",
   },
-];
+  COMPLAINT: {
+    icon: MessageSquareWarning,
+    className: "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
+  },
+};
 
-function NotificationItem({ item }: { item: NotificationItemData }) {
+function timeAgo(iso: string): string {
+  const mins = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 60000));
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(iso).toLocaleDateString("en-KE", { day: "numeric", month: "short" });
+}
+
+function whatsappUrl(phone: string, clientName: string | null, title: string): string {
+  const number = phone.replace(/\D/g, "");
+  const msg = `Hello ${clientName ?? ""}, a reminder regarding your car rental: ${title}. Kindly get in touch or return the vehicle. Thank you.`;
+  return `https://wa.me/${number}?text=${encodeURIComponent(msg)}`;
+}
+
+/* Swipe-to-dismiss row: drag past the threshold (or tap X) to clear it. */
+function NotificationItem({
+  item,
+  onDismiss,
+}: {
+  item: WorkspaceNotification;
+  onDismiss: (id: string) => void;
+}) {
+  const { icon: Icon, className } = KIND_STYLE[item.kind];
+  const [dx, setDx] = useState(0);
+  const [leaving, setLeaving] = useState(false);
+  const start = useRef<number | null>(null);
+
+  function pointerDown(e: React.PointerEvent) {
+    start.current = e.clientX;
+    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+  }
+  function pointerMove(e: React.PointerEvent) {
+    if (start.current === null) return;
+    setDx(e.clientX - start.current);
+  }
+  function pointerUp() {
+    if (start.current === null) return;
+    start.current = null;
+    if (Math.abs(dx) > 90) {
+      setLeaving(true);
+      setTimeout(() => onDismiss(item.id), 180);
+      setDx(dx > 0 ? 400 : -400);
+    } else {
+      setDx(0);
+    }
+  }
+
   return (
-    <div className="flex gap-3 px-4 py-3">
-      <Avatar className="size-8 shrink-0">
-        <AvatarImage src={item.actorAvatar} alt={item.actorName} />
-        <AvatarFallback>
-          {item.actorName
-            .split(" ")
-            .map((n) => n[0])
-            .join("")
-            .slice(0, 2)}
-        </AvatarFallback>
-      </Avatar>
-      <div className="flex min-w-0 flex-col gap-1.5">
-        <p className="text-sm leading-snug text-foreground">
-          <span className="font-medium">{item.actorName}</span>{" "}
-          <span className="text-muted-foreground">{item.action}</span>{" "}
-          <span className="font-medium">{item.target}</span>
-        </p>
-        <p className="text-xs text-muted-foreground">{item.timestamp}</p>
-        {item.fromStatus && item.toStatus && (
-          <div className="flex items-center gap-2 pt-0.5">
-            <StatusPill {...item.fromStatus} />
-            <ArrowRight className="size-3.5 text-muted-foreground" />
-            <StatusPill {...item.toStatus} />
-          </div>
-        )}
+    <div
+      className={cn(
+        "group relative touch-pan-y select-none overflow-hidden transition-[opacity,max-height] duration-200",
+        leaving ? "max-h-0 opacity-0" : "max-h-40"
+      )}
+    >
+      <div
+        className="flex gap-3 px-4 py-3 transition-transform hover:bg-muted/50"
+        style={{
+          transform: `translateX(${dx}px)`,
+          transition: start.current === null ? "transform 180ms ease" : "none",
+        }}
+        onPointerDown={pointerDown}
+        onPointerMove={pointerMove}
+        onPointerUp={pointerUp}
+        onPointerCancel={pointerUp}
+      >
+        <span
+          className={cn(
+            "flex size-8 shrink-0 items-center justify-center rounded-full",
+            className
+          )}
+        >
+          <Icon className="size-4" />
+        </span>
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <p className="text-sm font-medium leading-snug">{item.title}</p>
+          <p className="text-xs text-muted-foreground">{item.detail}</p>
+          <p className="text-xs text-muted-foreground/70">{timeAgo(item.at)}</p>
+
+          {/* Actions — reach the client right from the notification */}
+          {item.phone && (
+            <div className="mt-1.5 flex gap-2">
+              <a
+                href={`tel:${item.phone}`}
+                className="flex items-center gap-1 rounded-md border px-2 py-1 text-xs text-foreground transition-colors hover:bg-muted"
+              >
+                <Phone className="size-3" />
+                Call client
+              </a>
+              <a
+                href={whatsappUrl(item.phone, item.clientName ?? null, item.title)}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-1 rounded-md border border-green-600/30 px-2 py-1 text-xs text-green-700 transition-colors hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-950"
+              >
+                <MessageCircle className="size-3" />
+                WhatsApp
+              </a>
+            </div>
+          )}
+        </div>
+
+        {/* Dismiss (also available without swiping) */}
+        <button
+          type="button"
+          aria-label="Dismiss notification"
+          onClick={() => {
+            setLeaving(true);
+            setTimeout(() => onDismiss(item.id), 180);
+          }}
+          className="h-fit rounded p-1 text-muted-foreground/40 opacity-0 transition-opacity hover:bg-muted hover:text-foreground group-hover:opacity-100"
+        >
+          <X className="size-3.5" />
+        </button>
       </div>
     </div>
   );
 }
 
-export function NotificationSheet() {
-  const hasNotifications = MOCK_NOTIFICATIONS.length > 0;
+/** Browser push toggle — subscribes this device via the service worker. */
+function PushToggle({ orgId }: { orgId: string }) {
+  const [state, setState] = useState<"unknown" | "off" | "on" | "busy" | "unsupported">(
+    "unknown"
+  );
+
+  useEffect(() => {
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+      setState("unsupported");
+      return;
+    }
+    navigator.serviceWorker
+      .getRegistration("/sw.js")
+      .then((reg) => reg?.pushManager.getSubscription())
+      .then((sub) => setState(sub ? "on" : "off"))
+      .catch(() => setState("off"));
+  }, []);
+
+  async function enable() {
+    setState("busy");
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") {
+        toast.error("Notifications are blocked — allow them in your browser settings.");
+        setState("off");
+        return;
+      }
+      const reg = await navigator.serviceWorker.register("/sw.js");
+      await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+      });
+      await savePushSubscription(orgId, sub.toJSON() as never);
+      toast.success("Push notifications enabled on this device");
+      setState("on");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Couldn't enable notifications.");
+      setState("off");
+    }
+  }
+
+  async function disable() {
+    setState("busy");
+    try {
+      const reg = await navigator.serviceWorker.getRegistration("/sw.js");
+      const sub = await reg?.pushManager.getSubscription();
+      if (sub) {
+        await removePushSubscription(orgId, sub.endpoint);
+        await sub.unsubscribe();
+      }
+      toast.success("Push notifications turned off");
+    } finally {
+      setState("off");
+    }
+  }
+
+  if (state === "unsupported" || state === "unknown") return null;
+
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="gap-1.5 text-xs text-muted-foreground"
+      disabled={state === "busy"}
+      onClick={state === "on" ? disable : enable}
+    >
+      {state === "busy" ? (
+        <Loader2 className="size-3.5 animate-spin" />
+      ) : state === "on" ? (
+        <BellOff className="size-3.5" />
+      ) : (
+        <BellRing className="size-3.5" />
+      )}
+      {state === "on" ? "Disable push" : "Enable push"}
+    </Button>
+  );
+}
+
+export function NotificationSheet({
+  orgId,
+  notifications = [],
+}: {
+  orgId: string;
+  notifications?: WorkspaceNotification[];
+}) {
+  const router = useRouter();
+  const [items, setItems] = useState(notifications);
+  const [lastSeen, setLastSeen] = useState<number>(0);
+
+  // Server refreshes bring new props — resync the local list.
+  const [prev, setPrev] = useState(notifications);
+  if (notifications !== prev) {
+    setPrev(notifications);
+    setItems(notifications);
+  }
+
+  useEffect(() => {
+    setLastSeen(Number(localStorage.getItem(`notif-seen-${orgId}`) ?? 0));
+  }, [orgId]);
+
+  const unread = items.filter((n) => new Date(n.at).getTime() > lastSeen).length;
+  const urgent = items.some((n) => n.kind === "OVERDUE");
+
+  function markAllRead() {
+    const now = Date.now();
+    localStorage.setItem(`notif-seen-${orgId}`, String(now));
+    setLastSeen(now);
+  }
+
+  function dismissOne(id: string) {
+    setItems((cur) => cur.filter((i) => i.id !== id));
+    dismissNotifications(orgId, [id])
+      .then(() => router.refresh())
+      .catch(() => toast.error("Couldn't dismiss — it may come back on refresh."));
+  }
+
+  function clearAll() {
+    const keys = items.map((i) => i.id);
+    setItems([]);
+    dismissNotifications(orgId, keys)
+      .then(() => router.refresh())
+      .catch(() => toast.error("Couldn't clear everything — try again."));
+  }
 
   return (
     <Sheet>
       <SheetTrigger
         render={
-          <Button className="h-7 w-7" variant="outline">
+          <Button className="relative h-7 w-7" variant="outline">
             <Bell />
+            {unread > 0 && (
+              <span
+                className={cn(
+                  "absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full text-[9px] font-bold text-white",
+                  urgent ? "bg-red-500" : "bg-blue-500"
+                )}
+              >
+                {unread > 9 ? "9+" : unread}
+              </span>
+            )}
           </Button>
         }
       />
@@ -121,22 +344,44 @@ export function NotificationSheet() {
             </SheetClose>
             <SheetTitle>Notifications</SheetTitle>
           </div>
-          {hasNotifications && (
-            <Button variant="ghost" size="sm" className="gap-1.5 text-xs text-muted-foreground">
-              <CheckCheck className="size-3.5" />
-              Mark as read
-            </Button>
-          )}
+          <PushToggle orgId={orgId} />
         </div>
 
+        {items.length > 0 && (
+          <div className="flex items-center justify-end gap-1 border-b px-2 py-1.5">
+            {unread > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1.5 text-xs text-muted-foreground"
+                onClick={markAllRead}
+              >
+                <CheckCheck className="size-3.5" />
+                Mark all as read
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 text-xs text-muted-foreground"
+              onClick={clearAll}
+            >
+              <Trash2 className="size-3.5" />
+              Clear all
+            </Button>
+          </div>
+        )}
+
         <div className="flex-1 divide-y overflow-y-auto">
-          {hasNotifications ? (
-            MOCK_NOTIFICATIONS.map((item) => <NotificationItem key={item.id} item={item} />)
+          {items.length > 0 ? (
+            items.map((item) => (
+              <NotificationItem key={item.id} item={item} onDismiss={dismissOne} />
+            ))
           ) : (
             <div className="flex flex-col items-center gap-2 px-4 py-16 text-center">
               <Bell className="size-8 text-muted-foreground" />
               <p className="text-sm text-muted-foreground">
-                You&apos;re all caught up — no notifications yet.
+                You&apos;re all caught up — no notifications right now.
               </p>
             </div>
           )}

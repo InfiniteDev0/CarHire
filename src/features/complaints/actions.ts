@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { sendPushToOrg } from "@/lib/push";
 import { complaintSchema, type ComplaintInput } from "@/lib/validation/complaint";
 
 async function assertMember(orgId: string) {
@@ -58,6 +59,12 @@ export async function createComplaint(
     created_by: user.id,
   });
   if (error) throw new Error(error.message);
+
+  await sendPushToOrg(orgId, {
+    title: "New complaint filed",
+    body: v.description.slice(0, 100),
+    url: `/workspace/${orgId}/complaints`,
+  });
 }
 
 export async function setComplaintResolved(

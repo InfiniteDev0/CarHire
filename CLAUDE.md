@@ -233,6 +233,36 @@ Phase 9 — Business rules hardening (July 2026)  [DONE]
  was hand-styled by the owner — do not restyle those files.
 
 
+Phase 10 — Money UX, plans & notifications (July 2026)  [DONE]
+
+ Migrations 0011–0015 (ALL APPLIED live): payments ledger (+ backfill,
+ kind DEPOSIT/PAYMENT/EXTENSION, method CASH/MPESA/BANK/OTHER),
+ organizations.plan (FREE/PRO/BUSINESS), push_subscriptions,
+ notification_dismissals.
+ [x] Cancel = hard delete (drafts + old CANCELLED rows). Skeleton loading.tsx.
+ [x] Charts: --chart-* vars got a rich palette AND every chart config now
+     hardcodes hex colors (emerald/amber bars, blue radial, sky area) — never
+     rely on theme vars for chart color again.
+ [x] Home: FleetStats/MoneyStats tiles redesigned (badge top, big colored value,
+     label under). PaymentsCard = demo-style stat rail + sky area chart with
+     7/30/90-day filter. Sections drag-to-reorder (localStorage). Finance page:
+     PaymentsChart (30d) + RecentTransactions (kind tabs, search, CSV).
+ [x] Plans: chosen at onboarding step 5 (Free recommended; paid → checkout),
+     assertUnderLimit skips paid plans, header shows Upgrade (free) or plan
+     badge, pricing page is plan-aware, checkout at /pricing/checkout with
+     Card/M-Pesa/PayPal forms → activatePlan (SIMULATED payment — swap real
+     Stripe/Daraja/PayPal call inside features/billing/actions.ts when keys exist).
+ [x] Notifications: native Web Push (web-push + VAPID keys in .env.local, NOT
+     Firebase — no external account needed). public/sw.js, enable/disable
+     toggle in the bell sheet, pushes fire on checkout/checkin/payment/
+     extension/complaint (lib/push.ts sendPushToOrg, best-effort). Feed items
+     have stable keys; swipe-to-dismiss / X / clear-all persist to
+     notification_dismissals; mark-all-read = localStorage lastSeen badge.
+     Overdue/due-soon items carry the client phone → Call + WhatsApp buttons.
+ NOTE: scheduled "rent due" pushes need a cron (Supabase pg_cron/edge
+ function hitting sendPushToOrg) — event pushes only for now.
+
+
 Notes on things intentionally deferred past MVP1
 
 

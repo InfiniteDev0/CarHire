@@ -1,3 +1,5 @@
+export type OnboardingPlan = "FREE" | "PRO" | "BUSINESS";
+
 // Shape of everything the CarHire onboarding wizard collects.
 export interface OnboardingData {
   // Step 1 — identity
@@ -12,6 +14,9 @@ export interface OnboardingData {
 
   // Step 4 — invite co-admins (optional)
   inviteEmails: string[];
+
+  // Step 5 — plan (workspace starts FREE; paid plans go through checkout)
+  plan: OnboardingPlan;
 
   // Step 5 — operating rules (all optional)
   curfewStart: string; // "HH:MM" or ""

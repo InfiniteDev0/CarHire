@@ -4,6 +4,27 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 export const FREE_LIMITS = { staff: 5, vehicles: 5, clients: 5 } as const;
 export type LimitKey = keyof typeof FREE_LIMITS;
 
+export type OrgPlan = "FREE" | "PRO" | "BUSINESS";
+
+export const PLAN_LABELS: Record<OrgPlan, string> = {
+  FREE: "Free",
+  PRO: "Pro",
+  BUSINESS: "Business",
+};
+
+/** The org's subscription plan (defaults to FREE if unreadable). */
+export async function getOrgPlan(
+  supabase: SupabaseClient,
+  orgId: string
+): Promise<OrgPlan> {
+  const { data } = await supabase
+    .from("organizations")
+    .select("plan")
+    .eq("id", orgId)
+    .maybeSingle();
+  return ((data?.plan as OrgPlan) ?? "FREE") satisfies OrgPlan;
+}
+
 export interface OrgUsage {
   staff: number;
   vehicles: number;
@@ -52,12 +73,18 @@ export function isAnyLimitReached(usage: OrgUsage): boolean {
   );
 }
 
-/** Throw a friendly limit error if `orgId` is already at the cap for `key`. */
+/**
+ * Throw a friendly limit error if `orgId` is already at the cap for `key`.
+ * Paid plans (PRO/BUSINESS) are unlimited — the check short-circuits.
+ */
 export async function assertUnderLimit(
   supabase: SupabaseClient,
   orgId: string,
   key: LimitKey
 ): Promise<void> {
+  const plan = await getOrgPlan(supabase, orgId);
+  if (plan !== "FREE") return;
+
   const usage = await getOrgUsage(supabase, orgId);
   if (usage[key] >= FREE_LIMITS[key]) {
     throw new Error(

@@ -37,7 +37,14 @@ export function CreatingWorkspace({ api }: { api: OnboardingApi }) {
         toast.error(`${result.invitesFailed} invite(s) couldn't be sent`);
       }
 
-      router.replace(`/workspace/${result.orgId}`);
+      // Paid plan picked → straight to checkout to activate it; Free → home.
+      if (api.plan !== "FREE") {
+        router.replace(
+          `/workspace/${result.orgId}/pricing/checkout?plan=${api.plan.toLowerCase()}`
+        );
+      } else {
+        router.replace(`/workspace/${result.orgId}`);
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : "Something went wrong.";
       setError(message);

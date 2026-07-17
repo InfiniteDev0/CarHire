@@ -1,9 +1,17 @@
+import Link from "next/link";
 import { cn } from "@/lib/utils/index";
 import { Button } from "@/components/ui/button";
 import * as PricingCard from "@/components/pricing-card";
-import { CheckCircle2, Users, Briefcase, Building } from "lucide-react";
+import { CheckCircle2, Users, Briefcase, Building, BadgeCheck } from "lucide-react";
+import type { OrgPlan } from "@/lib/limits";
 
-export function PricingSection() {
+export function PricingSection({
+	orgId,
+	currentPlan = "FREE",
+}: {
+	orgId?: string;
+	currentPlan?: OrgPlan;
+}) {
 	return (
 		<section className="w-full">
 			<div className="mx-auto mb-4 max-w-md space-y-2">
@@ -14,8 +22,11 @@ export function PricingSection() {
 					Plans that Scale with You
 				</h2>
 				<p className="text-center text-muted-foreground text-sm md:text-base">
-					Whether you're just starting out or growing fast, our flexible pricing
-					has you covered.
+					You&apos;re on the{" "}
+					<span className="font-semibold text-foreground">
+						{currentPlan.charAt(0) + currentPlan.slice(1).toLowerCase()}
+					</span>{" "}
+					plan. Upgrade any time — everything below unlocks instantly.
 				</p>
 			</div>
 			<div className="mx-auto grid w-full max-w-4xl gap-4 p-6 md:grid-cols-3">
@@ -43,12 +54,32 @@ export function PricingSection() {
 									</PricingCard.OriginalPrice>
 								)}
 							</PricingCard.Price>
-							<Button
-								className={cn("w-full font-semibold")}
-								variant={plan.variant as "outline" | "default"}
-							>
-								Get Started
-							</Button>
+							{plan.id === currentPlan ? (
+								<Button className="w-full font-semibold" variant="outline" disabled>
+									<BadgeCheck className="size-4" />
+									Current plan
+								</Button>
+							) : plan.id === "FREE" ? (
+								<Button className="w-full font-semibold" variant="outline" disabled>
+									Starter plan
+								</Button>
+							) : (
+								<Button
+									asChild
+									className={cn("w-full font-semibold")}
+									variant={plan.variant as "outline" | "default"}
+								>
+									<Link
+										href={
+											orgId
+												? `/workspace/${orgId}/pricing/checkout?plan=${plan.id.toLowerCase()}`
+												: "#"
+										}
+									>
+										Upgrade to {plan.name}
+									</Link>
+								</Button>
+							)}
 						</PricingCard.Header>
 
 						<PricingCard.Body>
@@ -73,6 +104,7 @@ export function PricingSection() {
 
 const plans = [
 	{
+		id: "FREE" as const,
 		icon: <Users />,
 		description: "Get your fleet online",
 		name: "Free",
@@ -88,6 +120,7 @@ const plans = [
 		],
 	},
 	{
+		id: "PRO" as const,
 		icon: <Briefcase />,
 		description: "For growing rental businesses",
 		name: "Pro",
@@ -106,6 +139,7 @@ const plans = [
 		],
 	},
 	{
+		id: "BUSINESS" as const,
 		icon: <Building />,
 		name: "Business",
 		description: "For multi-branch operators",

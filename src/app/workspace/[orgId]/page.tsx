@@ -7,6 +7,12 @@ import { OngoingRentals } from "@/components/workspace/home/ongoing-rentals";
 import { RecentActivity, type ActivityEvent } from "@/components/workspace/home/recent-activity";
 import { RevenueChart, type MonthMoney } from "@/components/workspace/home/revenue-chart";
 import { FleetRadial } from "@/components/workspace/home/fleet-radial";
+import { DraggableSections } from "@/components/workspace/home/draggable-sections";
+import {
+  PaymentsCard,
+  type PaymentPoint,
+  type ExpensePoint,
+} from "@/components/workspace/home/payments-card";
 import { displayStatus, type ContractRow } from "@/features/rentals/helpers";
 import type { Rental, RentalStatus } from "@/lib/constants/rentals";
 
@@ -64,7 +70,7 @@ export default async function WorkspaceHome({
 
   const logColumns = "id, created_at, contracts(clients(full_name), cars(reg_number))";
 
-  const [carsRes, contractsRes, moneyRes, debtRes, expensesRes, checkoutsRes, checkinsRes] =
+  const [carsRes, contractsRes, moneyRes, debtRes, expensesRes, paymentsRes, checkoutsRes, checkinsRes] =
     await Promise.all([
       supabase
         .from("cars")
@@ -96,6 +102,11 @@ export default async function WorkspaceHome({
             .toISOString()
             .slice(0, 10)
         ),
+      supabase
+        .from("payments")
+        .select("amount, created_at")
+        .eq("org_id", orgId)
+        .gte("created_at", new Date(Date.now() - 90 * 86400_000).toISOString()),
       supabase
         .from("checkout_logs")
         .select(logColumns)
@@ -200,20 +211,40 @@ export default async function WorkspaceHome({
   return (
     <div className="flex flex-col gap-3">
       <HomeGreeting orgId={orgId} name={name} role={role} />
-      <FleetStats orgId={orgId} counts={counts} />
-      <MoneyStats orgId={orgId} data={moneyData} />
-      <div className="grid gap-3 lg:grid-cols-[2fr_1fr]">
-        <RevenueChart data={chartData} />
-        <FleetRadial
-          utilization={moneyData.utilization}
-          onTrip={counts.onTrip}
-          total={activeFleet}
-        />
-      </div>
-      <div className="grid gap-3 lg:grid-cols-1">
-        <OngoingRentals orgId={orgId} rentals={rentals} />
-        <RecentActivity events={events} />
-      </div>
+      <DraggableSections
+        storageKey={`home-order-${orgId}`}
+        sections={[
+          { id: "fleet", node: <FleetStats orgId={orgId} counts={counts} /> },
+          { id: "money", node: <MoneyStats orgId={orgId} data={moneyData} /> },
+          {
+            id: "payments",
+            node: (
+              <PaymentsCard
+                payments={(paymentsRes.data ?? []) as PaymentPoint[]}
+                expenses={
+                  ((expensesRes.data ?? []) as ExpensePoint[])
+                }
+                outstanding={outstanding}
+              />
+            ),
+          },
+          {
+            id: "charts",
+            node: (
+              <div className="grid gap-3 lg:grid-cols-[2fr_1fr]">
+                <RevenueChart data={chartData} />
+                <FleetRadial
+                  utilization={moneyData.utilization}
+                  onTrip={counts.onTrip}
+                  total={activeFleet}
+                />
+              </div>
+            ),
+          },
+          { id: "rentals", node: <OngoingRentals orgId={orgId} rentals={rentals} /> },
+          { id: "activity", node: <RecentActivity events={events} /> },
+        ]}
+      />
     </div>
   );
 }

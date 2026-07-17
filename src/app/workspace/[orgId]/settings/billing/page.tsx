@@ -3,7 +3,7 @@ import { Crown } from "lucide-react";
 
 import { requireAdmin } from "@/lib/auth/membership";
 import { createClient } from "@/lib/supabase/server";
-import { getOrgUsage, FREE_LIMITS, type LimitKey } from "@/lib/limits";
+import { getOrgUsage, getOrgPlan, FREE_LIMITS, PLAN_LABELS, type LimitKey } from "@/lib/limits";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -25,7 +25,11 @@ export default async function BillingSettingsPage({
   await requireAdmin(orgId);
 
   const supabase = await createClient();
-  const usage = await getOrgUsage(supabase, orgId);
+  const [usage, plan] = await Promise.all([
+    getOrgUsage(supabase, orgId),
+    getOrgPlan(supabase, orgId),
+  ]);
+  const onFree = plan === "FREE";
 
   return (
     <div className="flex max-w-xl flex-col gap-4">
@@ -39,16 +43,17 @@ export default async function BillingSettingsPage({
       {/* Current plan */}
       <div className="flex items-center justify-between rounded-lg border p-3">
         <div className="flex items-center gap-2">
-          <Badge variant="secondary">Free plan</Badge>
+          <Badge variant="secondary">{PLAN_LABELS[plan]} plan</Badge>
           <span className="text-sm text-muted-foreground">
-            Up to {FREE_LIMITS.staff} staff, {FREE_LIMITS.vehicles} vehicles and{" "}
-            {FREE_LIMITS.clients} clients.
+            {onFree
+              ? `Up to ${FREE_LIMITS.staff} staff, ${FREE_LIMITS.vehicles} vehicles and ${FREE_LIMITS.clients} clients.`
+              : "Unlimited vehicles, staff and clients."}
           </span>
         </div>
         <Button asChild variant="outline" className="h-8 gap-1.5 rounded-sm text-xs">
           <Link href={`/workspace/${orgId}/pricing`}>
             <Crown className="size-3.5" />
-            Upgrade to Pro
+            {onFree ? "Upgrade to Pro" : "Manage plan"}
           </Link>
         </Button>
       </div>
@@ -58,7 +63,7 @@ export default async function BillingSettingsPage({
         {(Object.keys(FREE_LIMITS) as LimitKey[]).map((key) => {
           const used = usage[key];
           const cap = FREE_LIMITS[key];
-          const atLimit = used >= cap;
+          const atLimit = onFree && used >= cap;
           return (
             <div key={key} className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between text-sm">

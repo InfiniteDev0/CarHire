@@ -23,10 +23,11 @@ export interface DayCollection {
 
 const kes = (n: number) => `KES ${Number(n).toLocaleString()}`;
 
+// Explicit color — independent of the theme's --chart-* variables.
 const chartConfig = {
   collected: {
     label: "Collected",
-    color: "var(--chart-2)",
+    color: "#38bdf8", // sky blue, like the reference dashboard
   },
 } satisfies ChartConfig;
 

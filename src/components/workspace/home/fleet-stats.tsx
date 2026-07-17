@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Car, CircleCheck, WrenchOff } from "lucide-react";
+import { Car, CircleCheck, KeyRound, WrenchIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -18,49 +18,68 @@ export function FleetStats({
   counts: FleetCounts;
 }) {
   return (
-    <div className="grid auto-rows-min gap-4 md:grid-cols-4">
-      <div className="flex h-25 flex-col justify-between rounded-xl bg-muted/50 p-2">
-        <div className="flex items-center justify-between">
-          <Badge variant="outline">
-            <Car /> Vehicles
+    <div className="grid auto-rows-min gap-4 sm:grid-cols-2 md:grid-cols-4">
+      {/* Total fleet */}
+      <div className="flex h-28 flex-col justify-between rounded-xl bg-muted/50 p-3">
+        <div className="flex items-start justify-between">
+          <Badge variant="outline" className="gap-1">
+            <Car className="size-3" /> Vehicles
           </Badge>
-          <Button asChild className="h-7 cursor-pointer">
+          <Button asChild className="h-6 rounded-sm px-2 text-xs">
             <Link href={`/workspace/${orgId}/vehicles`}>Add</Link>
           </Button>
         </div>
-        <div className="flex items-center justify-between">
-          <p className="text-sm">Total fleet</p>
-          <p className="text-3xl">{counts.total}</p>
+        <div>
+          <p className="text-3xl font-semibold leading-none tabular-nums">{counts.total}</p>
+          <p className="mt-1 text-xs text-muted-foreground">Total fleet</p>
         </div>
       </div>
 
-      <div className="flex h-25 flex-col justify-between rounded-xl bg-muted/50 p-2">
-        <Badge className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
-          <CircleCheck />
-          Available
-        </Badge>
-        <div className="flex items-center justify-between">
-          <p className="text-sm">Available for rent</p>
-          <p className="text-3xl">{counts.available}</p>
+      {/* Available */}
+      <div className="flex h-28 flex-col justify-between rounded-xl bg-muted/50 p-3">
+        <div className="flex items-start justify-between">
+          <Badge className="gap-1 bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
+            <CircleCheck className="size-3" />
+            Available
+          </Badge>
+        </div>
+        <div>
+          <p className="text-3xl font-semibold leading-none tabular-nums text-green-600 dark:text-green-400">
+            {counts.available}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">Ready to rent out</p>
         </div>
       </div>
 
-      <div className="flex h-25 flex-col justify-between rounded-xl bg-muted/50 p-2">
-        <Badge>On Rent</Badge>
-        <div className="flex items-center justify-between">
-          <p className="text-sm">Away on rent</p>
-          <p className="text-3xl">{counts.onTrip}</p>
+      {/* On rent */}
+      <div className="flex h-28 flex-col justify-between rounded-xl bg-muted/50 p-3">
+        <div className="flex items-start justify-between">
+          <Badge className="gap-1 bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+            <KeyRound className="size-3" />
+            On rent
+          </Badge>
+        </div>
+        <div>
+          <p className="text-3xl font-semibold leading-none tabular-nums text-blue-600 dark:text-blue-400">
+            {counts.onTrip}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">Away with clients</p>
         </div>
       </div>
 
-      <div className="flex h-25 flex-col justify-between rounded-xl bg-muted/50 p-2">
-        <Badge className="bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300">
-          <WrenchOff />
-          Need Service
-        </Badge>
-        <div className="flex items-center justify-between">
-          <p className="text-sm">Need maintenance</p>
-          <p className="text-3xl">{counts.maintenance}</p>
+      {/* Maintenance */}
+      <div className="flex h-28 flex-col justify-between rounded-xl bg-muted/50 p-3">
+        <div className="flex items-start justify-between">
+          <Badge className="gap-1 bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300">
+            <WrenchIcon className="size-3" />
+            Service
+          </Badge>
+        </div>
+        <div>
+          <p className="text-3xl font-semibold leading-none tabular-nums text-red-600 dark:text-red-400">
+            {counts.maintenance}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">Need maintenance</p>
         </div>
       </div>
     </div>

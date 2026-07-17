@@ -14,6 +14,7 @@ import {
   type ExtendInput,
 } from "@/lib/validation/contract";
 import { tripReportSchema, type TripReportInput } from "@/lib/validation/trip-report";
+import { sendPushToOrg } from "@/lib/push";
 import { isInCurfew, type CheckoutLog, type CheckinLog } from "./helpers";
 
 /** Throw unless the caller is an active member (staff or admin) of `orgId`. */
@@ -230,6 +231,12 @@ export async function checkoutContract(
   if (contractErr) throw new Error(contractErr.message);
 
   await supabase.from("cars").update({ status: "TRIP" }).eq("id", contract.car_id).eq("org_id", orgId);
+
+  await sendPushToOrg(orgId, {
+    title: "Vehicle checked out",
+    body: "A trip just started — keys handed over.",
+    url: `/workspace/${orgId}/rentals`,
+  });
 }
 
 /**
@@ -281,6 +288,12 @@ export async function checkinContract(
   if (contractErr) throw new Error(contractErr.message);
 
   await supabase.from("cars").update({ status: "AVAILABLE" }).eq("id", contract.car_id).eq("org_id", orgId);
+
+  await sendPushToOrg(orgId, {
+    title: "Vehicle returned",
+    body: "A car is back at base and the contract is completed.",
+    url: `/workspace/${orgId}/rentals`,
+  });
 
   // Unpaid balance becomes client debt (blocks future rentals until cleared).
   const balance = (contract.total_amount ?? 0) + penalty - (contract.amount_paid ?? 0);
@@ -377,6 +390,12 @@ export async function extendContract(
     });
   }
 
+  await sendPushToOrg(orgId, {
+    title: "Rental extended",
+    body: `${extra} extra day(s) authorized — KES ${paid.toLocaleString()} collected.`,
+    url: `/workspace/${orgId}/rentals`,
+  });
+
   const { error } = await supabase
     .from("contracts")
     .update({
@@ -428,6 +447,12 @@ export async function recordPayment(
     kind: "PAYMENT",
     method,
     recorded_by: user.id,
+  });
+
+  await sendPushToOrg(orgId, {
+    title: "Payment received",
+    body: `KES ${amount.toLocaleString()} was recorded.`,
+    url: `/workspace/${orgId}/financials`,
   });
 
   if (contract.status === "COMPLETED") {

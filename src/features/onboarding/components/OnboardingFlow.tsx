@@ -6,6 +6,7 @@ import { StepName } from "./steps/StepName";
 import { StepLocation } from "./steps/StepLocation";
 import { StepFleetSize } from "./steps/StepFleetSize";
 import { StepInvite } from "./steps/StepInvite";
+import { StepPlan } from "./steps/StepPlan";
 import { CreatingWorkspace } from "./CreatingWorkspace";
 
 export default function OnboardingFlow() {
@@ -25,6 +26,8 @@ export default function OnboardingFlow() {
       return <StepFleetSize api={api} />;
     case 4:
       return <StepInvite api={api} />;
+    case 5:
+      return <StepPlan api={api} />;
     default:
       return <StepName api={api} />;
   }

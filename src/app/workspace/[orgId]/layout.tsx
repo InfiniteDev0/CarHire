@@ -12,10 +12,12 @@ import { Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LiveClock } from "@/components/workspace/live-clock";
 import { NotificationSheet } from "@/features/workspace/notification-sheet";
+import { getWorkspaceNotifications } from "@/features/workspace/notifications";
 import { WorkspaceBreadcrumb } from "@/features/workspace/workspace-breadcrumb";
 import { WorkspaceStoreHydrator } from "@/components/workspace/workspace-store-hydrator";
 import type { MemberRole } from "@/lib/auth/membership";
-import { getOrgUsage, isAnyLimitReached } from "@/lib/limits";
+import { getOrgUsage, isAnyLimitReached, PLAN_LABELS, type OrgPlan } from "@/lib/limits";
+import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { RainbowButton } from "@/components/ui/rainbow-button";
 
@@ -42,10 +44,11 @@ export default async function WorkspaceLayout({
 
   const { data: org } = await supabase
     .from("organizations")
-    .select("id, name")
+    .select("id, name, plan")
     .eq("id", orgId)
     .maybeSingle();
   if (!org) redirect("/");
+  const plan = ((org.plan as OrgPlan) ?? "FREE") satisfies OrgPlan;
 
   const { data: membership } = await supabase
     .from("org_members")
@@ -55,8 +58,11 @@ export default async function WorkspaceLayout({
     .maybeSingle();
   const role = (membership?.role ?? null) as MemberRole | null;
 
-  const usage = await getOrgUsage(supabase, orgId);
-  const atLimit = isAnyLimitReached(usage);
+  const [usage, notifications] = await Promise.all([
+    getOrgUsage(supabase, orgId),
+    getWorkspaceNotifications(supabase, orgId),
+  ]);
+  const atLimit = plan === "FREE" && isAnyLimitReached(usage);
 
   const displayName =
     (user.user_metadata?.full_name as string) || user.email || "User";
@@ -91,18 +97,25 @@ export default async function WorkspaceLayout({
                 <LiveClock />
                 {/* cta */}
                 <div className="flex items-center gap-2">
-                  <RainbowButton
-                    asChild
-                    variant="outline"
-                    className="h-fit p-1 px-2 cursor-pointer rounded-sm text-xs"
-                  >
-                    <Link href={`/workspace/${orgId}/pricing`}>
-                      <Crown />
-                      Upgrade to Pro
-                    </Link>
-                  </RainbowButton>
+                  {plan === "FREE" ? (
+                    <RainbowButton
+                      asChild
+                      variant="outline"
+                      className="h-fit p-1 px-2 cursor-pointer rounded-sm text-xs"
+                    >
+                      <Link href={`/workspace/${orgId}/pricing`}>
+                        <Crown />
+                        Upgrade to Pro
+                      </Link>
+                    </RainbowButton>
+                  ) : (
+                    <Badge className="gap-1 bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300">
+                      <Crown className="size-3" />
+                      {PLAN_LABELS[plan]}
+                    </Badge>
+                  )}
                   {/* notification trigger and sheet */}
-                  <NotificationSheet />
+                  <NotificationSheet orgId={org.id} notifications={notifications} />
                 </div>
               </div>
             </div>

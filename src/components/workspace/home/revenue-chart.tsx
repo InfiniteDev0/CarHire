@@ -22,14 +22,15 @@ export interface MonthMoney {
   expenses: number;
 }
 
+// Explicit colors — independent of the theme's --chart-* variables.
 const chartConfig = {
   revenue: {
     label: "Revenue",
-    color: "var(--chart-2)",
+    color: "#10b981", // emerald
   },
   expenses: {
     label: "Expenses",
-    color: "var(--chart-1)",
+    color: "#f59e0b", // amber
   },
 } satisfies ChartConfig;
 

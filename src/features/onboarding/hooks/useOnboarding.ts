@@ -12,6 +12,7 @@ const initialState: OnboardingState = {
   phone: "",
   fleetSize: null,
   inviteEmails: [],
+  plan: "FREE",
   curfewStart: "",
   curfewEnd: "",
   rateFloor: "",
