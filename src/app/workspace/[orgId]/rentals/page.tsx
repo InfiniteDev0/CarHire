@@ -29,7 +29,7 @@ export default async function RentalsPage({
       .order("full_name"),
     supabase
       .from("cars")
-      .select("id, reg_number, make, model, rate_per_day")
+      .select("id, reg_number, make, model, rate_per_day, deposit")
       .eq("org_id", orgId)
       .eq("status", "AVAILABLE")
       .is("decommissioned_at", null)

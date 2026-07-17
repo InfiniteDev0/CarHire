@@ -2,7 +2,18 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { X, LogIn, LogOut, CalendarPlus, Banknote, Undo2, Loader2 } from "lucide-react";
+import Link from "next/link";
+import {
+  X,
+  LogIn,
+  LogOut,
+  CalendarPlus,
+  Banknote,
+  Undo2,
+  Loader2,
+  ClipboardList,
+  FileDown,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -23,6 +34,7 @@ import {
   ExtendDialog,
   PaymentDialog,
 } from "./rental-dialogs";
+import { TripReportDialog } from "./trip-report-dialog";
 
 const kes = (n: number) => `KES ${Number(n).toLocaleString()}`;
 const fmt = (iso: string | null) =>
@@ -38,6 +50,7 @@ const fmt = (iso: string | null) =>
 export const STATUS_BADGE: Record<string, string> = {
   DRAFT: "bg-zinc-800 text-zinc-300 border border-zinc-700",
   ACTIVE: "border border-emerald-500/20 bg-emerald-500/10 text-emerald-400",
+  EXTENDED: "border border-purple-500/20 bg-purple-500/10 text-purple-400",
   OVERDUE: "border border-red-500/20 bg-red-500/10 text-red-400",
   COMPLETED: "border border-blue-500/20 bg-blue-500/10 text-blue-400",
   CANCELLED: "bg-zinc-800 text-zinc-500 border border-zinc-700",
@@ -70,6 +83,7 @@ export function ContractDetailsSheet({
   const [checkinOpen, setCheckinOpen] = useState(false);
   const [extendOpen, setExtendOpen] = useState(false);
   const [paymentOpen, setPaymentOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   if (!contract) return null;
@@ -85,7 +99,7 @@ export function ContractDetailsSheet({
     startTransition(async () => {
       try {
         await cancelContract(orgId, contract.id);
-        toast.success("Draft cancelled");
+        toast.success("Rental deleted");
         router.refresh();
         onOpenChange(false);
       } catch (err) {
@@ -136,6 +150,9 @@ export function ContractDetailsSheet({
         <Row label="Period" value={`${fmt(contract.contract_start)} → ${fmt(contract.contract_expiration)}`} />
         <Row label="Duration" value={`${contract.duration_days} days`} />
         <Row label="Rate" value={`${kes(Number(contract.rate_per_day))}/day`} />
+        {contract.deposit_amount > 0 && (
+          <Row label="Deposit" value={kes(contract.deposit_amount)} />
+        )}
         {contract.refuel_penalty > 0 && (
           <Row label="Refuel penalty" value={kes(contract.refuel_penalty)} />
         )}
@@ -182,6 +199,15 @@ export function ContractDetailsSheet({
                   {logs.checkin.refuel_penalty > 0 &&
                     ` · Penalty ${kes(logs.checkin.refuel_penalty)}`}
                 </p>
+                {logs.checkout?.mileage != null && logs.checkin.mileage != null && (
+                  <p className="mt-1 text-zinc-500">
+                    Distance covered:{" "}
+                    <span className="text-zinc-300">
+                      {Math.max(0, logs.checkin.mileage - logs.checkout.mileage).toLocaleString()} km
+                    </span>{" "}
+                    ({logs.checkout.mileage.toLocaleString()} → {logs.checkin.mileage.toLocaleString()})
+                  </p>
+                )}
               </div>
             )}
           </>
@@ -190,6 +216,18 @@ export function ContractDetailsSheet({
 
       {/* Actions by state */}
       <div className="flex flex-col gap-2 border-t border-zinc-800 pt-3">
+        {status !== "CANCELLED" && (
+          <Button
+            asChild
+            variant="outline"
+            className="w-full border-zinc-700 bg-transparent text-zinc-300 hover:bg-zinc-900"
+          >
+            <Link href={`/print/${orgId}/contracts/${contract.id}`} target="_blank">
+              <FileDown className="size-4" />
+              Contract PDF
+            </Link>
+          </Button>
+        )}
         {status === "DRAFT" && (
           <div className="flex gap-2">
             <Button
@@ -199,7 +237,7 @@ export function ContractDetailsSheet({
               onClick={doCancel}
             >
               {isPending ? <Loader2 className="size-4 animate-spin" /> : <Undo2 className="size-4" />}
-              Cancel draft
+              Delete draft
             </Button>
             <Button className="flex-1" onClick={() => setCheckoutOpen(true)}>
               <LogOut className="size-4" />
@@ -207,7 +245,7 @@ export function ContractDetailsSheet({
             </Button>
           </div>
         )}
-        {(status === "ACTIVE" || status === "OVERDUE") && (
+        {(status === "ACTIVE" || status === "EXTENDED" || status === "OVERDUE") && (
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -231,16 +269,45 @@ export function ContractDetailsSheet({
             </Button>
           </div>
         )}
-        {status === "COMPLETED" && balance > 0 && (
-          <Button className="w-full" onClick={() => setPaymentOpen(true)}>
-            <Banknote className="size-4" />
-            Record payment ({kes(balance)} outstanding)
+        {status === "CANCELLED" && (
+          <Button
+            variant="outline"
+            disabled={isPending}
+            className="w-full border-zinc-700 bg-transparent text-red-400 hover:bg-zinc-900"
+            onClick={doCancel}
+          >
+            {isPending ? <Loader2 className="size-4 animate-spin" /> : <Undo2 className="size-4" />}
+            Delete this cancelled rental
           </Button>
+        )}
+        {status === "COMPLETED" && (
+          <div className="flex flex-col gap-2">
+            {balance > 0 && (
+              <Button className="w-full" onClick={() => setPaymentOpen(true)}>
+                <Banknote className="size-4" />
+                Record payment ({kes(balance)} outstanding)
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              className="w-full border-zinc-700 bg-transparent text-zinc-300 hover:bg-zinc-900"
+              onClick={() => setReportOpen(true)}
+            >
+              <ClipboardList className="size-4" />
+              Trip report
+            </Button>
+          </div>
         )}
       </div>
 
       {/* Dialogs */}
-      <CheckoutDialog orgId={orgId} contract={contract} open={checkoutOpen} onOpenChange={setCheckoutOpen} />
+      <CheckoutDialog
+        orgId={orgId}
+        contract={contract}
+        open={checkoutOpen}
+        onOpenChange={setCheckoutOpen}
+        onDone={() => onOpenChange(false)}
+      />
       <CheckinDialog
         orgId={orgId}
         contract={contract}
@@ -248,13 +315,25 @@ export function ContractDetailsSheet({
         open={checkinOpen}
         onOpenChange={setCheckinOpen}
       />
-      <ExtendDialog orgId={orgId} contract={contract} open={extendOpen} onOpenChange={setExtendOpen} />
+      <ExtendDialog
+        orgId={orgId}
+        contract={contract}
+        balance={balance}
+        open={extendOpen}
+        onOpenChange={setExtendOpen}
+      />
       <PaymentDialog
         orgId={orgId}
         contract={contract}
         balance={balance}
         open={paymentOpen}
         onOpenChange={setPaymentOpen}
+      />
+      <TripReportDialog
+        orgId={orgId}
+        contract={contract}
+        open={reportOpen}
+        onOpenChange={setReportOpen}
       />
     </SidePanel>
   );

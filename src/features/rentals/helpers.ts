@@ -1,6 +1,12 @@
 import type { FuelLevel } from "@/lib/validation/contract";
 
-export type ContractStatus = "DRAFT" | "ACTIVE" | "COMPLETED" | "OVERDUE" | "CANCELLED";
+export type ContractStatus =
+  | "DRAFT"
+  | "ACTIVE"
+  | "EXTENDED"
+  | "COMPLETED"
+  | "OVERDUE"
+  | "CANCELLED";
 
 export interface ContractRow {
   id: string;
@@ -17,26 +23,36 @@ export interface ContractRow {
   domicile: string | null;
   total_amount: number | null;
   amount_paid: number;
+  deposit_amount: number;
   refuel_penalty: number;
   contract_start: string | null;
   contract_expiration: string | null;
   created_at: string;
   clients: { full_name: string; phone: string | null; is_blocked: boolean } | null;
   cars: { reg_number: string; make: string | null; model: string | null } | null;
+  contract_extensions: { count: number }[] | null;
 }
 
 export const CONTRACT_COLUMNS =
-  "id, client_id, car_id, status, is_self_drive, driver_name, driver_dl_number, driver_dl_expiry, rate_per_day, duration_days, routing, domicile, total_amount, amount_paid, refuel_penalty, contract_start, contract_expiration, created_at, clients(full_name, phone, is_blocked), cars(reg_number, make, model)";
+  "id, client_id, car_id, status, is_self_drive, driver_name, driver_dl_number, driver_dl_expiry, rate_per_day, duration_days, routing, domicile, total_amount, amount_paid, deposit_amount, refuel_penalty, contract_start, contract_expiration, created_at, clients(full_name, phone, is_blocked), cars(reg_number, make, model), contract_extensions(count)";
 
-/** DB never stores OVERDUE — it's ACTIVE past its expiration, computed on read. */
-export function displayStatus(c: Pick<ContractRow, "status" | "contract_expiration">): ContractStatus {
+/**
+ * DB only stores DRAFT/ACTIVE/COMPLETED/CANCELLED — OVERDUE (active past its
+ * expiration) and EXTENDED (active with authorized extensions) are computed
+ * on read.
+ */
+export function displayStatus(
+  c: Pick<ContractRow, "status" | "contract_expiration"> &
+    Partial<Pick<ContractRow, "contract_extensions">>
+): ContractStatus {
+  if (c.status !== "ACTIVE") return c.status;
   if (
-    c.status === "ACTIVE" &&
     c.contract_expiration &&
     new Date(c.contract_expiration).getTime() < Date.now()
   ) {
     return "OVERDUE";
   }
+  if ((c.contract_extensions?.[0]?.count ?? 0) > 0) return "EXTENDED";
   return c.status;
 }
 

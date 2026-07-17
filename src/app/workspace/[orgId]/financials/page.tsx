@@ -1,4 +1,4 @@
-import { Banknote, HandCoins, ReceiptText, TriangleAlert } from "lucide-react";
+import { Banknote, HandCoins, ReceiptText, TriangleAlert, TrendingDown, Scale } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,19 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
+import {
+  ExpensesSection,
+  type ExpenseRow,
+  type ExpenseCarPick,
+} from "@/features/financials/components/expenses-section";
+import {
+  PaymentsChart,
+  type DayCollection,
+} from "@/features/financials/components/payments-chart";
+import {
+  RecentTransactions,
+  type TransactionRow,
+} from "@/features/financials/components/recent-transactions";
 
 export const metadata = { title: "Finance · CarHire" };
 
@@ -59,7 +72,7 @@ export default async function FinancialsPage({
   const { orgId } = await params;
   const supabase = await createClient();
 
-  const [contractsRes, debtRes] = await Promise.all([
+  const [contractsRes, debtRes, expensesRes, carsRes, paymentsRes] = await Promise.all([
     supabase
       .from("contracts")
       .select(
@@ -69,9 +82,33 @@ export default async function FinancialsPage({
       .neq("status", "CANCELLED")
       .order("created_at", { ascending: false }),
     supabase.from("clients").select("debt_owed").eq("org_id", orgId).gt("debt_owed", 0),
+    supabase
+      .from("expenses")
+      .select("id, car_id, category, amount, incurred_on, note, cars(reg_number)")
+      .eq("org_id", orgId)
+      .order("incurred_on", { ascending: false }),
+    supabase
+      .from("cars")
+      .select("id, reg_number, make, model")
+      .eq("org_id", orgId)
+      .is("decommissioned_at", null)
+      .order("reg_number"),
+    supabase
+      .from("payments")
+      .select("id, amount, kind, method, created_at, contracts(clients(full_name), cars(reg_number))")
+      .eq("org_id", orgId)
+      .order("created_at", { ascending: false })
+      .limit(100),
   ]);
 
   const contracts = (contractsRes.data ?? []) as unknown as FinContract[];
+  const expenses = (expensesRes.data ?? []) as unknown as ExpenseRow[];
+  const carPicks: ExpenseCarPick[] = (carsRes.data ?? []).map((c) => ({
+    id: c.id,
+    label: [c.reg_number, [c.make, c.model].filter(Boolean).join(" ")]
+      .filter(Boolean)
+      .join(" · "),
+  }));
 
   const collected = contracts.reduce((s, c) => s + Number(c.amount_paid ?? 0), 0);
   const outstanding = contracts.reduce(
@@ -87,6 +124,32 @@ export default async function FinancialsPage({
   const monthRevenue = contracts
     .filter((c) => new Date(c.contract_start ?? c.created_at) >= monthStart)
     .reduce((s, c) => s + Number(c.amount_paid ?? 0), 0);
+  const monthExpenses = expenses
+    .filter((e) => new Date(e.incurred_on) >= monthStart)
+    .reduce((s, e) => s + Number(e.amount), 0);
+  const monthNet = monthRevenue - monthExpenses;
+
+  // Daily collections for the payments chart (last 30 days, zero-filled)
+  const transactions = (paymentsRes.data ?? []) as unknown as TransactionRow[];
+  const dayKey = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const days: DayCollection[] = [];
+  const byDay = new Map<string, number>();
+  for (const p of transactions) {
+    const k = dayKey(new Date(p.created_at));
+    byDay.set(k, (byDay.get(k) ?? 0) + Number(p.amount));
+  }
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(today.getTime() - i * 86400_000);
+    const k = dayKey(d);
+    days.push({ date: k, collected: byDay.get(k) ?? 0 });
+  }
+  const cutoff30 = today.getTime() - 29 * 86400_000;
+  const income30d = transactions
+    .filter((p) => new Date(p.created_at).getTime() >= cutoff30)
+    .reduce((s, p) => s + Number(p.amount), 0);
 
   return (
     <div className="flex flex-col gap-4">
@@ -99,9 +162,25 @@ export default async function FinancialsPage({
       </div>
 
       {/* Summary tiles */}
-      <div className="grid auto-rows-min gap-4 sm:grid-cols-2 md:grid-cols-4">
+      <div className="grid auto-rows-min gap-4 sm:grid-cols-2 md:grid-cols-3">
         <Tile icon={Banknote} label="Collected (all time)" value={kes(collected)} />
         <Tile icon={HandCoins} label="Revenue this month" value={kes(monthRevenue)} />
+        <Tile
+          icon={TrendingDown}
+          label="Expenses this month"
+          value={kes(monthExpenses)}
+          accent={monthExpenses > 0 ? "text-amber-600 dark:text-amber-400" : undefined}
+        />
+        <Tile
+          icon={Scale}
+          label="Net this month"
+          value={kes(monthNet)}
+          accent={
+            monthNet < 0
+              ? "text-red-600 dark:text-red-400"
+              : "text-green-600 dark:text-green-400"
+          }
+        />
         <Tile
           icon={ReceiptText}
           label="Outstanding balances"
@@ -116,7 +195,17 @@ export default async function FinancialsPage({
         />
       </div>
 
+      {/* Payments over time */}
+      <PaymentsChart
+        data={days}
+        totals={{ income30d, outstanding, clientDebt }}
+      />
+
+      {/* Recent transactions */}
+      <RecentTransactions transactions={transactions} />
+
       {/* Ledger */}
+      <h2 className="mt-2 text-sm font-medium">Rental ledger</h2>
       {contracts.length === 0 ? (
         <div className="flex min-h-40 items-center justify-center rounded-xl border border-dashed text-sm text-muted-foreground">
           No rentals yet — money shows up here once contracts exist.
@@ -173,6 +262,11 @@ export default async function FinancialsPage({
           </Table>
         </div>
       )}
+
+      {/* Expenses */}
+      <div className="mt-2">
+        <ExpensesSection orgId={orgId} expenses={expenses} carPicks={carPicks} />
+      </div>
     </div>
   );
 }

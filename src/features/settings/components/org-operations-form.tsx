@@ -8,50 +8,36 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { KENYA_COUNTIES } from "@/features/onboarding/data/counties";
-import { orgSettingsSchema } from "@/lib/validation/settings";
-import { updateOrgSettings } from "../actions";
+import { orgOperationsSchema } from "@/lib/validation/settings";
+import { updateOrgOperations } from "../actions";
 
-const NONE = "__none";
-
-export interface OrgSettings {
-  name: string;
-  phone: string;
-  county: string;
+export interface OrgOperations {
   curfewStart: string;
   curfewEnd: string;
   rateFloor: string;
   rateCeiling: string;
 }
 
-export function SettingsForm({
+export function OrgOperationsForm({
   orgId,
   initial,
 }: {
   orgId: string;
-  initial: OrgSettings;
+  initial: OrgOperations;
 }) {
   const router = useRouter();
-  const [form, setForm] = useState<OrgSettings>(initial);
+  const [form, setForm] = useState<OrgOperations>(initial);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
 
-  const set = <K extends keyof OrgSettings>(k: K, v: OrgSettings[K]) =>
+  const set = <K extends keyof OrgOperations>(k: K, v: OrgOperations[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (isLoading) return;
 
-    const result = orgSettingsSchema.safeParse(form);
+    const result = orgOperationsSchema.safeParse(form);
     if (!result.success) {
       const errs: Record<string, string> = {};
       for (const issue of result.error.issues) {
@@ -65,8 +51,8 @@ export function SettingsForm({
 
     setIsLoading(true);
     try {
-      await updateOrgSettings(orgId, form);
-      toast.success("Settings saved");
+      await updateOrgOperations(orgId, form);
+      toast.success("Operating rules saved");
       router.refresh();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong.");
@@ -77,55 +63,6 @@ export function SettingsForm({
 
   return (
     <form onSubmit={handleSubmit} noValidate className="flex max-w-xl flex-col gap-6">
-      {/* Business details */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="flex flex-col gap-1.5 sm:col-span-2">
-          <Label htmlFor="name">Business name</Label>
-          <Input
-            id="name"
-            value={form.name}
-            onChange={(e) => set("name", e.target.value)}
-            disabled={isLoading}
-            aria-invalid={!!errors.name}
-          />
-          {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="phone">Business phone</Label>
-          <Input
-            id="phone"
-            type="tel"
-            value={form.phone}
-            onChange={(e) => set("phone", e.target.value)}
-            placeholder="+254 7XX XXX XXX"
-            disabled={isLoading}
-          />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label>Primary county</Label>
-          <Select
-            value={form.county || NONE}
-            onValueChange={(v) => set("county", v === NONE ? "" : v)}
-            disabled={isLoading}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="—" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={NONE}>—</SelectItem>
-              {KENYA_COUNTIES.map((c) => (
-                <SelectItem key={c} value={c}>
-                  {c}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <Separator />
-
-      {/* Operating rules */}
       <div>
         <h2 className="text-sm font-medium">Curfew lockout</h2>
         <p className="mb-3 text-xs text-muted-foreground">
@@ -199,7 +136,7 @@ export function SettingsForm({
       <div>
         <Button type="submit" disabled={isLoading}>
           {isLoading && <Loader2 className="size-4 animate-spin" />}
-          Save settings
+          Save changes
         </Button>
       </div>
     </form>

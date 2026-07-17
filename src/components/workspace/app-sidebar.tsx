@@ -51,7 +51,7 @@ export function AppSidebar({
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
-              className="bg-black"
+              className="bg-accent"
               render={<Link href={base} />}
             >
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
@@ -82,7 +82,8 @@ export function AppSidebar({
                     tooltip={item.title}
                     isActive={active}
                     render={<Link href={item.url} />}
-                    className="text-muted-foreground data-active:bg-transparent data-active:text-foreground data-active:font-medium group-data-[collapsible=icon]:data-active:bg-black group-data-[collapsible=icon]:data-active:text-white"
+                    className="mb-1"
+                    // text-muted-foreground data-active:bg-transparent data-active:text-foreground data-active:font-medium group-data-[collapsible=icon]:data-active:bg-black group-data-[collapsible=icon]:data-active:text-white
                   >
                     <item.icon />
                     <span>{item.title}</span>

@@ -55,8 +55,10 @@ interface FormState {
   engine: string;
   mileage: string;
   ratePerDay: string;
+  deposit: string;
   imageUrl: string;
   ownerName: string;
+  ownerPhone: string;
   numOwners: string;
   insuranceExpiry: string;
   inspectionStatus: string;
@@ -81,8 +83,10 @@ function initialFrom(v: Vehicle | null): FormState {
     engine: v?.engine ?? "",
     mileage: s(v?.mileage),
     ratePerDay: s(v?.rate_per_day),
+    deposit: s(v?.deposit),
     imageUrl: v?.image_url ?? "",
     ownerName: v?.owner_name ?? "",
+    ownerPhone: v?.owner_phone ?? "",
     numOwners: s(v?.num_owners),
     insuranceExpiry: v?.insurance_expiry ?? "",
     inspectionStatus: v?.inspection_status ?? "",
@@ -262,6 +266,13 @@ export function VehicleFormSheet({
             <Label htmlFor="ratePerDay">Rate / day (KES)</Label>
             <Input id="ratePerDay" type="number" value={form.ratePerDay} onChange={(e) => set("ratePerDay", e.target.value)} placeholder="3500" disabled={isLoading} />
           </div>
+          <div className="col-span-2 flex flex-col gap-1.5">
+            <Label htmlFor="deposit">Pickup deposit (KES)</Label>
+            <Input id="deposit" type="number" value={form.deposit} onChange={(e) => set("deposit", e.target.value)} placeholder="10000" disabled={isLoading} />
+            <span className="text-xs text-zinc-600">
+              Collected when a rental for this car is created. Admin-only.
+            </span>
+          </div>
         </div>
 
         {/* Location */}
@@ -276,8 +287,12 @@ export function VehicleFormSheet({
         {/* Ownership + documents */}
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="ownerName">Owner (optional)</Label>
+            <Label htmlFor="ownerName">Owner name</Label>
             <Input id="ownerName" value={form.ownerName} onChange={(e) => set("ownerName", e.target.value)} placeholder="Company / person" disabled={isLoading} />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="ownerPhone">Owner phone</Label>
+            <Input id="ownerPhone" type="tel" value={form.ownerPhone} onChange={(e) => set("ownerPhone", e.target.value)} placeholder="+254 7XX XXX XXX" disabled={isLoading} />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="numOwners">No. of owners</Label>

@@ -47,6 +47,7 @@ export function ClientDetailsSheet({
   photos,
   contracts,
   onEdit,
+  staffNames,
 }: {
   orgId: string;
   client: ClientRow | null;
@@ -55,6 +56,7 @@ export function ClientDetailsSheet({
   photos: { front: string | null; back: string | null } | null;
   contracts: ClientContract[] | null; // null = still loading
   onEdit: (c: ClientRow) => void;
+  staffNames?: Record<string, string>;
 }) {
   const router = useRouter();
   const [tab, setTab] = useState<TabId>("profile");
@@ -68,6 +70,20 @@ export function ClientDetailsSheet({
   }
 
   if (!client) return null;
+
+  // Money still owed on live (ACTIVE) rentals — noted on the client, distinct
+  // from debt_owed which only accrues at check-in.
+  const activeBalance = (contracts ?? [])
+    .filter((c) => c.status === "ACTIVE")
+    .reduce(
+      (s, c) =>
+        s +
+        Math.max(
+          0,
+          Number(c.total_amount ?? 0) + Number(c.refuel_penalty ?? 0) - Number(c.amount_paid ?? 0)
+        ),
+      0
+    );
 
   function toggleBlocked() {
     if (!client) return;
@@ -111,12 +127,25 @@ export function ClientDetailsSheet({
           <h1 className="truncate text-xl font-bold tracking-tight">{client.full_name}</h1>
           <p className="text-xs text-zinc-500">
             {client.phone || "no phone"} · joined {shortDate(client.created_at)}
+            {client.created_by && staffNames?.[client.created_by] && (
+              <> · registered by {staffNames[client.created_by]}</>
+            )}
           </p>
         </div>
-        {client.debt_owed > 0 && (
+        {(client.debt_owed > 0 || activeBalance > 0) && (
           <div className="shrink-0 text-right">
-            <p className="text-xs text-zinc-500">Debt owed</p>
-            <p className="font-bold text-red-400">{kes(client.debt_owed)}</p>
+            {client.debt_owed > 0 && (
+              <>
+                <p className="text-xs text-zinc-500">Debt owed</p>
+                <p className="font-bold text-red-400">{kes(client.debt_owed)}</p>
+              </>
+            )}
+            {activeBalance > 0 && (
+              <>
+                <p className="text-xs text-zinc-500">Owing on active rental</p>
+                <p className="font-bold text-amber-400">{kes(activeBalance)}</p>
+              </>
+            )}
           </div>
         )}
       </div>
@@ -145,14 +174,34 @@ export function ClientDetailsSheet({
         {tab === "profile" && (
           <div className="flex flex-col gap-4">
             <div>
-              <InfoRow label="National ID" value={client.national_id} />
-              <InfoRow label="KRA PIN" value={client.kra_pin} />
+              <InfoRow label="ID number" value={client.national_id} />
+              <InfoRow label="Driving licence" value={client.dl_number} />
               <InfoRow label="Primary phone" value={client.phone} />
               <InfoRow label="Secondary phone" value={client.secondary_phone} />
               <InfoRow label="Email" value={client.email} />
               <InfoRow label="Address" value={client.address} />
-              <InfoRow label="Next of kin" value={client.next_of_kin_name} />
-              <InfoRow label="Next of kin phone" value={client.next_of_kin_phone} />
+            </div>
+
+            {/* Next of kin */}
+            <div>
+              <p className="mb-1 text-xs font-medium uppercase tracking-wide text-zinc-500">
+                Next of kin
+              </p>
+              {(client.next_of_kins?.length
+                ? client.next_of_kins
+                : client.next_of_kin_name
+                  ? [{ name: client.next_of_kin_name, phone: client.next_of_kin_phone ?? "", relationship: "" }]
+                  : []
+              ).map((kin, i) => (
+                <InfoRow
+                  key={i}
+                  label={kin.relationship || "Contact"}
+                  value={[kin.name, kin.phone].filter(Boolean).join(" · ")}
+                />
+              ))}
+              {!client.next_of_kins?.length && !client.next_of_kin_name && (
+                <p className="text-xs text-zinc-600">None on file.</p>
+              )}
             </div>
 
             {/* ID photos */}

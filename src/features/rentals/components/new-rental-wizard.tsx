@@ -3,16 +3,16 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
-import { X, Search, Loader2, TriangleAlert, Check } from "lucide-react";
+import { X, Search, Loader2, TriangleAlert, Check, Plus, Minus } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { SidePanel } from "@/components/workspace/side-panel";
-import { createContractSchema } from "@/lib/validation/contract";
+import { useIsAdmin } from "@/lib/store/workspace-store";
+import { createContractSchema, composeRouting, type RouteLeg } from "@/lib/validation/contract";
 import { createContract } from "../actions";
 import { isInCurfew } from "../helpers";
 
@@ -31,6 +31,7 @@ export interface PickCar {
   make: string | null;
   model: string | null;
   rate_per_day: number | null;
+  deposit: number | null;
 }
 
 export interface OrgRules {
@@ -64,6 +65,7 @@ export function NewRentalWizard({
   initialCarId?: string | null;
 }) {
   const router = useRouter();
+  const isAdmin = useIsAdmin();
   const [step, setStep] = useState(0);
   const [clientSearch, setClientSearch] = useState("");
   const [carSearch, setCarSearch] = useState("");
@@ -75,8 +77,8 @@ export function NewRentalWizard({
   const [driverDlExpiry, setDriverDlExpiry] = useState("");
   const [durationDays, setDurationDays] = useState("1");
   const [ratePerDay, setRatePerDay] = useState("");
-  const [amountPaid, setAmountPaid] = useState("");
-  const [routing, setRouting] = useState("");
+  const [depositAmount, setDepositAmount] = useState("");
+  const [routeLegs, setRouteLegs] = useState<RouteLeg[]>([{ from: "", to: "" }]);
   const [domicile, setDomicile] = useState("Nairobi");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -96,8 +98,8 @@ export function NewRentalWizard({
       setDriverDlExpiry("");
       setDurationDays("1");
       setRatePerDay("");
-      setAmountPaid("");
-      setRouting("");
+      setDepositAmount("");
+      setRouteLegs([{ from: "", to: "" }]);
       setDomicile("Nairobi");
     }
   }
@@ -129,6 +131,9 @@ export function NewRentalWizard({
     ((rules.rate_floor != null && Number(ratePerDay) < Number(rules.rate_floor)) ||
       (rules.rate_ceiling != null && Number(ratePerDay) > Number(rules.rate_ceiling)));
 
+  // Staff can't change an admin-set deposit; the field locks to the car's price.
+  const depositLocked = !isAdmin && car?.deposit != null;
+
   function canAdvance(): boolean {
     switch (step) {
       case 0:
@@ -138,7 +143,12 @@ export function NewRentalWizard({
       case 2:
         return isSelfDrive || (!!driverName && !!driverDlNumber && !!driverDlExpiry);
       case 3:
-        return Number(durationDays) >= 1 && Number(ratePerDay) > 0 && !rateOutOfBounds;
+        return (
+          Number(durationDays) >= 1 &&
+          Number(ratePerDay) > 0 &&
+          Number(depositAmount) > 0 &&
+          !rateOutOfBounds
+        );
       default:
         return true;
     }
@@ -146,7 +156,13 @@ export function NewRentalWizard({
 
   function pickCar(c: PickCar) {
     setCarId(c.id);
-    if (c.rate_per_day != null && !ratePerDay) setRatePerDay(String(c.rate_per_day));
+    // Rate and deposit are defined on the car — prefill both.
+    if (c.rate_per_day != null) setRatePerDay(String(c.rate_per_day));
+    setDepositAmount(c.deposit != null ? String(c.deposit) : "");
+  }
+
+  function setLeg(i: number, key: keyof RouteLeg, value: string) {
+    setRouteLegs((legs) => legs.map((l, idx) => (idx === i ? { ...l, [key]: value } : l)));
   }
 
   async function handleCreate() {
@@ -160,8 +176,8 @@ export function NewRentalWizard({
       driverDlExpiry,
       durationDays,
       ratePerDay,
-      amountPaid,
-      routing,
+      depositAmount,
+      routeLegs,
       domicile,
     };
     const parsed = createContractSchema.safeParse(input);
@@ -400,16 +416,63 @@ export function NewRentalWizard({
                     )}
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <Label>Paid now (KES)</Label>
-                    <input type="number" min={0} className={inputClass} value={amountPaid} onChange={(e) => setAmountPaid(e.target.value)} placeholder="0" />
+                    <Label>Pickup deposit (KES)</Label>
+                    <input
+                      type="number"
+                      min={0}
+                      className={cn(inputClass, depositLocked && "opacity-60")}
+                      value={depositAmount}
+                      onChange={(e) => setDepositAmount(e.target.value)}
+                      placeholder="10000"
+                      readOnly={depositLocked}
+                    />
+                    <span className="text-xs text-zinc-600">
+                      {depositLocked
+                        ? "Set by the admin for this car — required to create the rental."
+                        : "Required — collected when the agreement is created."}
+                    </span>
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <Label>Domicile / base</Label>
                     <input className={inputClass} value={domicile} onChange={(e) => setDomicile(e.target.value)} />
                   </div>
-                  <div className="col-span-2 flex flex-col gap-1.5">
-                    <Label>Authorized routing</Label>
-                    <input className={inputClass} value={routing} onChange={(e) => setRouting(e.target.value)} placeholder="e.g. Nairobi only, or Nairobi–Nakuru" />
+                  <div className="col-span-2 flex flex-col gap-2">
+                    <Label>Authorized routes</Label>
+                    {routeLegs.map((leg, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <input
+                          className={inputClass}
+                          value={leg.from}
+                          onChange={(e) => setLeg(i, "from", e.target.value)}
+                          placeholder="From — e.g. Nairobi"
+                        />
+                        <input
+                          className={inputClass}
+                          value={leg.to}
+                          onChange={(e) => setLeg(i, "to", e.target.value)}
+                          placeholder="To — e.g. Nakuru"
+                        />
+                        {routeLegs.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => setRouteLegs((legs) => legs.filter((_, idx) => idx !== i))}
+                            className="flex size-8 shrink-0 items-center justify-center rounded-md border border-zinc-800 text-zinc-500 hover:border-zinc-600 hover:text-white"
+                          >
+                            <Minus className="size-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    {routeLegs.length < 5 && (
+                      <button
+                        type="button"
+                        onClick={() => setRouteLegs((legs) => [...legs, { from: "", to: "" }])}
+                        className="flex w-fit items-center gap-1.5 rounded-md border border-dashed border-zinc-700 px-2.5 py-1.5 text-xs text-zinc-400 hover:border-zinc-500 hover:text-white"
+                      >
+                        <Plus className="size-3.5" />
+                        Add another route
+                      </button>
+                    )}
                   </div>
                 </div>
                 <div className="rounded-md bg-zinc-900 p-3 text-sm">
@@ -417,7 +480,8 @@ export function NewRentalWizard({
                   <span className="font-bold text-white">{kes(total)}</span>
                   <span className="text-zinc-500">
                     {" "}
-                    ({durationDays || 0} × {kes(Number(ratePerDay) || 0)})
+                    ({durationDays || 0} × {kes(Number(ratePerDay) || 0)}) · Deposit{" "}
+                    {kes(Number(depositAmount) || 0)}
                   </span>
                 </div>
               </div>
@@ -442,8 +506,8 @@ export function NewRentalWizard({
                     ["Duration", `${durationDays} days`],
                     ["Rate", `${kes(Number(ratePerDay) || 0)}/day`],
                     ["Total", kes(total)],
-                    ["Paid now", kes(Number(amountPaid) || 0)],
-                    ["Routing", routing || "—"],
+                    ["Deposit", kes(Number(depositAmount) || 0)],
+                    ["Routes", composeRouting(routeLegs) || "—"],
                     ["Domicile", domicile || "—"],
                   ] as const
                 ).map(([k, v]) => (

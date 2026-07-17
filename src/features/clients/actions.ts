@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { assertUnderLimit } from "@/lib/limits";
 import { formFile, signPath, uploadPhoto } from "@/lib/storage";
-import { clientSchema } from "@/lib/validation/client";
+import { clientSchema, normalizeKenyanPhone, type NextOfKin } from "@/lib/validation/client";
 import type { ClientContract } from "./types";
 
 /** Throw unless the caller is an active member (staff or admin) of `orgId`. */
@@ -29,16 +29,22 @@ async function assertMember(orgId: string) {
 }
 
 function parseForm(formData: FormData) {
+  let nextOfKins: NextOfKin[] = [];
+  try {
+    nextOfKins = JSON.parse(String(formData.get("nextOfKins") ?? "[]"));
+  } catch {
+    nextOfKins = [];
+  }
+
   const parsed = clientSchema.safeParse({
     fullName: String(formData.get("fullName") ?? ""),
     nationalId: String(formData.get("nationalId") ?? ""),
-    kraPin: String(formData.get("kraPin") ?? ""),
+    dlNumber: String(formData.get("dlNumber") ?? ""),
     phone: String(formData.get("phone") ?? ""),
     secondaryPhone: String(formData.get("secondaryPhone") ?? ""),
     email: String(formData.get("email") ?? ""),
     address: String(formData.get("address") ?? ""),
-    nokName: String(formData.get("nokName") ?? ""),
-    nokPhone: String(formData.get("nokPhone") ?? ""),
+    nextOfKins,
     notes: String(formData.get("notes") ?? ""),
   });
   if (!parsed.success) {
@@ -48,16 +54,23 @@ function parseForm(formData: FormData) {
 }
 
 function toRow(v: ReturnType<typeof parseForm>) {
+  const kins = v.nextOfKins.filter((k) => k.name || k.phone);
   return {
     full_name: v.fullName,
-    national_id: v.nationalId || null, // null (not "") keeps the unique index happy
-    kra_pin: v.kraPin || null,
-    phone: v.phone,
-    secondary_phone: v.secondaryPhone || null,
+    national_id: v.nationalId ? v.nationalId.trim().toUpperCase() : null, // null keeps the unique index happy
+    dl_number: v.dlNumber ? v.dlNumber.trim().toUpperCase() : null,
+    phone: normalizeKenyanPhone(v.phone),
+    secondary_phone: v.secondaryPhone ? normalizeKenyanPhone(v.secondaryPhone) : null,
     email: v.email || null,
     address: v.address || null,
-    next_of_kin_name: v.nokName || null,
-    next_of_kin_phone: v.nokPhone || null,
+    next_of_kins: kins.map((k) => ({
+      name: k.name,
+      phone: k.phone ? normalizeKenyanPhone(k.phone) : "",
+      relationship: k.relationship,
+    })),
+    // Legacy single next-of-kin columns mirror the first entry.
+    next_of_kin_name: kins[0]?.name || null,
+    next_of_kin_phone: kins[0]?.phone ? normalizeKenyanPhone(kins[0].phone) : null,
     notes: v.notes || null,
   };
 }
@@ -99,13 +112,31 @@ export async function createClientRecord(
   orgId: string,
   formData: FormData
 ): Promise<SaveClientResult> {
-  const { supabase } = await assertMember(orgId);
+  const { supabase, user } = await assertMember(orgId);
   await assertUnderLimit(supabase, orgId, "clients");
   const v = parseForm(formData);
+  const row = toRow(v);
+
+  // Is this client new or returning? Match on national ID or phone.
+  const matchers: string[] = [`phone.eq.${row.phone}`];
+  if (row.national_id) matchers.push(`national_id.eq.${row.national_id}`);
+  const { data: existing } = await supabase
+    .from("clients")
+    .select("id, full_name, national_id, phone")
+    .eq("org_id", orgId)
+    .or(matchers.join(","))
+    .limit(1);
+  if (existing && existing.length > 0) {
+    const hit = existing[0];
+    const via = row.national_id && hit.national_id === row.national_id ? "ID number" : "phone";
+    throw new Error(
+      `${hit.full_name} is already registered with this ${via} — this is a returning client, open their profile instead.`
+    );
+  }
 
   const { data: inserted, error } = await supabase
     .from("clients")
-    .insert({ org_id: orgId, ...toRow(v) })
+    .insert({ org_id: orgId, created_by: user.id, ...row })
     .select("id")
     .single();
   if (error || !inserted) {

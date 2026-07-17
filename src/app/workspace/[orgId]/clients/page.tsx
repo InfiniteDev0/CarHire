@@ -12,13 +12,20 @@ export default async function ClientsPage({
   const { orgId } = await params;
   const supabase = await createClient();
 
-  const { data: clients } = await supabase
-    .from("clients")
-    .select(CLIENT_COLUMNS)
-    .eq("org_id", orgId)
-    .order("created_at", { ascending: false });
+  const [{ data: clients }, { data: members }] = await Promise.all([
+    supabase
+      .from("clients")
+      .select(CLIENT_COLUMNS)
+      .eq("org_id", orgId)
+      .order("created_at", { ascending: false }),
+    supabase.from("org_members").select("user_id, full_name").eq("org_id", orgId),
+  ]);
 
   const rows = (clients ?? []) as unknown as ClientRow[];
+  // user_id → staff name, for "registered by" in the details sheet.
+  const staffNames = Object.fromEntries(
+    (members ?? []).map((m) => [m.user_id as string, (m.full_name as string) ?? "Staff"])
+  );
 
   return (
     <div className="flex flex-col gap-4">
@@ -30,7 +37,7 @@ export default async function ClientsPage({
         </p>
       </div>
 
-      <ClientsView orgId={orgId} clients={rows} />
+      <ClientsView orgId={orgId} clients={rows} staffNames={staffNames} />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { Outfit } from "next/font/google";
 import { Toaster } from "sonner";
+import { ThemeProvider } from "next-themes";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -18,10 +19,13 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className={`${outfit.variable}  h-full antialiased dark`}
+      suppressHydrationWarning
+      className={`${outfit.variable}  h-full antialiased light`}
     >
       <body className="min-h-full flex flex-col">
-        {children}
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+          {children}
+        </ThemeProvider>
         <Toaster position="top-center" theme="dark" richColors />
       </body>
     </html>

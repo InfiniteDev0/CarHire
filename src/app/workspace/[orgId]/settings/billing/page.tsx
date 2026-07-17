@@ -1,0 +1,81 @@
+import Link from "next/link";
+import { Crown } from "lucide-react";
+
+import { requireAdmin } from "@/lib/auth/membership";
+import { createClient } from "@/lib/supabase/server";
+import { getOrgUsage, FREE_LIMITS, type LimitKey } from "@/lib/limits";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+
+export const metadata = { title: "Billing · Settings · CarHire" };
+
+const USAGE_LABEL: Record<LimitKey, string> = {
+  staff: "Staff members",
+  vehicles: "Vehicles",
+  clients: "Clients",
+};
+
+export default async function BillingSettingsPage({
+  params,
+}: {
+  params: Promise<{ orgId: string }>;
+}) {
+  const { orgId } = await params;
+  await requireAdmin(orgId);
+
+  const supabase = await createClient();
+  const usage = await getOrgUsage(supabase, orgId);
+
+  return (
+    <div className="flex max-w-xl flex-col gap-4">
+      <div className="space-y-1">
+        <h2 className="text-sm font-medium">Billing</h2>
+        <p className="text-xs text-muted-foreground">
+          Your plan and how much of it you&apos;re using.
+        </p>
+      </div>
+
+      {/* Current plan */}
+      <div className="flex items-center justify-between rounded-lg border p-3">
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary">Free plan</Badge>
+          <span className="text-sm text-muted-foreground">
+            Up to {FREE_LIMITS.staff} staff, {FREE_LIMITS.vehicles} vehicles and{" "}
+            {FREE_LIMITS.clients} clients.
+          </span>
+        </div>
+        <Button asChild variant="outline" className="h-8 gap-1.5 rounded-sm text-xs">
+          <Link href={`/workspace/${orgId}/pricing`}>
+            <Crown className="size-3.5" />
+            Upgrade to Pro
+          </Link>
+        </Button>
+      </div>
+
+      {/* Usage */}
+      <div className="flex flex-col gap-4 rounded-lg border p-3">
+        {(Object.keys(FREE_LIMITS) as LimitKey[]).map((key) => {
+          const used = usage[key];
+          const cap = FREE_LIMITS[key];
+          const atLimit = used >= cap;
+          return (
+            <div key={key} className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between text-sm">
+                <span>{USAGE_LABEL[key]}</span>
+                <span
+                  className={
+                    atLimit ? "font-medium text-red-600 dark:text-red-400" : "text-muted-foreground"
+                  }
+                >
+                  {used} / {cap}
+                </span>
+              </div>
+              <Progress value={Math.min(100, (used / cap) * 100)} />
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

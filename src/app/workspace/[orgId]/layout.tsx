@@ -17,6 +17,7 @@ import { WorkspaceStoreHydrator } from "@/components/workspace/workspace-store-h
 import type { MemberRole } from "@/lib/auth/membership";
 import { getOrgUsage, isAnyLimitReached } from "@/lib/limits";
 import Link from "next/link";
+import { RainbowButton } from "@/components/ui/rainbow-button";
 
 /**
  * Workspace shell — sidebar + header, applied to every /workspace/[orgId] page.
@@ -90,7 +91,7 @@ export default async function WorkspaceLayout({
                 <LiveClock />
                 {/* cta */}
                 <div className="flex items-center gap-2">
-                  <Button
+                  <RainbowButton
                     asChild
                     variant="outline"
                     className="h-fit p-1 px-2 cursor-pointer rounded-sm text-xs"
@@ -99,7 +100,7 @@ export default async function WorkspaceLayout({
                       <Crown />
                       Upgrade to Pro
                     </Link>
-                  </Button>
+                  </RainbowButton>
                   {/* notification trigger and sheet */}
                   <NotificationSheet />
                 </div>

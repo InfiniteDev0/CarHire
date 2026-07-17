@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { X, Loader2 } from "lucide-react";
+import { X, Loader2, Plus, Minus } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { SidePanel } from "@/components/workspace/side-panel";
-import { clientSchema } from "@/lib/validation/client";
+import { clientSchema, type NextOfKin } from "@/lib/validation/client";
 import { photoError } from "@/lib/storage";
 import { createClientRecord, updateClientRecord } from "../actions";
 import type { ClientRow } from "../types";
@@ -18,29 +18,35 @@ import type { ClientRow } from "../types";
 interface FormState {
   fullName: string;
   nationalId: string;
-  kraPin: string;
+  dlNumber: string;
   phone: string;
   secondaryPhone: string;
   email: string;
   address: string;
-  nokName: string;
-  nokPhone: string;
   notes: string;
 }
+
+const emptyKin = (): NextOfKin => ({ name: "", phone: "", relationship: "" });
 
 function initialFrom(c: ClientRow | null): FormState {
   return {
     fullName: c?.full_name ?? "",
     nationalId: c?.national_id ?? "",
-    kraPin: c?.kra_pin ?? "",
+    dlNumber: c?.dl_number ?? "",
     phone: c?.phone ?? "",
     secondaryPhone: c?.secondary_phone ?? "",
     email: c?.email ?? "",
     address: c?.address ?? "",
-    nokName: c?.next_of_kin_name ?? "",
-    nokPhone: c?.next_of_kin_phone ?? "",
     notes: c?.notes ?? "",
   };
+}
+
+function initialKins(c: ClientRow | null): NextOfKin[] {
+  if (c?.next_of_kins && c.next_of_kins.length > 0) return c.next_of_kins;
+  if (c?.next_of_kin_name || c?.next_of_kin_phone) {
+    return [{ name: c.next_of_kin_name ?? "", phone: c.next_of_kin_phone ?? "", relationship: "" }];
+  }
+  return [emptyKin()];
 }
 
 const inputWrap = "flex flex-col gap-1.5";
@@ -60,6 +66,7 @@ export function ClientFormSheet({
 }) {
   const router = useRouter();
   const [form, setForm] = useState<FormState>(() => initialFrom(editing));
+  const [kins, setKins] = useState<NextOfKin[]>(() => initialKins(editing));
   const [idFront, setIdFront] = useState<File | null>(null);
   const [idBack, setIdBack] = useState<File | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -71,6 +78,7 @@ export function ClientFormSheet({
     setPrevOpen(open);
     if (open) {
       setForm(initialFrom(editing));
+      setKins(initialKins(editing));
       setIdFront(null);
       setIdBack(null);
       setErrors({});
@@ -79,6 +87,9 @@ export function ClientFormSheet({
 
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
+
+  const setKin = (i: number, key: keyof NextOfKin, value: string) =>
+    setKins((list) => list.map((k, idx) => (idx === i ? { ...k, [key]: value } : k)));
 
   function pickFile(
     e: React.ChangeEvent<HTMLInputElement>,
@@ -103,7 +114,7 @@ export function ClientFormSheet({
     e.preventDefault();
     if (isLoading) return;
 
-    const result = clientSchema.safeParse(form);
+    const result = clientSchema.safeParse({ ...form, nextOfKins: kins });
     if (!result.success) {
       const errs: Record<string, string> = {};
       for (const issue of result.error.issues) {
@@ -111,6 +122,10 @@ export function ClientFormSheet({
         if (key && !errs[key]) errs[key] = issue.message;
       }
       setErrors(errs);
+      const first = result.error.issues[0];
+      if (String(first?.path[0]) === "nextOfKins") {
+        toast.error(first?.message ?? "Check the next of kin details.");
+      }
       return;
     }
     setErrors({});
@@ -119,6 +134,7 @@ export function ClientFormSheet({
     try {
       const fd = new FormData();
       Object.entries(form).forEach(([k, v]) => fd.set(k, v));
+      fd.set("nextOfKins", JSON.stringify(kins));
       if (idFront) fd.set("idFront", idFront);
       if (idBack) fd.set("idBack", idBack);
 
@@ -160,12 +176,18 @@ export function ClientFormSheet({
             {errors.fullName && <span className="text-xs text-red-400">{errors.fullName}</span>}
           </div>
           <div className={inputWrap}>
-            <Label htmlFor="nationalId">National ID</Label>
-            <Input id="nationalId" value={form.nationalId} onChange={(e) => set("nationalId", e.target.value)} placeholder="12345678" disabled={isLoading} />
+            <Label htmlFor="nationalId">ID number</Label>
+            <Input id="nationalId" value={form.nationalId} onChange={(e) => set("nationalId", e.target.value)} placeholder="12345678" disabled={isLoading} aria-invalid={!!errors.nationalId} />
+            {errors.nationalId ? (
+              <span className="text-xs text-red-400">{errors.nationalId}</span>
+            ) : (
+              <span className="text-xs text-zinc-600">Old ID, Maisha UPI, or alien card.</span>
+            )}
           </div>
           <div className={inputWrap}>
-            <Label htmlFor="kraPin">KRA PIN</Label>
-            <Input id="kraPin" value={form.kraPin} onChange={(e) => set("kraPin", e.target.value)} placeholder="A012345678Z" disabled={isLoading} />
+            <Label htmlFor="dlNumber">Driving licence (Smart DL)</Label>
+            <Input id="dlNumber" value={form.dlNumber} onChange={(e) => set("dlNumber", e.target.value)} placeholder="DL-ABC1234" disabled={isLoading} aria-invalid={!!errors.dlNumber} />
+            {errors.dlNumber && <span className="text-xs text-red-400">{errors.dlNumber}</span>}
           </div>
           <div className={inputWrap}>
             <Label htmlFor="phone">Primary phone *</Label>
@@ -174,7 +196,8 @@ export function ClientFormSheet({
           </div>
           <div className={inputWrap}>
             <Label htmlFor="secondaryPhone">Secondary phone</Label>
-            <Input id="secondaryPhone" type="tel" value={form.secondaryPhone} onChange={(e) => set("secondaryPhone", e.target.value)} placeholder="Fallback contact" disabled={isLoading} />
+            <Input id="secondaryPhone" type="tel" value={form.secondaryPhone} onChange={(e) => set("secondaryPhone", e.target.value)} placeholder="Fallback contact" disabled={isLoading} aria-invalid={!!errors.secondaryPhone} />
+            {errors.secondaryPhone && <span className="text-xs text-red-400">{errors.secondaryPhone}</span>}
           </div>
           <div className={inputWrap}>
             <Label htmlFor="email">Email</Label>
@@ -188,15 +211,38 @@ export function ClientFormSheet({
         </div>
 
         {/* Next of kin */}
-        <div className="grid grid-cols-2 gap-3 border-t border-zinc-800 pt-4">
-          <div className={inputWrap}>
-            <Label htmlFor="nokName">Next of kin</Label>
-            <Input id="nokName" value={form.nokName} onChange={(e) => set("nokName", e.target.value)} placeholder="Name" disabled={isLoading} />
-          </div>
-          <div className={inputWrap}>
-            <Label htmlFor="nokPhone">Next of kin phone</Label>
-            <Input id="nokPhone" type="tel" value={form.nokPhone} onChange={(e) => set("nokPhone", e.target.value)} placeholder="+254 …" disabled={isLoading} />
-          </div>
+        <div className="flex flex-col gap-3 border-t border-zinc-800 pt-4">
+          <Label>Next of kin</Label>
+          {kins.map((kin, i) => (
+            <div key={i} className="flex items-start gap-2">
+              <div className="grid flex-1 grid-cols-3 gap-2">
+                <Input value={kin.name} onChange={(e) => setKin(i, "name", e.target.value)} placeholder="Name" disabled={isLoading} />
+                <Input type="tel" value={kin.phone} onChange={(e) => setKin(i, "phone", e.target.value)} placeholder="+254 …" disabled={isLoading} />
+                <Input value={kin.relationship} onChange={(e) => setKin(i, "relationship", e.target.value)} placeholder="Relationship" disabled={isLoading} />
+              </div>
+              {kins.length > 1 && (
+                <button
+                  type="button"
+                  disabled={isLoading}
+                  onClick={() => setKins((list) => list.filter((_, idx) => idx !== i))}
+                  className="flex size-9 shrink-0 items-center justify-center rounded-md border border-zinc-800 text-zinc-500 hover:border-zinc-600 hover:text-white"
+                >
+                  <Minus className="size-3.5" />
+                </button>
+              )}
+            </div>
+          ))}
+          {kins.length < 5 && (
+            <button
+              type="button"
+              disabled={isLoading}
+              onClick={() => setKins((list) => [...list, emptyKin()])}
+              className="flex w-fit items-center gap-1.5 rounded-md border border-dashed border-zinc-700 px-2.5 py-1.5 text-xs text-zinc-400 hover:border-zinc-500 hover:text-white"
+            >
+              <Plus className="size-3.5" />
+              Add next of kin
+            </button>
+          )}
         </div>
 
         {/* ID photos */}

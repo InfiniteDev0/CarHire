@@ -23,6 +23,19 @@ const intField = (msg: string) =>
 
 const optionalInt = z.string().trim().regex(/^$|^\d+$/, "Numbers only").optional().default("");
 
+/** One authorized route leg — composed into the routing text server-side. */
+export const routeLegSchema = z.object({
+  from: z.string().trim().max(60),
+  to: z.string().trim().max(60),
+});
+export type RouteLeg = z.infer<typeof routeLegSchema>;
+
+export const composeRouting = (legs: RouteLeg[]) =>
+  legs
+    .filter((l) => l.from || l.to)
+    .map((l) => `${l.from || "—"} → ${l.to || "—"}`)
+    .join(", ");
+
 export const createContractSchema = z
   .object({
     clientId: z.string().min(1, "Pick a client"),
@@ -33,13 +46,12 @@ export const createContractSchema = z
     driverDlExpiry: z.string().trim().optional().default(""), // YYYY-MM-DD
     durationDays: intField("Enter the rental days"),
     ratePerDay: z.string().trim().regex(/^\d+(\.\d{1,2})?$/, "Enter the daily rate"),
-    amountPaid: z
+    depositAmount: z
       .string()
       .trim()
-      .regex(/^$|^\d+(\.\d{1,2})?$/, "Enter a valid amount")
-      .optional()
-      .default(""),
-    routing: z.string().trim().max(120).optional().default(""),
+      .regex(/^\d+(\.\d{1,2})?$/, "Enter the deposit")
+      .refine((v) => Number(v) > 0, "The pickup deposit is required"),
+    routeLegs: z.array(routeLegSchema).max(5).optional().default([]),
     domicile: z.string().trim().max(60).optional().default(""),
   })
   .superRefine((v, ctx) => {
@@ -93,6 +105,20 @@ export type CheckinInput = z.infer<typeof checkinSchema>;
 
 export const extendSchema = z.object({
   extraDays: intField("How many extra days?").refine((v) => Number(v) >= 1, "At least 1 day"),
+  // Money the client pays up-front to authorize the extension.
+  amountPaid: z
+    .string()
+    .trim()
+    .regex(/^$|^\d+(\.\d{1,2})?$/, "Enter a valid amount")
+    .optional()
+    .default(""),
+  // Admin-adjustable required payment; non-admins are pinned to half the balance.
+  requiredPayment: z
+    .string()
+    .trim()
+    .regex(/^$|^\d+(\.\d{1,2})?$/, "Enter a valid amount")
+    .optional()
+    .default(""),
 });
 export type ExtendInput = z.infer<typeof extendSchema>;
 

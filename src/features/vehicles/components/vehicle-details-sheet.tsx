@@ -98,7 +98,7 @@ export function VehicleDetailsSheet({
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-4 overflow-x-auto border-b border-zinc-800 pb-px no-scrollbar">
+      <div className="flex  items-center gap-4 overflow-x-auto border-b border-zinc-800 pb-px no-scrollbar">
         {TABS.map((t) => (
           <button
             key={t.id}
@@ -117,7 +117,7 @@ export function VehicleDetailsSheet({
       </div>
 
       {/* Content */}
-      <div className="flex-1 text-sm text-zinc-400">
+      <div className="flex-1 overflow-y-scroll scrollbar-pill px-2  text-sm text-zinc-400">
         {tab === "rent" && (
           <div className="space-y-5">
             <div className="rounded-md bg-zinc-900 p-3">

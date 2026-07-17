@@ -24,9 +24,11 @@ const kes = (n: number) => `KES ${Number(n).toLocaleString()}`;
 export function ClientsView({
   orgId,
   clients,
+  staffNames,
 }: {
   orgId: string;
   clients: ClientRow[];
+  staffNames: Record<string, string>;
 }) {
   const [search, setSearch] = useState("");
   const [formOpen, setFormOpen] = useState(false);
@@ -159,6 +161,7 @@ export function ClientsView({
         photos={photos}
         contracts={contracts}
         onEdit={openEdit}
+        staffNames={staffNames}
       />
     </div>
   );

@@ -1,7 +1,12 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { orgSettingsSchema, type OrgSettingsInput } from "@/lib/validation/settings";
+import {
+  orgGeneralSchema,
+  orgOperationsSchema,
+  type OrgGeneralInput,
+  type OrgOperationsInput,
+} from "@/lib/validation/settings";
 
 async function assertAdmin(orgId: string) {
   const supabase = await createClient();
@@ -23,13 +28,13 @@ async function assertAdmin(orgId: string) {
   return supabase;
 }
 
-export async function updateOrgSettings(
+export async function updateOrgGeneral(
   orgId: string,
-  input: OrgSettingsInput
+  input: OrgGeneralInput
 ): Promise<void> {
   const supabase = await assertAdmin(orgId);
 
-  const parsed = orgSettingsSchema.safeParse(input);
+  const parsed = orgGeneralSchema.safeParse(input);
   if (!parsed.success) {
     throw new Error(parsed.error.issues[0]?.message ?? "Invalid settings.");
   }
@@ -41,6 +46,27 @@ export async function updateOrgSettings(
       name: v.name,
       phone: v.phone || null,
       county: v.county || null,
+    })
+    .eq("id", orgId);
+
+  if (error) throw new Error(error.message);
+}
+
+export async function updateOrgOperations(
+  orgId: string,
+  input: OrgOperationsInput
+): Promise<void> {
+  const supabase = await assertAdmin(orgId);
+
+  const parsed = orgOperationsSchema.safeParse(input);
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? "Invalid settings.");
+  }
+  const v = parsed.data;
+
+  const { error } = await supabase
+    .from("organizations")
+    .update({
       curfew_start: v.curfewStart || null,
       curfew_end: v.curfewEnd || null,
       rate_floor: v.rateFloor ? Number(v.rateFloor) : null,

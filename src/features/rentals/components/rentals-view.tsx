@@ -30,7 +30,7 @@ const kes = (n: number) => `KES ${Number(n).toLocaleString()}`;
 const shortDate = (iso: string | null) =>
   iso ? new Date(iso).toLocaleDateString("en-KE", { day: "numeric", month: "short" }) : "—";
 
-const FILTERS = ["ALL", "DRAFT", "ACTIVE", "OVERDUE", "COMPLETED", "CANCELLED"] as const;
+const FILTERS = ["ALL", "DRAFT", "ACTIVE", "EXTENDED", "OVERDUE", "COMPLETED", "CANCELLED"] as const;
 type Filter = (typeof FILTERS)[number];
 
 export function RentalsView({
@@ -62,6 +62,7 @@ export function RentalsView({
       ALL: contracts.length,
       DRAFT: 0,
       ACTIVE: 0,
+      EXTENDED: 0,
       OVERDUE: 0,
       COMPLETED: 0,
       CANCELLED: 0,

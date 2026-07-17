@@ -7,11 +7,13 @@ import {
   checkinSchema,
   extendSchema,
   paymentSchema,
-  fuelIndex,
+  composeRouting,
   type CreateContractInput,
   type CheckoutInput,
   type CheckinInput,
+  type ExtendInput,
 } from "@/lib/validation/contract";
+import { tripReportSchema, type TripReportInput } from "@/lib/validation/trip-report";
 import { isInCurfew, type CheckoutLog, type CheckinLog } from "./helpers";
 
 /** Throw unless the caller is an active member (staff or admin) of `orgId`. */
@@ -32,7 +34,7 @@ async function assertMember(orgId: string) {
   if (!data || !data.is_active) {
     throw new Error("You're not a member of this workspace.");
   }
-  return { supabase, user };
+  return { supabase, user, isAdmin: data.role === "admin" };
 }
 
 function firstIssue(error: { issues: { message: string }[] }) {
@@ -47,39 +49,59 @@ export async function createContract(
   orgId: string,
   input: CreateContractInput
 ): Promise<{ contractId: string }> {
-  const { supabase, user } = await assertMember(orgId);
+  const { supabase, user, isAdmin } = await assertMember(orgId);
 
   const parsed = createContractSchema.safeParse(input);
   if (!parsed.success) throw new Error(firstIssue(parsed.error));
   const v = parsed.data;
 
-  const [{ data: client }, { data: car }, { data: org }] = await Promise.all([
-    supabase
-      .from("clients")
-      .select("is_blocked, debt_owed, full_name")
-      .eq("id", v.clientId)
-      .eq("org_id", orgId)
-      .maybeSingle(),
-    supabase
-      .from("cars")
-      .select("status, reg_number")
-      .eq("id", v.carId)
-      .eq("org_id", orgId)
-      .maybeSingle(),
-    supabase
-      .from("organizations")
-      .select("rate_floor, rate_ceiling")
-      .eq("id", orgId)
-      .maybeSingle(),
-  ]);
+  const [{ data: client }, { data: car }, { data: org }, { data: openContracts }] =
+    await Promise.all([
+      supabase
+        .from("clients")
+        .select("is_blocked, debt_owed, full_name")
+        .eq("id", v.clientId)
+        .eq("org_id", orgId)
+        .maybeSingle(),
+      supabase
+        .from("cars")
+        .select("status, reg_number, deposit")
+        .eq("id", v.carId)
+        .eq("org_id", orgId)
+        .maybeSingle(),
+      supabase
+        .from("organizations")
+        .select("rate_floor, rate_ceiling")
+        .eq("id", orgId)
+        .maybeSingle(),
+      supabase
+        .from("contracts")
+        .select("id, status")
+        .eq("org_id", orgId)
+        .eq("client_id", v.clientId)
+        .in("status", ["DRAFT", "ACTIVE"]),
+    ]);
 
   if (!client) throw new Error("Client not found.");
   if (client.is_blocked) {
     throw new Error(`${client.full_name} is blocked and cannot hire until unblocked.`);
   }
+  if ((openContracts?.length ?? 0) > 0) {
+    throw new Error(
+      `${client.full_name} already has an open rental — one car per client until it's returned.`
+    );
+  }
   if (!car) throw new Error("Vehicle not found.");
   if (car.status !== "AVAILABLE") {
     throw new Error(`${car.reg_number} is not available right now.`);
+  }
+
+  // The pickup deposit is fixed per car by the admin; staff can't discount it.
+  const deposit = Number(v.depositAmount);
+  if (car.deposit != null && !isAdmin && deposit !== Number(car.deposit)) {
+    throw new Error(
+      `The deposit for ${car.reg_number} is KES ${Number(car.deposit).toLocaleString()} — only an admin can change it.`
+    );
   }
 
   const rate = Number(v.ratePerDay);
@@ -105,17 +127,30 @@ export async function createContract(
       driver_dl_expiry: v.isSelfDrive ? null : v.driverDlExpiry || null,
       rate_per_day: rate,
       duration_days: duration,
-      routing: v.routing || null,
+      routing: composeRouting(v.routeLegs) || null,
       domicile: v.domicile || null,
       status: "DRAFT",
       total_amount: total,
-      amount_paid: v.amountPaid ? Number(v.amountPaid) : 0,
+      amount_paid: deposit, // the deposit is the first money in
+      deposit_amount: deposit,
       created_by: user.id,
     })
     .select("id")
     .single();
 
   if (error || !inserted) throw new Error(error?.message ?? "Could not create the rental.");
+
+  // Ledger entry for the deposit — non-fatal if it fails, totals stay correct.
+  if (deposit > 0) {
+    await supabase.from("payments").insert({
+      org_id: orgId,
+      contract_id: inserted.id,
+      amount: deposit,
+      kind: "DEPOSIT",
+      recorded_by: user.id,
+    });
+  }
+
   return { contractId: inserted.id };
 }
 
@@ -137,7 +172,7 @@ export async function checkoutContract(
   const [{ data: contract }, { data: org }] = await Promise.all([
     supabase
       .from("contracts")
-      .select("status, car_id, duration_days")
+      .select("status, car_id, client_id, duration_days")
       .eq("id", contractId)
       .eq("org_id", orgId)
       .maybeSingle(),
@@ -151,6 +186,18 @@ export async function checkoutContract(
   if (!contract) throw new Error("Contract not found.");
   if (contract.status !== "DRAFT") {
     throw new Error("Only draft contracts can be checked out.");
+  }
+
+  // One car per client: refuse if they already have a live trip.
+  const { data: liveTrips } = await supabase
+    .from("contracts")
+    .select("id")
+    .eq("org_id", orgId)
+    .eq("client_id", contract.client_id)
+    .eq("status", "ACTIVE")
+    .neq("id", contractId);
+  if ((liveTrips?.length ?? 0) > 0) {
+    throw new Error("This client is already out with another car — check it in first.");
   }
   if (isInCurfew(new Date(), org?.curfew_start ?? null, org?.curfew_end ?? null)) {
     throw new Error(
@@ -252,21 +299,28 @@ export async function checkinContract(
   }
 }
 
-/** Staff-entered rental extension: more days, new expiration, new total. */
+/**
+ * Rental extension. To authorize one, the client must first pay half of the
+ * remaining balance — the admin can adjust that required amount, staff can't.
+ * Every authorized extension is logged in contract_extensions.
+ */
 export async function extendContract(
   orgId: string,
   contractId: string,
-  input: { extraDays: string }
+  input: ExtendInput
 ): Promise<void> {
-  const { supabase } = await assertMember(orgId);
+  const { supabase, user, isAdmin } = await assertMember(orgId);
 
   const parsed = extendSchema.safeParse(input);
   if (!parsed.success) throw new Error(firstIssue(parsed.error));
   const extra = Number(parsed.data.extraDays);
+  const paid = Number(parsed.data.amountPaid || 0);
 
   const { data: contract } = await supabase
     .from("contracts")
-    .select("status, duration_days, rate_per_day, contract_expiration")
+    .select(
+      "status, duration_days, rate_per_day, contract_expiration, total_amount, amount_paid, refuel_penalty"
+    )
     .eq("id", contractId)
     .eq("org_id", orgId)
     .maybeSingle();
@@ -279,10 +333,49 @@ export async function extendContract(
     throw new Error("Check the contract out before extending it.");
   }
 
+  // Payment gate: default is half the outstanding balance; admins may adjust.
+  const balance = Math.max(
+    0,
+    Number(contract.total_amount ?? 0) +
+      Number(contract.refuel_penalty ?? 0) -
+      Number(contract.amount_paid ?? 0)
+  );
+  const halfBalance = Math.ceil(balance / 2);
+  const required =
+    isAdmin && parsed.data.requiredPayment !== ""
+      ? Number(parsed.data.requiredPayment)
+      : halfBalance;
+
+  if (paid < required) {
+    throw new Error(
+      `Extension not authorized — the client must pay at least KES ${required.toLocaleString()} of the outstanding balance first.`
+    );
+  }
+
   const newDuration = contract.duration_days + extra;
   const newExpiration = new Date(
     new Date(contract.contract_expiration).getTime() + extra * 86400_000
   );
+
+  const { error: logErr } = await supabase.from("contract_extensions").insert({
+    org_id: orgId,
+    contract_id: contractId,
+    extra_days: extra,
+    required_payment: required,
+    amount_paid: paid,
+    created_by: user.id,
+  });
+  if (logErr) throw new Error(logErr.message);
+
+  if (paid > 0) {
+    await supabase.from("payments").insert({
+      org_id: orgId,
+      contract_id: contractId,
+      amount: paid,
+      kind: "EXTENSION",
+      recorded_by: user.id,
+    });
+  }
 
   const { error } = await supabase
     .from("contracts")
@@ -290,6 +383,7 @@ export async function extendContract(
       duration_days: newDuration,
       contract_expiration: newExpiration.toISOString(),
       total_amount: newDuration * Number(contract.rate_per_day),
+      amount_paid: Number(contract.amount_paid ?? 0) + paid,
     })
     .eq("id", contractId)
     .eq("org_id", orgId);
@@ -300,13 +394,16 @@ export async function extendContract(
 export async function recordPayment(
   orgId: string,
   contractId: string,
-  input: { amount: string }
+  input: { amount: string; method?: string }
 ): Promise<void> {
-  const { supabase } = await assertMember(orgId);
+  const { supabase, user } = await assertMember(orgId);
 
   const parsed = paymentSchema.safeParse(input);
   if (!parsed.success) throw new Error(firstIssue(parsed.error));
   const amount = Number(parsed.data.amount);
+  const method = ["CASH", "MPESA", "BANK", "OTHER"].includes(input.method ?? "")
+    ? input.method
+    : "CASH";
 
   const { data: contract } = await supabase
     .from("contracts")
@@ -324,6 +421,15 @@ export async function recordPayment(
     .eq("org_id", orgId);
   if (error) throw new Error(error.message);
 
+  await supabase.from("payments").insert({
+    org_id: orgId,
+    contract_id: contractId,
+    amount,
+    kind: "PAYMENT",
+    method,
+    recorded_by: user.id,
+  });
+
   if (contract.status === "COMPLETED") {
     const { data: client } = await supabase
       .from("clients")
@@ -340,7 +446,10 @@ export async function recordPayment(
   }
 }
 
-/** Cancel a draft that never went out. */
+/**
+ * Cancel a draft that never went out — deleted outright (logs/extensions
+ * cascade), so cancelled clutter never piles up in the list.
+ */
 export async function cancelContract(orgId: string, contractId: string): Promise<void> {
   const { supabase } = await assertMember(orgId);
   const { data: contract } = await supabase
@@ -350,13 +459,79 @@ export async function cancelContract(orgId: string, contractId: string): Promise
     .eq("org_id", orgId)
     .maybeSingle();
   if (!contract) throw new Error("Contract not found.");
-  if (contract.status !== "DRAFT") throw new Error("Only drafts can be cancelled.");
+  if (contract.status !== "DRAFT" && contract.status !== "CANCELLED") {
+    throw new Error("Only drafts (or already-cancelled rentals) can be deleted.");
+  }
 
   const { error } = await supabase
     .from("contracts")
-    .update({ status: "CANCELLED" })
+    .delete()
     .eq("id", contractId)
     .eq("org_id", orgId);
+  if (error) throw new Error(error.message);
+}
+
+export interface TripReport {
+  id: string;
+  car_condition: string;
+  client_rating: number | null;
+  performance: string | null;
+  damages: string | null;
+  damage_plan: string | null;
+  created_at: string;
+}
+
+/** The trip report for a completed contract (null if not filled yet). */
+export async function getTripReport(
+  orgId: string,
+  contractId: string
+): Promise<TripReport | null> {
+  const { supabase } = await assertMember(orgId);
+  const { data } = await supabase
+    .from("trip_reports")
+    .select("id, car_condition, client_rating, performance, damages, damage_plan, created_at")
+    .eq("org_id", orgId)
+    .eq("contract_id", contractId)
+    .maybeSingle();
+  return (data as TripReport | null) ?? null;
+}
+
+/** Create or update the trip report for a completed contract (staff/admin). */
+export async function saveTripReport(
+  orgId: string,
+  contractId: string,
+  input: TripReportInput
+): Promise<void> {
+  const { supabase, user } = await assertMember(orgId);
+
+  const parsed = tripReportSchema.safeParse(input);
+  if (!parsed.success) throw new Error(firstIssue(parsed.error));
+  const v = parsed.data;
+
+  const { data: contract } = await supabase
+    .from("contracts")
+    .select("status")
+    .eq("id", contractId)
+    .eq("org_id", orgId)
+    .maybeSingle();
+  if (!contract) throw new Error("Contract not found.");
+  if (contract.status !== "COMPLETED") {
+    throw new Error("Trip reports are filled once the trip is completed.");
+  }
+
+  const { error } = await supabase.from("trip_reports").upsert(
+    {
+      org_id: orgId,
+      contract_id: contractId,
+      car_condition: v.carCondition,
+      client_rating: Number(v.clientRating),
+      performance: v.performance || null,
+      damages: v.damages || null,
+      damage_plan: v.damagePlan || null,
+      filled_by: user.id,
+    },
+    { onConflict: "contract_id" }
+  );
   if (error) throw new Error(error.message);
 }
 

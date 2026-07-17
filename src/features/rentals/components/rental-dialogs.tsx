@@ -17,6 +17,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { useIsAdmin } from "@/lib/store/workspace-store";
 import {
   FUEL_LEVELS,
   FUEL_LABELS,
@@ -89,16 +90,21 @@ export function CheckoutDialog({
   contract,
   open,
   onOpenChange,
+  onDone,
 }: {
   orgId: string;
   contract: ContractRow;
   open: boolean;
   onOpenChange: (o: boolean) => void;
+  onDone?: () => void;
 }) {
   const [mileage, setMileage] = useState("");
   const [fuel, setFuel] = useState<FuelLevel>("FULL");
   const [signature, setSignature] = useState("");
-  const { isLoading, run } = useAction(() => onOpenChange(false));
+  const { isLoading, run } = useAction(() => {
+    onOpenChange(false);
+    onDone?.();
+  });
 
   const clientName = contract.clients?.full_name ?? "";
   const signatureOk =
@@ -281,17 +287,25 @@ export function CheckinDialog({
 export function ExtendDialog({
   orgId,
   contract,
+  balance,
   open,
   onOpenChange,
 }: {
   orgId: string;
   contract: ContractRow;
+  balance: number;
   open: boolean;
   onOpenChange: (o: boolean) => void;
 }) {
+  const isAdmin = useIsAdmin();
+  const halfBalance = Math.ceil(Math.max(0, balance) / 2);
   const [extraDays, setExtraDays] = useState("1");
+  const [requiredPayment, setRequiredPayment] = useState(String(halfBalance));
+  const [amountPaid, setAmountPaid] = useState("");
   const { isLoading, run } = useAction(() => onOpenChange(false));
   const extraCost = (Number(extraDays) || 0) * Number(contract.rate_per_day);
+  const required = isAdmin ? Number(requiredPayment) || 0 : halfBalance;
+  const paidEnough = (Number(amountPaid) || 0) >= required;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -299,36 +313,77 @@ export function ExtendDialog({
         <DialogHeader>
           <DialogTitle>Extend rental</DialogTitle>
           <DialogDescription>
-            Adds days at the contract rate (KES {Number(contract.rate_per_day).toLocaleString()}
-            /day) and pushes the return deadline out.
+            Outstanding balance: KES {Math.max(0, balance).toLocaleString()}. The client must pay{" "}
+            {isAdmin ? "the required amount" : "half of it"} before an extension is authorized.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col gap-1.5 py-2">
-          <Label htmlFor="extraDays">Extra days</Label>
-          <Input
-            id="extraDays"
-            type="number"
-            min={1}
-            inputMode="numeric"
-            value={extraDays}
-            onChange={(e) => setExtraDays(e.target.value)}
-            disabled={isLoading}
-          />
-          <p className="text-xs text-muted-foreground">
-            Adds KES {extraCost.toLocaleString()} to the total.
-          </p>
+        <div className="flex flex-col gap-4 py-2">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="extraDays">Extra days</Label>
+            <Input
+              id="extraDays"
+              type="number"
+              min={1}
+              inputMode="numeric"
+              value={extraDays}
+              onChange={(e) => setExtraDays(e.target.value)}
+              disabled={isLoading}
+            />
+            <p className="text-xs text-muted-foreground">
+              Adds KES {extraCost.toLocaleString()} at the contract rate (KES{" "}
+              {Number(contract.rate_per_day).toLocaleString()}/day).
+            </p>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="extRequired">Required payment (KES)</Label>
+            <Input
+              id="extRequired"
+              type="number"
+              min={0}
+              inputMode="numeric"
+              value={isAdmin ? requiredPayment : String(halfBalance)}
+              onChange={(e) => setRequiredPayment(e.target.value)}
+              disabled={isLoading || !isAdmin}
+            />
+            <p className="text-xs text-muted-foreground">
+              {isAdmin
+                ? "Defaults to half the balance — you can adjust it."
+                : "Half the outstanding balance. Only an admin can change this."}
+            </p>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="extPaid">Amount paid now (KES)</Label>
+            <Input
+              id="extPaid"
+              type="number"
+              min={0}
+              inputMode="numeric"
+              value={amountPaid}
+              onChange={(e) => setAmountPaid(e.target.value)}
+              placeholder={String(required)}
+              disabled={isLoading}
+            />
+          </div>
         </div>
 
         <DialogFooter>
           <Button
-            disabled={isLoading}
+            disabled={isLoading || !paidEnough}
             onClick={() =>
-              run(() => extendContract(orgId, contract.id, { extraDays }), "Rental extended")
+              run(
+                () =>
+                  extendContract(orgId, contract.id, {
+                    extraDays,
+                    amountPaid,
+                    requiredPayment: isAdmin ? requiredPayment : "",
+                  }),
+                "Extension authorized"
+              )
             }
           >
             {isLoading && <Loader2 className="size-4 animate-spin" />}
-            Extend
+            Authorize extension
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -351,6 +406,7 @@ export function PaymentDialog({
   onOpenChange: (o: boolean) => void;
 }) {
   const [amount, setAmount] = useState("");
+  const [method, setMethod] = useState("CASH");
   const { isLoading, run } = useAction(() => onOpenChange(false));
 
   return (
@@ -359,30 +415,53 @@ export function PaymentDialog({
         <DialogHeader>
           <DialogTitle>Record payment</DialogTitle>
           <DialogDescription>
-            Outstanding balance: KES {Math.max(0, balance).toLocaleString()}. Payments are
-            entered manually for MVP (M-Pesa integration later).
+            Outstanding balance: KES {Math.max(0, balance).toLocaleString()}. Entered by staff
+            when the client pays.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col gap-1.5 py-2">
-          <Label htmlFor="payAmount">Amount received (KES)</Label>
-          <Input
-            id="payAmount"
-            type="number"
-            min={1}
-            inputMode="numeric"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder={balance > 0 ? String(balance) : "0"}
-            disabled={isLoading}
-          />
+        <div className="flex flex-col gap-4 py-2">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="payAmount">Amount received (KES)</Label>
+            <Input
+              id="payAmount"
+              type="number"
+              min={1}
+              inputMode="numeric"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder={balance > 0 ? String(balance) : "0"}
+              disabled={isLoading}
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label>Paid via</Label>
+            <div className="flex gap-1.5">
+              {(["CASH", "MPESA", "BANK", "OTHER"] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  disabled={isLoading}
+                  onClick={() => setMethod(m)}
+                  className={cn(
+                    "h-8 flex-1 rounded-md border text-xs font-medium transition-colors",
+                    method === m
+                      ? "border-foreground bg-foreground text-background"
+                      : "border-input text-muted-foreground hover:border-foreground/40"
+                  )}
+                >
+                  {m === "MPESA" ? "M-Pesa" : m.charAt(0) + m.slice(1).toLowerCase()}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         <DialogFooter>
           <Button
             disabled={isLoading || !amount}
             onClick={() =>
-              run(() => recordPayment(orgId, contract.id, { amount }), "Payment recorded")
+              run(() => recordPayment(orgId, contract.id, { amount, method }), "Payment recorded")
             }
           >
             {isLoading && <Loader2 className="size-4 animate-spin" />}

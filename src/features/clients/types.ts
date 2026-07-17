@@ -1,24 +1,28 @@
+import type { NextOfKin } from "@/lib/validation/client";
+
 export interface ClientRow {
   id: string;
   full_name: string;
   national_id: string | null;
-  kra_pin: string | null;
+  dl_number: string | null;
   phone: string | null;
   secondary_phone: string | null;
   email: string | null;
   address: string | null;
   next_of_kin_name: string | null;
   next_of_kin_phone: string | null;
+  next_of_kins: NextOfKin[] | null;
   id_front_url: string | null;
   id_back_url: string | null;
   notes: string | null;
   debt_owed: number;
   is_blocked: boolean;
+  created_by: string | null;
   created_at: string;
 }
 
 export const CLIENT_COLUMNS =
-  "id, full_name, national_id, kra_pin, phone, secondary_phone, email, address, next_of_kin_name, next_of_kin_phone, id_front_url, id_back_url, notes, debt_owed, is_blocked, created_at";
+  "id, full_name, national_id, dl_number, phone, secondary_phone, email, address, next_of_kin_name, next_of_kin_phone, next_of_kins, id_front_url, id_back_url, notes, debt_owed, is_blocked, created_by, created_at";
 
 /** Contract slice shown in a client's rental history tab. */
 export interface ClientContract {

@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { assertUnderLimit } from "@/lib/limits";
-import { carSchema, toInt, toMoney, type CarInput } from "@/lib/validation/car";
+import { carSchema, normalizePlate, toInt, toMoney, type CarInput } from "@/lib/validation/car";
 
 /** Throw unless the caller is an active admin of `orgId`. Returns the client. */
 async function assertAdmin(orgId: string) {
@@ -27,7 +27,7 @@ async function assertAdmin(orgId: string) {
 
 function toRow(v: CarInput) {
   return {
-    reg_number: v.regNumber.toUpperCase(),
+    reg_number: normalizePlate(v.regNumber),
     make: v.make,
     model: v.model,
     year: toInt(v.year),
@@ -42,8 +42,10 @@ function toRow(v: CarInput) {
     engine: v.engine || null,
     mileage: toInt(v.mileage),
     rate_per_day: toMoney(v.ratePerDay),
+    deposit: toMoney(v.deposit),
     image_url: v.imageUrl || null,
     owner_name: v.ownerName || null,
+    owner_phone: v.ownerPhone || null,
     num_owners: toInt(v.numOwners),
     insurance_expiry: v.insuranceExpiry || null,
     inspection_status: v.inspectionStatus || null,

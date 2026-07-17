@@ -14,11 +14,17 @@ const moneyField = z
   .optional()
   .default("");
 
-export const orgSettingsSchema = z
+/** Workspace → General: identity fields. */
+export const orgGeneralSchema = z.object({
+  name: z.string().trim().min(2, "Enter the business name").max(80),
+  phone: z.string().trim().max(30).optional().default(""),
+  county: z.string().trim().max(60).optional().default(""),
+});
+export type OrgGeneralInput = z.infer<typeof orgGeneralSchema>;
+
+/** Workspace → Operations: curfew + rate guardrails. */
+export const orgOperationsSchema = z
   .object({
-    name: z.string().trim().min(2, "Enter the business name").max(80),
-    phone: z.string().trim().max(30).optional().default(""),
-    county: z.string().trim().max(60).optional().default(""),
     curfewStart: timeField,
     curfewEnd: timeField,
     rateFloor: moneyField,
@@ -40,5 +46,4 @@ export const orgSettingsSchema = z
       });
     }
   });
-
-export type OrgSettingsInput = z.infer<typeof orgSettingsSchema>;
+export type OrgOperationsInput = z.infer<typeof orgOperationsSchema>;

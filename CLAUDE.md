@@ -175,6 +175,64 @@ Phase 7 — Polish, Responsive, Scale-readiness  [DONE for MVP]
 
 
 
+Phase 8 — Post-MVP fixes + features (July 2026)
+
+ [x] ROOT-CAUSE FIX: 0005_cars_recreate dropped cars and with it every FK
+     pointing at it — contracts.car_id / complaints.car_id had no FK, so every
+     PostgREST embed of cars(...) errored and Rentals/Complaints/Home/Finance
+     rendered empty. Migration 0007_restore_car_fks restores both (APPLIED to
+     live DB via pooler aws-1-eu-west-2). Lesson: recreating a table must
+     re-add inbound FKs.
+ [x] Finance CRUD: expenses table (migration 0008, APPLIED live) — category
+     enum, optional car link, staff insert/update + admin-only delete RLS.
+     features/financials/{actions.ts,components/expenses-section.tsx}; tiles
+     now include Expenses/Net this month; CSV export.
+ [x] Home: MoneyStats row (revenue month, outstanding, debt, utilization %) +
+     RecentActivity feed (checkout/checkin logs) beside OngoingRentals.
+ [x] Calendar: internal month grid from contracts (START/RETURN/OVERDUE chips,
+     day detail list) — features/calendar/components/rental-calendar.tsx.
+     Google Calendar sync deliberately deferred.
+ [x] Settings restructured into nested routes with a secondary sidebar
+     (settings/layout.tsx + settings-nav): Workspace (admin-only) general /
+     operations / billing (usage vs FREE_LIMITS), My settings profile
+     (name/email/password + global sign-out) / appearance. Old combined
+     settings-form.tsx deleted; orgSettingsSchema split into
+     orgGeneralSchema + orgOperationsSchema. next-themes now drives dark/light
+     (defaultTheme dark) — don't hardcode the class on <html>.
+
+
+Phase 9 — Business rules hardening (July 2026)  [DONE]
+
+ Migrations 0009 + 0010 (both APPLIED live): cars.deposit + cars.owner_phone,
+ contracts.deposit_amount, contract_extensions table, trip_reports table
+ (car_return_condition enum), clients.dl_number / next_of_kins jsonb / created_by.
+ [x] Cars: admin-set pickup deposit, owner name+phone, Kenyan plate validation
+     (KLL NNNL / GK / KG-KC-KT / Z trailers / diplomatic) + normalizePlate;
+     duplicate plates rejected (unique index + normalized compare).
+ [x] Wizard: deposit replaces "paid now" (prefilled from car, staff can't change
+     an admin-set deposit), rate prefills from car, routes are From→To leg pairs
+     (add up to 5) composed into routing text. One open (DRAFT/ACTIVE) rental
+     per client enforced at create AND checkout. Checkout closes the sheet.
+ [x] Extensions: gate — client must pay ≥ half the outstanding balance (admin can
+     adjust the required amount); logged in contract_extensions; ACTIVE contracts
+     with extensions display as EXTENDED (computed, like OVERDUE).
+ [x] Trip reports on COMPLETED rentals: return condition, 1–5 client rating,
+     performance, damages + damage plan; checkin log shows km distance covered.
+ [x] Clients KYC: phones normalized to +254 7/1 ######## (primary ≠ secondary),
+     ID accepts old 8-digit / 14-digit Maisha UPI / alien card, Smart DL number
+     replaces KRA PIN in UI (kra_pin column kept), multiple next of kin (jsonb),
+     returning-client duplicate check (ID or phone), created_by recorded and
+     shown, active-rental balance shown on the client sheet.
+ [x] Printable agreement at /print/[orgId]/contracts/[contractId] (own light
+     layout, window.print → PDF): parties, vehicle, terms, extensions table,
+     penalties clauses, ID photos, signature + fingerprint + staff boxes.
+     Linked from the contract details sheet ("Contract PDF").
+ [x] Home: shadcn charts (ui/chart.tsx) — revenue-vs-expenses bar (6 months) +
+     fleet-utilization radial.
+ NOTE: Settings UI (layout banner, nav styling, theme-picker with SVG previews)
+ was hand-styled by the owner — do not restyle those files.
+
+
 Notes on things intentionally deferred past MVP1
 
 
