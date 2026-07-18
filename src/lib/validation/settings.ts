@@ -29,6 +29,7 @@ export const orgOperationsSchema = z
     curfewEnd: timeField,
     rateFloor: moneyField,
     rateCeiling: moneyField,
+    refuelPenalty: moneyField,
   })
   .superRefine((v, ctx) => {
     if ((v.curfewStart && !v.curfewEnd) || (!v.curfewStart && v.curfewEnd)) {

@@ -11,10 +11,13 @@ export const metadata = { title: "Complaints · CarHire" };
 
 export default async function ComplaintsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ orgId: string }>;
+  searchParams: Promise<{ new?: string }>;
 }) {
   const { orgId } = await params;
+  const { new: newParam } = await searchParams;
   const supabase = await createClient();
 
   const [complaintsRes, contractsRes, carsRes, staffNames] = await Promise.all([
@@ -77,6 +80,7 @@ export default async function ComplaintsPage({
         contractPicks={contractPicks}
         carPicks={carPicks}
         staffNames={staffNames}
+        openFormOnLoad={!!newParam}
       />
     </div>
   );

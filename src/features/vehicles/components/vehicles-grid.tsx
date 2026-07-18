@@ -36,11 +36,13 @@ export function VehiclesGrid({
   isAdmin,
   cars,
   staffNames,
+  openFormOnLoad = false,
 }: {
   orgId: string;
   isAdmin: boolean;
   cars: Vehicle[];
   staffNames?: Record<string, string>;
+  openFormOnLoad?: boolean;
 }) {
   const router = useRouter();
   const [search, setSearch] = useState("");
@@ -49,7 +51,7 @@ export function VehiclesGrid({
 
   const [detailsTarget, setDetailsTarget] = useState<Vehicle | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
-  const [formOpen, setFormOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(openFormOnLoad);
   const [editing, setEditing] = useState<Vehicle | null>(null);
   const [filterOpen, setFilterOpen] = useState(false);
   const [decommissionTarget, setDecommissionTarget] = useState<Vehicle | null>(null);

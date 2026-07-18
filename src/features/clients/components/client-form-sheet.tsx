@@ -70,6 +70,9 @@ export function ClientFormSheet({
   const [kins, setKins] = useState<NextOfKin[]>(() => initialKins(editing));
   const [idFront, setIdFront] = useState<File | null>(null);
   const [idBack, setIdBack] = useState<File | null>(null);
+  const [dlFront, setDlFront] = useState<File | null>(null);
+  const [dlBack, setDlBack] = useState<File | null>(null);
+  const [passport, setPassport] = useState<File | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
 
@@ -82,6 +85,9 @@ export function ClientFormSheet({
       setKins(initialKins(editing));
       setIdFront(null);
       setIdBack(null);
+      setDlFront(null);
+      setDlBack(null);
+      setPassport(null);
       setErrors({});
     }
   }
@@ -138,6 +144,9 @@ export function ClientFormSheet({
       fd.set("nextOfKins", JSON.stringify(kins));
       if (idFront) fd.set("idFront", idFront);
       if (idBack) fd.set("idBack", idBack);
+      if (dlFront) fd.set("dlFront", dlFront);
+      if (dlBack) fd.set("dlBack", dlBack);
+      if (passport) fd.set("passport", passport);
 
       const res = editing
         ? await updateClientRecord(orgId, editing.id, fd)
@@ -263,6 +272,42 @@ export function ClientFormSheet({
             {editing?.id_back_url && !idBack && (
               <span className="text-xs text-zinc-600">Already uploaded — pick a file to replace.</span>
             )}
+          </div>
+        </div>
+
+        {/* Optional documents — DL + passport */}
+        <div className="flex flex-col gap-3 border-t border-zinc-800 pt-4">
+          <div>
+            <Label>Optional documents</Label>
+            <p className="text-xs text-zinc-600">
+              Driving licence and passport — good to have for self-drive hires.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className={inputWrap}>
+              <Label htmlFor="cDlFront">DL — front</Label>
+              <input id="cDlFront" type="file" accept="image/*" disabled={isLoading} onChange={(e) => pickFile(e, setDlFront, "dlFront")} className={fileInputClass} />
+              {errors.dlFront && <span className="text-xs text-red-400">{errors.dlFront}</span>}
+              {editing?.dl_front_url && !dlFront && (
+                <span className="text-xs text-zinc-600">Already uploaded — pick a file to replace.</span>
+              )}
+            </div>
+            <div className={inputWrap}>
+              <Label htmlFor="cDlBack">DL — back</Label>
+              <input id="cDlBack" type="file" accept="image/*" disabled={isLoading} onChange={(e) => pickFile(e, setDlBack, "dlBack")} className={fileInputClass} />
+              {errors.dlBack && <span className="text-xs text-red-400">{errors.dlBack}</span>}
+              {editing?.dl_back_url && !dlBack && (
+                <span className="text-xs text-zinc-600">Already uploaded — pick a file to replace.</span>
+              )}
+            </div>
+            <div className={`${inputWrap} col-span-2`}>
+              <Label htmlFor="cPassport">Passport</Label>
+              <input id="cPassport" type="file" accept="image/*" disabled={isLoading} onChange={(e) => pickFile(e, setPassport, "passport")} className={fileInputClass} />
+              {errors.passport && <span className="text-xs text-red-400">{errors.passport}</span>}
+              {editing?.passport_url && !passport && (
+                <span className="text-xs text-zinc-600">Already uploaded — pick a file to replace.</span>
+              )}
+            </div>
           </div>
         </div>
 

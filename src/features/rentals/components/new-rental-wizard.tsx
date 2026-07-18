@@ -39,6 +39,7 @@ export interface OrgRules {
   curfew_end: string | null;
   rate_floor: number | null;
   rate_ceiling: number | null;
+  refuel_penalty_per_level: number | null;
 }
 
 const STEPS = ["Client", "Vehicle", "Driver", "Terms", "Review"] as const;

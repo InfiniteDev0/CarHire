@@ -224,6 +224,7 @@ export function RentalsView({
         open={detailsOpen}
         onOpenChange={setDetailsOpen}
         staffNames={staffNames}
+        penaltyPerStep={Number(rules.refuel_penalty_per_level ?? 1500)}
       />
     </div>
   );

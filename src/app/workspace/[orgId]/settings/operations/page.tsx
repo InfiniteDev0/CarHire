@@ -18,7 +18,7 @@ export default async function OperationsSettingsPage({
   const supabase = await createClient();
   const { data: org } = await supabase
     .from("organizations")
-    .select("curfew_start, curfew_end, rate_floor, rate_ceiling")
+    .select("curfew_start, curfew_end, rate_floor, rate_ceiling, refuel_penalty_per_level")
     .eq("id", orgId)
     .maybeSingle();
 
@@ -29,6 +29,8 @@ export default async function OperationsSettingsPage({
     curfewEnd: t(org?.curfew_end ?? null),
     rateFloor: org?.rate_floor != null ? String(org.rate_floor) : "",
     rateCeiling: org?.rate_ceiling != null ? String(org.rate_ceiling) : "",
+    refuelPenalty:
+      org?.refuel_penalty_per_level != null ? String(org.refuel_penalty_per_level) : "1500",
   };
 
   return (

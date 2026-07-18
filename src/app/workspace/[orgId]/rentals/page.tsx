@@ -37,7 +37,7 @@ export default async function RentalsPage({
       .order("reg_number"),
     supabase
       .from("organizations")
-      .select("curfew_start, curfew_end, rate_floor, rate_ceiling")
+      .select("curfew_start, curfew_end, rate_floor, rate_ceiling, refuel_penalty_per_level")
       .eq("id", orgId)
       .maybeSingle(),
     getStaffNames(supabase, orgId),
@@ -51,6 +51,7 @@ export default async function RentalsPage({
     curfew_end: orgRes.data?.curfew_end ?? null,
     rate_floor: orgRes.data?.rate_floor ?? null,
     rate_ceiling: orgRes.data?.rate_ceiling ?? null,
+    refuel_penalty_per_level: orgRes.data?.refuel_penalty_per_level ?? null,
   };
 
   // ?new=1 opens the wizard; ?new=<carId> opens it with that car preselected.

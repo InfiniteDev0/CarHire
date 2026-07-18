@@ -53,7 +53,13 @@ export function ClientDetailsSheet({
   client: ClientRow | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  photos: { front: string | null; back: string | null } | null;
+  photos: {
+    front: string | null;
+    back: string | null;
+    dlFront: string | null;
+    dlBack: string | null;
+    passport: string | null;
+  } | null;
   contracts: ClientContract[] | null; // null = still loading
   onEdit: (c: ClientRow) => void;
   staffNames?: Record<string, string>;
@@ -204,7 +210,7 @@ export function ClientDetailsSheet({
               )}
             </div>
 
-            {/* ID photos */}
+            {/* Documents */}
             <div>
               <p className="mb-2 text-xs font-medium uppercase tracking-wide text-zinc-500">
                 ID document
@@ -227,6 +233,46 @@ export function ClientDetailsSheet({
                   </div>
                 ))}
               </div>
+
+              {(photos?.dlFront || photos?.dlBack) && (
+                <>
+                  <p className="mb-2 mt-4 text-xs font-medium uppercase tracking-wide text-zinc-500">
+                    Driving licence
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {([["dlFront", "front"], ["dlBack", "back"]] as const).map(([key, label]) => (
+                      <div key={key}>
+                        {photos?.[key] ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={photos[key]!}
+                            alt={`DL ${label}`}
+                            className="aspect-[3/2] w-full rounded-md border border-zinc-800 object-cover"
+                          />
+                        ) : (
+                          <div className="flex aspect-[3/2] items-center justify-center rounded-md border border-dashed border-zinc-800 text-xs text-zinc-600 capitalize">
+                            {label}: not uploaded
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {photos?.passport && (
+                <>
+                  <p className="mb-2 mt-4 text-xs font-medium uppercase tracking-wide text-zinc-500">
+                    Passport
+                  </p>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={photos.passport}
+                    alt="Passport"
+                    className="aspect-[3/2] w-full rounded-md border border-zinc-800 object-cover"
+                  />
+                </>
+              )}
             </div>
 
             {client.notes && (

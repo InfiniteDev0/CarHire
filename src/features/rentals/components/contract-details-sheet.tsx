@@ -72,6 +72,7 @@ export function ContractDetailsSheet({
   open,
   onOpenChange,
   staffNames,
+  penaltyPerStep,
 }: {
   orgId: string;
   contract: ContractRow | null;
@@ -79,6 +80,7 @@ export function ContractDetailsSheet({
   open: boolean;
   onOpenChange: (o: boolean) => void;
   staffNames?: Record<string, string>;
+  penaltyPerStep?: number;
 }) {
   const router = useRouter();
   const [checkoutOpen, setCheckoutOpen] = useState(false);
@@ -317,8 +319,10 @@ export function ContractDetailsSheet({
         orgId={orgId}
         contract={contract}
         checkout={logs?.checkout ?? null}
+        penaltyPerStep={penaltyPerStep}
         open={checkinOpen}
         onOpenChange={setCheckinOpen}
+        onDone={() => onOpenChange(false)}
       />
       <ExtendDialog
         orgId={orgId}

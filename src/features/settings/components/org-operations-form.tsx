@@ -16,6 +16,7 @@ export interface OrgOperations {
   curfewEnd: string;
   rateFloor: string;
   rateCeiling: string;
+  refuelPenalty: string;
 }
 
 export function OrgOperationsForm({
@@ -129,6 +130,28 @@ export function OrgOperationsForm({
             {errors.rateCeiling && (
               <p className="text-xs text-destructive">{errors.rateCeiling}</p>
             )}
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h2 className="text-sm font-medium">Refuel penalty (KES)</h2>
+        <p className="mb-3 text-xs text-muted-foreground">
+          Charged per missing fuel-gauge step at check-in — staff see this as the
+          suggested penalty and can adjust per return.
+        </p>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="refuelPenalty">Per gauge step</Label>
+            <Input
+              id="refuelPenalty"
+              type="number"
+              min={0}
+              value={form.refuelPenalty}
+              onChange={(e) => set("refuelPenalty", e.target.value)}
+              placeholder="1500"
+              disabled={isLoading}
+            />
           </div>
         </div>
       </div>

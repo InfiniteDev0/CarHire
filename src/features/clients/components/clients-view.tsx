@@ -14,7 +14,7 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
-import { getClientPhotoUrls, getClientContracts } from "../actions";
+import { getClientPhotoUrls, getClientContracts, type ClientDocUrls } from "../actions";
 import type { ClientRow, ClientContract } from "../types";
 import { ClientFormSheet } from "./client-form-sheet";
 import { ClientDetailsSheet } from "./client-details-sheet";
@@ -25,17 +25,19 @@ export function ClientsView({
   orgId,
   clients,
   staffNames,
+  openAddOnLoad = false,
 }: {
   orgId: string;
   clients: ClientRow[];
   staffNames: Record<string, string>;
+  openAddOnLoad?: boolean;
 }) {
   const [search, setSearch] = useState("");
-  const [formOpen, setFormOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(openAddOnLoad);
   const [editing, setEditing] = useState<ClientRow | null>(null);
   const [detailsTarget, setDetailsTarget] = useState<ClientRow | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
-  const [photos, setPhotos] = useState<{ front: string | null; back: string | null } | null>(null);
+  const [photos, setPhotos] = useState<ClientDocUrls | null>(null);
   const [contracts, setContracts] = useState<ClientContract[] | null>(null);
 
   const filtered = useMemo(() => {
@@ -54,7 +56,11 @@ export function ClientsView({
     setContracts(null);
     setDetailsOpen(true);
     // Lazy-load photos + history once the sheet is opening (event handler, not effect).
-    getClientPhotoUrls(orgId, c.id).then(setPhotos).catch(() => setPhotos({ front: null, back: null }));
+    getClientPhotoUrls(orgId, c.id)
+      .then(setPhotos)
+      .catch(() =>
+        setPhotos({ front: null, back: null, dlFront: null, dlBack: null, passport: null })
+      );
     getClientContracts(orgId, c.id).then(setContracts).catch(() => setContracts([]));
   }
   function openAdd() {

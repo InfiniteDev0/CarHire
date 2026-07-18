@@ -1,6 +1,7 @@
 import { Outfit } from "next/font/google";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "next-themes";
+import { PwaRegister } from "@/components/pwa-register";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -11,8 +12,19 @@ const outfit = Outfit({
 
 
 export const metadata = {
-  title: "CarHire",
-  description: "Manage your cars and clients",
+  title: "Lenzro CarHire",
+  description: "Fleet, clients and contracts — one workspace per business.",
+  applicationName: "Lenzro CarHire",
+  icons: { icon: "/logo.png", apple: "/logo.png" },
+  appleWebApp: {
+    capable: true,
+    title: "Lenzro CarHire",
+    statusBarStyle: "black-translucent",
+  },
+};
+
+export const viewport = {
+  themeColor: "#000000",
 };
 
 export default function RootLayout({ children }) {
@@ -23,6 +35,7 @@ export default function RootLayout({ children }) {
       className={`${outfit.variable}  h-full antialiased light`}
     >
       <body className="min-h-full flex flex-col">
+        <PwaRegister />
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           {children}
         </ThemeProvider>

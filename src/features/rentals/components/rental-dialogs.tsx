@@ -14,6 +14,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -178,108 +188,168 @@ export function CheckinDialog({
   orgId,
   contract,
   checkout,
+  penaltyPerStep = REFUEL_PENALTY_PER_LEVEL,
   open,
   onOpenChange,
+  onDone,
 }: {
   orgId: string;
   contract: ContractRow;
   checkout: CheckoutLog | null;
+  penaltyPerStep?: number;
   open: boolean;
   onOpenChange: (o: boolean) => void;
+  onDone?: () => void;
 }) {
   const [returnedBy, setReturnedBy] = useState(contract.clients?.full_name ?? "");
   const [mileage, setMileage] = useState("");
   const [fuel, setFuelState] = useState<FuelLevel>("FULL");
   const [penalty, setPenalty] = useState("0");
-  const { isLoading, run } = useAction(() => onOpenChange(false));
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const { isLoading, run } = useAction(() => {
+    onOpenChange(false);
+    onDone?.();
+  });
 
   const issueFuel = checkout?.fuel_at_issue ?? null;
+  const startKm = checkout?.mileage ?? null;
+  // Odometers only go forward — same or lower than checkout is a typo.
+  const mileageInvalid =
+    startKm != null && mileage !== "" && Number(mileage) <= Number(startKm);
 
   function pickFuel(f: FuelLevel) {
     setFuelState(f);
     if (issueFuel) {
       const short = Math.max(0, fuelIndex(issueFuel) - fuelIndex(f));
-      setPenalty(String(short * REFUEL_PENALTY_PER_LEVEL));
+      setPenalty(String(short * penaltyPerStep));
     }
   }
 
+  function doCheckin() {
+    setConfirmOpen(false);
+    run(
+      () =>
+        checkinContract(orgId, contract.id, {
+          returnedBy,
+          mileage,
+          fuel,
+          refuelPenalty: penalty,
+        }),
+      `${contract.cars?.reg_number ?? "Car"} has just checked in — contract completed`
+    );
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-sm">
-        <DialogHeader>
-          <DialogTitle>Check in {contract.cars?.reg_number}</DialogTitle>
-          <DialogDescription>
-            Car back at base — this completes the contract and frees the vehicle.
-            {issueFuel && <> Issued at fuel level {FUEL_LABELS[issueFuel]}.</>}
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Check in {contract.cars?.reg_number}</DialogTitle>
+            <DialogDescription>
+              Car back at base — this completes the contract and frees the vehicle.
+              {issueFuel && <> Issued at fuel level {FUEL_LABELS[issueFuel]}.</>}
+            </DialogDescription>
+          </DialogHeader>
 
-        <div className="flex flex-col gap-4 py-2">
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="ciReturnedBy">Returned by</Label>
-            <Input
-              id="ciReturnedBy"
-              value={returnedBy}
-              onChange={(e) => setReturnedBy(e.target.value)}
-              placeholder="Who brought the car back"
-              disabled={isLoading}
-            />
+          <div className="flex flex-col gap-4 py-2">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="ciReturnedBy">Returned by</Label>
+              <Input
+                id="ciReturnedBy"
+                value={returnedBy}
+                onChange={(e) => setReturnedBy(e.target.value)}
+                placeholder="Who brought the car back"
+                disabled={isLoading}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="ciMileage">Ending mileage (km)</Label>
+              {startKm != null && (
+                <p className="text-xs text-muted-foreground">
+                  Went out at{" "}
+                  <span className="font-medium text-foreground">
+                    {Number(startKm).toLocaleString()} km
+                  </span>{" "}
+                  — the return reading must be higher.
+                </p>
+              )}
+              <Input
+                id="ciMileage"
+                type="number"
+                inputMode="numeric"
+                min={startKm != null ? Number(startKm) + 1 : 0}
+                value={mileage}
+                onChange={(e) => setMileage(e.target.value)}
+                placeholder={startKm != null ? String(Number(startKm) + 100) : "46120"}
+                disabled={isLoading}
+                aria-invalid={mileageInvalid}
+              />
+              {mileageInvalid && (
+                <p className="text-xs text-destructive">
+                  Must be higher than {Number(startKm).toLocaleString()} km — the reading at
+                  checkout.
+                </p>
+              )}
+              {startKm != null && !mileageInvalid && mileage !== "" && (
+                <p className="text-xs text-muted-foreground">
+                  Distance covered: {(Number(mileage) - Number(startKm)).toLocaleString()} km
+                </p>
+              )}
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label>Fuel level on return</Label>
+              <FuelPicker value={fuel} onChange={pickFuel} disabled={isLoading} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="ciPenalty">Refuel penalty (KES)</Label>
+              <Input
+                id="ciPenalty"
+                type="number"
+                inputMode="numeric"
+                value={penalty}
+                onChange={(e) => setPenalty(e.target.value)}
+                disabled={isLoading}
+              />
+              <p className="text-xs text-muted-foreground">
+                Auto-suggested at KES {penaltyPerStep.toLocaleString()} per missing gauge
+                step (set by the admin in Settings → Operations). Penalties can&apos;t be
+                added after check-in, so record them now.
+              </p>
+            </div>
           </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="ciMileage">Ending mileage (km)</Label>
-            <Input
-              id="ciMileage"
-              type="number"
-              inputMode="numeric"
-              value={mileage}
-              onChange={(e) => setMileage(e.target.value)}
-              placeholder="46120"
-              disabled={isLoading}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label>Fuel level on return</Label>
-            <FuelPicker value={fuel} onChange={pickFuel} disabled={isLoading} />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="ciPenalty">Refuel penalty (KES)</Label>
-            <Input
-              id="ciPenalty"
-              type="number"
-              inputMode="numeric"
-              value={penalty}
-              onChange={(e) => setPenalty(e.target.value)}
-              disabled={isLoading}
-            />
-            <p className="text-xs text-muted-foreground">
-              Auto-suggested at KES {REFUEL_PENALTY_PER_LEVEL.toLocaleString()} per missing
-              gauge step — adjust if needed. Unpaid balances roll into client debt.
-            </p>
-          </div>
-        </div>
 
-        <DialogFooter>
-          <Button
-            disabled={isLoading}
-            onClick={() =>
-              run(
-                () =>
-                  checkinContract(orgId, contract.id, {
-                    returnedBy,
-                    mileage,
-                    fuel,
-                    refuelPenalty: penalty,
-                  }),
-                "Vehicle checked in — contract completed"
-              )
-            }
-          >
-            {isLoading && <Loader2 className="size-4 animate-spin" />}
-            Confirm check-in
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <DialogFooter>
+            <Button
+              disabled={isLoading || mileageInvalid}
+              onClick={() => setConfirmOpen(true)}
+            >
+              {isLoading && <Loader2 className="size-4 animate-spin" />}
+              {isLoading ? "Checking in car…" : "Complete check-in"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Final gate — after this, penalties and damage charges are locked. */}
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm check-in?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Please check the car&apos;s condition, fuel level, mileage and any penalties
+              before confirming. Once {contract.cars?.reg_number ?? "the car"} is checked
+              in, problems and penalties can no longer be recorded on this rental.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Go back and check</AlertDialogCancel>
+            <AlertDialogAction onClick={doCheckin}>
+              Everything is checked — complete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 

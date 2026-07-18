@@ -1,4 +1,13 @@
-/* CarHire push service worker — shows pushes and opens the app on click. */
+/* Lenzro CarHire service worker — push notifications + PWA installability. */
+
+// Minimal fetch handler so browsers treat the app as installable.
+// Network-first passthrough — the app itself stays fully dynamic.
+self.addEventListener("fetch", () => {});
+
+self.addEventListener("install", () => self.skipWaiting());
+self.addEventListener("activate", (event) => {
+  event.waitUntil(clients.claim());
+});
 
 self.addEventListener("push", (event) => {
   let payload = { title: "CarHire", body: "", url: "/" };

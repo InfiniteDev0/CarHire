@@ -122,7 +122,7 @@ export function FleetAvailability({
                           title={cell?.title}
                           className={cn(
                             "h-7 rounded-sm",
-                            cell ? cell.className : "bg-muted/40"
+                            cell ? cell.className : "bg-green-500/50"
                           )}
                         />
                       </td>
@@ -138,7 +138,7 @@ export function FleetAvailability({
       {/* Legend */}
       <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">
-          <span className="size-3 rounded-sm bg-muted/40 ring-1 ring-border" /> Free
+          <span className="size-3 rounded-sm bg-green-500/80 ring-1 ring-border" /> Free
         </span>
         <span className="flex items-center gap-1.5">
           <span className="size-3 rounded-sm bg-blue-500/70" /> On rent

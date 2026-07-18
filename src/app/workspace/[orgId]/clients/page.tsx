@@ -6,10 +6,13 @@ export const metadata = { title: "Clients · CarHire" };
 
 export default async function ClientsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ orgId: string }>;
+  searchParams: Promise<{ new?: string }>;
 }) {
   const { orgId } = await params;
+  const { new: newParam } = await searchParams;
   const supabase = await createClient();
 
   const [{ data: clients }, { data: members }] = await Promise.all([
@@ -37,7 +40,12 @@ export default async function ClientsPage({
         </p>
       </div>
 
-      <ClientsView orgId={orgId} clients={rows} staffNames={staffNames} />
+      <ClientsView
+        orgId={orgId}
+        clients={rows}
+        staffNames={staffNames}
+        openAddOnLoad={!!newParam}
+      />
     </div>
   );
 }

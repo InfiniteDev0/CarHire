@@ -8,10 +8,13 @@ export const metadata = { title: "Vehicles · CarHire" };
 
 export default async function VehiclesPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ orgId: string }>;
+  searchParams: Promise<{ new?: string }>;
 }) {
   const { orgId } = await params;
+  const { new: newParam } = await searchParams;
   const { membership } = await getMembership(orgId);
   const isAdmin = membership?.role === "admin" && membership.is_active === true;
 
@@ -37,7 +40,13 @@ export default async function VehiclesPage({
         </p>
       </div>
 
-      <VehiclesGrid orgId={orgId} isAdmin={isAdmin} cars={fleet} staffNames={staffNames} />
+      <VehiclesGrid
+        orgId={orgId}
+        isAdmin={isAdmin}
+        cars={fleet}
+        staffNames={staffNames}
+        openFormOnLoad={!!newParam && isAdmin}
+      />
     </div>
   );
 }

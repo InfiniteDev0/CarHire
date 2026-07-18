@@ -58,18 +58,20 @@ export function ComplaintsView({
   contractPicks,
   carPicks,
   staffNames,
+  openFormOnLoad = false,
 }: {
   orgId: string;
   complaints: ComplaintRow[];
   contractPicks: ComplaintContractPick[];
   carPicks: ComplaintCarPick[];
   staffNames?: Record<string, string>;
+  openFormOnLoad?: boolean;
 }) {
   const router = useRouter();
   const [filter, setFilter] = useState<"OPEN" | "RESOLVED" | "ALL">("OPEN");
   const [typeFilter, setTypeFilter] = useState<"ALL" | ComplaintType>("ALL");
   const [search, setSearch] = useState("");
-  const [formOpen, setFormOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(openFormOnLoad);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 

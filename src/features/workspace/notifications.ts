@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { sendPushToOrg } from "@/lib/push";
 import type { WorkspaceNotification } from "./notification-sheet";
 
 const kes = (n: number) => `KES ${Number(n).toLocaleString()}`;
@@ -7,6 +8,7 @@ const DAY = 86400_000;
 interface ContractSlice {
   id: string;
   contract_expiration: string | null;
+  overdue_notified_at: string | null;
   clients: { full_name: string; phone: string | null } | null;
   cars: { reg_number: string } | null;
 }
@@ -43,7 +45,7 @@ export async function getWorkspaceNotifications(
   const [activeRes, paymentsRes, complaintsRes, dismissedRes] = await Promise.all([
     supabase
       .from("contracts")
-      .select("id, contract_expiration, clients(full_name, phone), cars(reg_number)")
+      .select("id, contract_expiration, overdue_notified_at, clients(full_name, phone), cars(reg_number)")
       .eq("org_id", orgId)
       .eq("status", "ACTIVE")
       .not("contract_expiration", "is", null),
@@ -73,6 +75,7 @@ export async function getWorkspaceNotifications(
 
   const dismissed = new Set((dismissedRes.data ?? []).map((d) => d.key));
   const items: WorkspaceNotification[] = [];
+  const freshOverdue: ContractSlice[] = [];
 
   for (const c of (activeRes.data ?? []) as unknown as ContractSlice[]) {
     const due = new Date(c.contract_expiration!).getTime();
@@ -89,6 +92,7 @@ export async function getWorkspaceNotifications(
         phone: c.clients?.phone ?? null,
         clientName: c.clients?.full_name ?? null,
       });
+      if (!c.overdue_notified_at) freshOverdue.push(c);
     } else if (due - now <= DAY) {
       items.push({
         id: `due-${c.id}`,
@@ -125,6 +129,25 @@ export async function getWorkspaceNotifications(
       at: c.created_at,
       href: `/workspace/${orgId}/complaints`,
     });
+  }
+
+  // Newly-overdue rentals: push-alert the whole org exactly once per contract.
+  // Stamp first so concurrent page loads don't double-send.
+  for (const c of freshOverdue) {
+    const { data: stamped } = await supabase
+      .from("contracts")
+      .update({ overdue_notified_at: new Date().toISOString() })
+      .eq("id", c.id)
+      .eq("org_id", orgId)
+      .is("overdue_notified_at", null)
+      .select("id");
+    if (stamped && stamped.length > 0) {
+      await sendPushToOrg(orgId, {
+        title: `${c.cars?.reg_number ?? "A vehicle"} is OVERDUE`,
+        body: `${c.clients?.full_name ?? "Client"} has kept the car past the contract deadline — follow up.`,
+        url: `/workspace/${orgId}/rentals`,
+      });
+    }
   }
 
   // Overdue first, then newest first. Cap the feed.

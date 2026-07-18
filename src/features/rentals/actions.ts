@@ -269,6 +269,24 @@ export async function checkinContract(
     throw new Error("Only active contracts can be checked in.");
   }
 
+  // Odometers only go forward: the return reading must beat the checkout one.
+  if (v.mileage) {
+    const { data: outLog } = await supabase
+      .from("checkout_logs")
+      .select("mileage")
+      .eq("org_id", orgId)
+      .eq("contract_id", contractId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const startKm = outLog?.mileage;
+    if (startKm != null && Number(v.mileage) <= Number(startKm)) {
+      throw new Error(
+        `Return mileage must be higher than the checkout reading (${Number(startKm).toLocaleString()} km).`
+      );
+    }
+  }
+
   const penalty = v.refuelPenalty ? Number(v.refuelPenalty) : 0;
 
   const { error: logErr } = await supabase.from("checkin_logs").insert({

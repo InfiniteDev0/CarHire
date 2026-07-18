@@ -80,25 +80,30 @@ async function uploadClientPhotos(
   clientId: string,
   formData: FormData
 ): Promise<{ updates: Record<string, string>; warning?: string }> {
-  const idFront = formFile(formData, "idFront");
-  const idBack = formFile(formData, "idBack");
+  // National ID is the core document; DL front/back and passport are optional.
+  const files: { field: string; column: string; name: string }[] = [
+    { field: "idFront", column: "id_front_url", name: "front" },
+    { field: "idBack", column: "id_back_url", name: "back" },
+    { field: "dlFront", column: "dl_front_url", name: "dl-front" },
+    { field: "dlBack", column: "dl_back_url", name: "dl-back" },
+    { field: "passport", column: "passport_url", name: "passport" },
+  ];
   const updates: Record<string, string> = {};
-  if (!idFront && !idBack) return { updates };
+  const picked = files.filter((f) => formFile(formData, f.field));
+  if (picked.length === 0) return { updates };
 
   try {
     const admin = createAdminClient();
     const dir = `${orgId}/${clientId}`;
-    if (idFront) {
-      updates.id_front_url = await uploadPhoto(admin, "client-docs", dir, "front", idFront);
-    }
-    if (idBack) {
-      updates.id_back_url = await uploadPhoto(admin, "client-docs", dir, "back", idBack);
+    for (const f of picked) {
+      const file = formFile(formData, f.field)!;
+      updates[f.column] = await uploadPhoto(admin, "client-docs", dir, f.name, file);
     }
     return { updates };
   } catch (e) {
     return {
       updates,
-      warning: e instanceof Error ? e.message : "ID photo upload failed.",
+      warning: e instanceof Error ? e.message : "Document upload failed.",
     };
   }
 }
@@ -195,23 +200,34 @@ export async function setClientBlocked(
   if (error) throw new Error(error.message);
 }
 
-/** Signed URLs for a client's ID photos (member-read storage policy). */
+export interface ClientDocUrls {
+  front: string | null;
+  back: string | null;
+  dlFront: string | null;
+  dlBack: string | null;
+  passport: string | null;
+}
+
+/** Signed URLs for a client's documents (member-read storage policy). */
 export async function getClientPhotoUrls(
   orgId: string,
   clientId: string
-): Promise<{ front: string | null; back: string | null }> {
+): Promise<ClientDocUrls> {
   const { supabase } = await assertMember(orgId);
   const { data } = await supabase
     .from("clients")
-    .select("id_front_url, id_back_url")
+    .select("id_front_url, id_back_url, dl_front_url, dl_back_url, passport_url")
     .eq("id", clientId)
     .eq("org_id", orgId)
     .maybeSingle();
-  const [front, back] = await Promise.all([
+  const [front, back, dlFront, dlBack, passport] = await Promise.all([
     signPath(supabase, "client-docs", data?.id_front_url),
     signPath(supabase, "client-docs", data?.id_back_url),
+    signPath(supabase, "client-docs", data?.dl_front_url),
+    signPath(supabase, "client-docs", data?.dl_back_url),
+    signPath(supabase, "client-docs", data?.passport_url),
   ]);
-  return { front, back };
+  return { front, back, dlFront, dlBack, passport };
 }
 
 /** Rental history for the client details sheet. */

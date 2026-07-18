@@ -71,6 +71,7 @@ export async function updateOrgOperations(
       curfew_end: v.curfewEnd || null,
       rate_floor: v.rateFloor ? Number(v.rateFloor) : null,
       rate_ceiling: v.rateCeiling ? Number(v.rateCeiling) : null,
+      refuel_penalty_per_level: v.refuelPenalty ? Number(v.refuelPenalty) : 1500,
     })
     .eq("id", orgId);
 
