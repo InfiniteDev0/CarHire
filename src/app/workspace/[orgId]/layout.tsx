@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { LiveClock } from "@/components/workspace/live-clock";
 import { NotificationSheet } from "@/features/workspace/notification-sheet";
 import { PresenceHeartbeat } from "@/features/workspace/presence-heartbeat";
-import { MobileBottomNav } from "@/components/workspace/mobile-bottom-nav";
+import { MobileShell } from "@/components/workspace/mobile-bottom-nav";
 import { getWorkspaceNotifications } from "@/features/workspace/notifications";
 import { WorkspaceBreadcrumb } from "@/features/workspace/workspace-breadcrumb";
 import { WorkspaceStoreHydrator } from "@/components/workspace/workspace-store-hydrator";
@@ -120,7 +120,7 @@ export default async function WorkspaceLayout({
           canCreateWorkspace={canCreateWorkspace}
         />
         <SidebarInset className="h-svh overflow-hidden">
-          <header className="flex h-12 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+          <header className="hidden md:flex h-12 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
             <div className="flex items-center justify-between gap-2 w-full px-4">
               <div className="flex items-center gap-2">
                 <SidebarTrigger className="-ml-1" />
@@ -169,17 +169,21 @@ export default async function WorkspaceLayout({
               </Link>
             </div>
           )}
-          <div className="flex flex-1 flex-col gap-4 overflow-y-auto scrollbar-pill p-4 pb-28 md:pb-4">
-            {children}
-          </div>
-          <MobileBottomNav
+          <MobileShell
             orgId={org.id}
             orgName={org.name}
+            plan={plan}
             userName={displayName}
             userEmail={user.email ?? ""}
             isAdmin={role === "admin"}
             vehicleCount={usage.vehicles}
+            workspaces={workspaces}
+            canCreateWorkspace={canCreateWorkspace}
+            notifications={notifications}
           />
+          <div className="flex flex-1 flex-col gap-4 overflow-y-auto scrollbar-pill p-4 pb-28 md:pb-4">
+            {children}
+          </div>
         </SidebarInset>
       </SidebarProvider>
     </TooltipProvider>

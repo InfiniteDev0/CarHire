@@ -143,6 +143,41 @@ export async function removeStaff(orgId: string, userId: string): Promise<void> 
   if (error) throw new Error(error.message);
 }
 
+/**
+ * Quick email invite (admin only) — the mobile "Invite members" drawer.
+ * Sends a Supabase invite email; the invitee sets a password via the link and
+ * lands in this workspace as staff.
+ */
+export async function inviteStaffByEmail(orgId: string, email: string): Promise<void> {
+  const { supabase } = await assertAdmin(orgId);
+  await assertUnderLimit(supabase, orgId, "staff");
+
+  const clean = email.trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean)) throw new Error("Enter a valid email.");
+
+  const admin = createAdminClient();
+  const { data: invited, error } = await admin.auth.admin.inviteUserByEmail(clean);
+  if (error || !invited?.user) {
+    const msg = error?.message ?? "";
+    if (/already|exists|registered/i.test(msg)) {
+      throw new Error("A user with this email already exists — add them from the Staff page.");
+    }
+    throw new Error(msg || "Could not send the invite.");
+  }
+
+  const { error: memberErr } = await admin.from("org_members").insert({
+    org_id: orgId,
+    user_id: invited.user.id,
+    role: "staff",
+    is_active: true,
+    email: clean,
+  });
+  if (memberErr) {
+    await admin.auth.admin.deleteUser(invited.user.id).catch(() => {});
+    throw new Error(memberErr.message);
+  }
+}
+
 export interface StaffActivityItem {
   id: string;
   kind:

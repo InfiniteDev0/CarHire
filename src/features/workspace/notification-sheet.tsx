@@ -96,10 +96,12 @@ function NotificationItem({
   const { icon: Icon, className } = KIND_STYLE[item.kind];
   const [dx, setDx] = useState(0);
   const [leaving, setLeaving] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const start = useRef<number | null>(null);
 
   function pointerDown(e: React.PointerEvent) {
     start.current = e.clientX;
+    setDragging(true);
     (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
   }
   function pointerMove(e: React.PointerEvent) {
@@ -109,6 +111,7 @@ function NotificationItem({
   function pointerUp() {
     if (start.current === null) return;
     start.current = null;
+    setDragging(false);
     if (Math.abs(dx) > 90) {
       setLeaving(true);
       setTimeout(() => onDismiss(item.id), 180);
@@ -129,7 +132,7 @@ function NotificationItem({
         className="flex gap-3 px-4 py-3 transition-transform hover:bg-muted/50"
         style={{
           transform: `translateX(${dx}px)`,
-          transition: start.current === null ? "transform 180ms ease" : "none",
+          transition: dragging ? "none" : "transform 180ms ease",
         }}
         onPointerDown={pointerDown}
         onPointerMove={pointerMove}
@@ -196,15 +199,27 @@ function PushToggle({ orgId }: { orgId: string }) {
   );
 
   useEffect(() => {
-    if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-      setState("unsupported");
-      return;
-    }
-    navigator.serviceWorker
-      .getRegistration("/sw.js")
-      .then((reg) => reg?.pushManager.getSubscription())
-      .then((sub) => setState(sub ? "on" : "off"))
-      .catch(() => setState("off"));
+    let cancelled = false;
+    // Async detection — setState only fires from resolved promises, never
+    // synchronously in the effect body (keeps the React Compiler happy).
+    (async () => {
+      await Promise.resolve();
+      if (cancelled) return;
+      if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+        setState("unsupported");
+        return;
+      }
+      try {
+        const reg = await navigator.serviceWorker.getRegistration("/sw.js");
+        const sub = await reg?.pushManager.getSubscription();
+        if (!cancelled) setState(sub ? "on" : "off");
+      } catch {
+        if (!cancelled) setState("off");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   async function enable() {
@@ -271,9 +286,11 @@ function PushToggle({ orgId }: { orgId: string }) {
 export function NotificationSheet({
   orgId,
   notifications = [],
+  triggerClassName,
 }: {
   orgId: string;
   notifications?: WorkspaceNotification[];
+  triggerClassName?: string;
 }) {
   const router = useRouter();
   const [items, setItems] = useState(notifications);
@@ -287,7 +304,15 @@ export function NotificationSheet({
   }
 
   useEffect(() => {
-    setLastSeen(Number(localStorage.getItem(`notif-seen-${orgId}`) ?? 0));
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) {
+        setLastSeen(Number(localStorage.getItem(`notif-seen-${orgId}`) ?? 0));
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [orgId]);
 
   const unread = items.filter((n) => new Date(n.at).getTime() > lastSeen).length;
@@ -318,7 +343,10 @@ export function NotificationSheet({
     <Sheet>
       <SheetTrigger
         render={
-          <Button className="relative h-7 w-7" variant="outline">
+          <Button
+            className={cn("relative h-7 w-7", triggerClassName)}
+            variant={triggerClassName ? "ghost" : "outline"}
+          >
             <Bell />
             {unread > 0 && (
               <span
