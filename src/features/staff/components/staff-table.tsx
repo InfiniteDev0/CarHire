@@ -2,7 +2,15 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { MoreVertical, UserCheck, UserX, UserMinus, Loader2, IdCard } from "lucide-react";
+import {
+  MoreVertical,
+  UserCheck,
+  UserX,
+  UserMinus,
+  Loader2,
+  IdCard,
+  History,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -39,6 +47,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { setStaffActive, removeStaff } from "../actions";
+import { StaffActivitySheet } from "./staff-activity-sheet";
 
 export interface StaffMember {
   user_id: string;
@@ -47,6 +56,23 @@ export interface StaffMember {
   full_name: string | null;
   email: string | null;
   phone: string | null;
+  last_seen_at: string | null;
+}
+
+const ONLINE_WINDOW_MS = 3 * 60_000; // heartbeat is every 2 min
+
+function presenceOf(m: StaffMember): { online: boolean; label: string } {
+  if (!m.last_seen_at) return { online: false, label: "Never signed in" };
+  const ago = Date.now() - new Date(m.last_seen_at).getTime();
+  if (ago < ONLINE_WINDOW_MS) return { online: true, label: "Online now" };
+  const mins = Math.floor(ago / 60_000);
+  if (mins < 60) return { online: false, label: `Left ${mins}m ago` };
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return { online: false, label: `Left ${hrs}h ago` };
+  return {
+    online: false,
+    label: `Left ${new Date(m.last_seen_at).toLocaleDateString("en-KE", { day: "numeric", month: "short" })}`,
+  };
 }
 
 export interface StaffPhotoUrls {
@@ -69,6 +95,8 @@ export function StaffTable({
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [idTarget, setIdTarget] = useState<StaffMember | null>(null);
   const [removeTarget, setRemoveTarget] = useState<StaffMember | null>(null);
+  const [activityTarget, setActivityTarget] = useState<StaffMember | null>(null);
+  const [activityOpen, setActivityOpen] = useState(false);
   const [, startTransition] = useTransition();
 
   function toggleActive(m: StaffMember) {
@@ -116,6 +144,7 @@ export function StaffTable({
             <TableHead className="hidden sm:table-cell">Phone</TableHead>
             <TableHead>Role</TableHead>
             <TableHead>Status</TableHead>
+            <TableHead className="hidden md:table-cell">Presence</TableHead>
             <TableHead className="hidden sm:table-cell">ID</TableHead>
             <TableHead className="w-8" />
           </TableRow>
@@ -123,7 +152,7 @@ export function StaffTable({
         <TableBody>
           {members.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+              <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
                 No members yet.
               </TableCell>
             </TableRow>
@@ -133,6 +162,7 @@ export function StaffTable({
               const isAdmin = m.role === "admin";
               const busy = pendingId === m.user_id;
               const hasId = !!(photoUrls[m.user_id]?.front || photoUrls[m.user_id]?.back);
+              const presence = presenceOf(m);
               return (
                 <TableRow key={m.user_id} className={m.is_active ? "" : "opacity-60"}>
                   <TableCell className="font-medium">
@@ -159,6 +189,26 @@ export function StaffTable({
                       </Badge>
                     )}
                   </TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    <span className="flex items-center gap-1.5 text-xs">
+                      <span
+                        className={
+                          presence.online
+                            ? "size-2 rounded-full bg-green-500"
+                            : "size-2 rounded-full bg-muted-foreground/40"
+                        }
+                      />
+                      <span
+                        className={
+                          presence.online
+                            ? "font-medium text-green-600 dark:text-green-400"
+                            : "text-muted-foreground"
+                        }
+                      >
+                        {presence.label}
+                      </span>
+                    </span>
+                  </TableCell>
                   <TableCell className="hidden sm:table-cell">
                     {hasId ? (
                       <Button
@@ -174,45 +224,56 @@ export function StaffTable({
                     )}
                   </TableCell>
                   <TableCell>
-                    {/* Admins and your own row can't be deactivated here */}
-                    {!isAdmin && !isSelf && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
-                          render={
-                            <Button variant="ghost" size="icon-sm" className="text-muted-foreground">
-                              {busy ? (
-                                <Loader2 className="size-4 animate-spin" />
-                              ) : (
-                                <MoreVertical className="size-4" />
-                              )}
-                              <span className="sr-only">Staff actions</span>
-                            </Button>
-                          }
-                        />
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => toggleActive(m)}>
-                            {m.is_active ? (
-                              <>
-                                <UserX className="size-4" />
-                                Deactivate
-                              </>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger
+                        render={
+                          <Button variant="ghost" size="icon-sm" className="text-muted-foreground">
+                            {busy ? (
+                              <Loader2 className="size-4 animate-spin" />
                             ) : (
-                              <>
-                                <UserCheck className="size-4" />
-                                Reactivate
-                              </>
+                              <MoreVertical className="size-4" />
                             )}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-red-600 dark:text-red-400"
-                            onClick={() => setRemoveTarget(m)}
-                          >
-                            <UserMinus className="size-4" />
-                            Remove from workspace
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
+                            <span className="sr-only">Staff actions</span>
+                          </Button>
+                        }
+                      />
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setActivityTarget(m);
+                            setActivityOpen(true);
+                          }}
+                        >
+                          <History className="size-4" />
+                          View activity
+                        </DropdownMenuItem>
+                        {/* Admins and your own row can't be deactivated/removed */}
+                        {!isAdmin && !isSelf && (
+                          <>
+                            <DropdownMenuItem onClick={() => toggleActive(m)}>
+                              {m.is_active ? (
+                                <>
+                                  <UserX className="size-4" />
+                                  Deactivate
+                                </>
+                              ) : (
+                                <>
+                                  <UserCheck className="size-4" />
+                                  Reactivate
+                                </>
+                              )}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="text-red-600 dark:text-red-400"
+                              onClick={() => setRemoveTarget(m)}
+                            >
+                              <UserMinus className="size-4" />
+                              Remove from workspace
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               );
@@ -220,6 +281,14 @@ export function StaffTable({
           )}
         </TableBody>
       </Table>
+
+      {/* Activity trail */}
+      <StaffActivitySheet
+        orgId={orgId}
+        member={activityTarget}
+        open={activityOpen}
+        onOpenChange={setActivityOpen}
+      />
 
       {/* Remove confirm */}
       <AlertDialog open={!!removeTarget} onOpenChange={(o) => !o && setRemoveTarget(null)}>

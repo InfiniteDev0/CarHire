@@ -407,7 +407,19 @@ export function PaymentDialog({
 }) {
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState("CASH");
+  const [reference, setReference] = useState("");
   const { isLoading, run } = useAction(() => onOpenChange(false));
+
+  const referenceMeta: Record<string, { label: string; placeholder: string }> = {
+    CASH: { label: "Receipt no. (optional)", placeholder: "e.g. RCT-0042" },
+    MPESA: {
+      label: "M-Pesa code / message",
+      placeholder: "e.g. SFG3K1XQ2P Confirmed. KES 5,000 received…",
+    },
+    CARD: { label: "Card reference (optional)", placeholder: "Last 4 digits / auth code" },
+    BANK: { label: "Bank reference (optional)", placeholder: "Transfer/slip reference" },
+    OTHER: { label: "Reference (optional)", placeholder: "How was this paid?" },
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -437,7 +449,7 @@ export function PaymentDialog({
           <div className="flex flex-col gap-1.5">
             <Label>Paid via</Label>
             <div className="flex gap-1.5">
-              {(["CASH", "MPESA", "BANK", "OTHER"] as const).map((m) => (
+              {(["CASH", "MPESA", "CARD", "BANK", "OTHER"] as const).map((m) => (
                 <button
                   key={m}
                   type="button"
@@ -455,13 +467,31 @@ export function PaymentDialog({
               ))}
             </div>
           </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="payReference">{referenceMeta[method].label}</Label>
+            <Input
+              id="payReference"
+              value={reference}
+              onChange={(e) => setReference(e.target.value)}
+              placeholder={referenceMeta[method].placeholder}
+              disabled={isLoading}
+            />
+            {method === "MPESA" && (
+              <p className="text-xs text-muted-foreground">
+                Paste the confirmation message or just the transaction code.
+              </p>
+            )}
+          </div>
         </div>
 
         <DialogFooter>
           <Button
             disabled={isLoading || !amount}
             onClick={() =>
-              run(() => recordPayment(orgId, contract.id, { amount, method }), "Payment recorded")
+              run(
+                () => recordPayment(orgId, contract.id, { amount, method, reference }),
+                "Payment recorded"
+              )
             }
           >
             {isLoading && <Loader2 className="size-4 animate-spin" />}

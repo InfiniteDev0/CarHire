@@ -23,7 +23,7 @@ export function MoneyStats({
   return (
     <div className="grid auto-rows-min gap-4 sm:grid-cols-2 md:grid-cols-4">
       {/* Revenue */}
-      <div className="flex h-28 flex-col justify-between rounded-xl bg-muted/50 p-3">
+      <div className="flex h-28 flex-col justify-between rounded-xl dark:bg-black bg-white p-3">
         <div className="flex items-start justify-between">
           <Badge className="gap-1 bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
             <HandCoins className="size-3" />
@@ -42,7 +42,7 @@ export function MoneyStats({
       </div>
 
       {/* Outstanding */}
-      <div className="flex h-28 flex-col justify-between rounded-xl bg-muted/50 p-3">
+      <div className="flex h-28 flex-col justify-between rounded-xl dark:bg-black bg-white p-3">
         <div className="flex items-start justify-between">
           <Badge className="gap-1 bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300">
             <ReceiptText className="size-3" />
@@ -58,7 +58,7 @@ export function MoneyStats({
       </div>
 
       {/* Debt */}
-      <div className="flex h-28 flex-col justify-between rounded-xl bg-muted/50 p-3">
+      <div className="flex h-28 flex-col justify-between rounded-xl dark:bg-black bg-white p-3">
         <div className="flex items-start justify-between">
           <Badge className="gap-1 bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300">
             <TriangleAlert className="size-3" />
@@ -74,7 +74,7 @@ export function MoneyStats({
       </div>
 
       {/* Utilization */}
-      <div className="flex h-28 flex-col justify-between rounded-xl bg-muted/50 p-3">
+      <div className="flex h-28 flex-col justify-between rounded-xl dark:bg-black bg-white p-3">
         <div className="flex items-start justify-between">
           <Badge className="gap-1 bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
             <Gauge className="size-3" />

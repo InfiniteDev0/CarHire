@@ -21,7 +21,7 @@ function timeAgo(iso: string): string {
 
 export function RecentActivity({ events }: { events: ActivityEvent[] }) {
   return (
-    <div className="flex flex-col gap-2 rounded-xl bg-muted/50 p-3">
+    <div className="flex flex-col gap-2 rounded-xl dark:bg-black bg-white p-3">
       <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
         <History className="size-4" />
         Recent activity

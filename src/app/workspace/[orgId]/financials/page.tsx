@@ -86,7 +86,7 @@ export default async function FinancialsPage({
     supabase.from("clients").select("debt_owed").eq("org_id", orgId).gt("debt_owed", 0),
     supabase
       .from("expenses")
-      .select("id, car_id, category, amount, incurred_on, note, cars(reg_number)")
+      .select("id, car_id, category, amount, incurred_on, note, created_by, cars(reg_number)")
       .eq("org_id", orgId)
       .order("incurred_on", { ascending: false }),
     supabase
@@ -98,7 +98,7 @@ export default async function FinancialsPage({
     supabase
       .from("payments")
       .select(
-        "id, amount, kind, method, created_at, recorded_by, contracts(clients(full_name), cars(reg_number))"
+        "id, amount, kind, method, reference, created_at, recorded_by, contracts(clients(full_name), cars(reg_number))"
       )
       .eq("org_id", orgId)
       .order("created_at", { ascending: false })
@@ -270,7 +270,12 @@ export default async function FinancialsPage({
 
       {/* Expenses */}
       <div className="mt-2">
-        <ExpensesSection orgId={orgId} expenses={expenses} carPicks={carPicks} />
+        <ExpensesSection
+          orgId={orgId}
+          expenses={expenses}
+          carPicks={carPicks}
+          staffNames={staffNames}
+        />
       </div>
     </div>
   );

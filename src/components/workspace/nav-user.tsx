@@ -54,7 +54,7 @@ export function NavUser({
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
-              <SidebarMenuButton size="lg" className="bg-black hover:bg-zinc-950 cursor-pointer" />
+              <SidebarMenuButton size="lg" className="cursor-pointer" />
             }
           >
             <Avatar>

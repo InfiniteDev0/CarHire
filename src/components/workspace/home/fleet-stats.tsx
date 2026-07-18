@@ -20,7 +20,7 @@ export function FleetStats({
   return (
     <div className="grid auto-rows-min gap-4 sm:grid-cols-2 md:grid-cols-4">
       {/* Total fleet */}
-      <div className="flex h-28 flex-col justify-between rounded-xl bg-muted/50 p-3">
+      <div className="flex h-28 flex-col justify-between rounded-xl dark:bg-black bg-white p-3">
         <div className="flex items-start justify-between">
           <Badge variant="outline" className="gap-1">
             <Car className="size-3" /> Vehicles
@@ -36,7 +36,7 @@ export function FleetStats({
       </div>
 
       {/* Available */}
-      <div className="flex h-28 flex-col justify-between rounded-xl bg-muted/50 p-3">
+      <div className="flex h-28 flex-col justify-between rounded-xl dark:bg-black bg-white p-3">
         <div className="flex items-start justify-between">
           <Badge className="gap-1 bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
             <CircleCheck className="size-3" />
@@ -52,7 +52,7 @@ export function FleetStats({
       </div>
 
       {/* On rent */}
-      <div className="flex h-28 flex-col justify-between rounded-xl bg-muted/50 p-3">
+      <div className="flex h-28 flex-col justify-between rounded-xl dark:bg-black bg-white p-3">
         <div className="flex items-start justify-between">
           <Badge className="gap-1 bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
             <KeyRound className="size-3" />
@@ -68,7 +68,7 @@ export function FleetStats({
       </div>
 
       {/* Maintenance */}
-      <div className="flex h-28 flex-col justify-between rounded-xl bg-muted/50 p-3">
+      <div className="flex h-28 flex-col justify-between rounded-xl dark:bg-black bg-white p-3">
         <div className="flex items-start justify-between">
           <Badge className="gap-1 bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300">
             <WrenchIcon className="size-3" />

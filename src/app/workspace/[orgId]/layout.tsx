@@ -12,6 +12,7 @@ import { Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LiveClock } from "@/components/workspace/live-clock";
 import { NotificationSheet } from "@/features/workspace/notification-sheet";
+import { PresenceHeartbeat } from "@/features/workspace/presence-heartbeat";
 import { getWorkspaceNotifications } from "@/features/workspace/notifications";
 import { WorkspaceBreadcrumb } from "@/features/workspace/workspace-breadcrumb";
 import { WorkspaceStoreHydrator } from "@/components/workspace/workspace-store-hydrator";
@@ -106,6 +107,7 @@ export default async function WorkspaceLayout({
           userName={displayName}
           userEmail={user.email ?? ""}
         />
+        <PresenceHeartbeat orgId={org.id} />
         <AppSidebar
           orgId={org.id}
           orgName={org.name}

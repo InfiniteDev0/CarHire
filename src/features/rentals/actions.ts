@@ -415,16 +415,17 @@ export async function extendContract(
 export async function recordPayment(
   orgId: string,
   contractId: string,
-  input: { amount: string; method?: string }
+  input: { amount: string; method?: string; reference?: string }
 ): Promise<void> {
   const { supabase, user } = await assertMember(orgId);
 
   const parsed = paymentSchema.safeParse(input);
   if (!parsed.success) throw new Error(firstIssue(parsed.error));
   const amount = Number(parsed.data.amount);
-  const method = ["CASH", "MPESA", "BANK", "OTHER"].includes(input.method ?? "")
+  const method = ["CASH", "MPESA", "CARD", "BANK", "OTHER"].includes(input.method ?? "")
     ? input.method
     : "CASH";
+  const reference = (input.reference ?? "").trim().slice(0, 300) || null;
 
   const { data: contract } = await supabase
     .from("contracts")
@@ -448,6 +449,7 @@ export async function recordPayment(
     amount,
     kind: "PAYMENT",
     method,
+    reference,
     recorded_by: user.id,
   });
 

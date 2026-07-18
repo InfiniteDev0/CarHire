@@ -20,7 +20,8 @@ export interface TransactionRow {
   id: string;
   amount: number;
   kind: "DEPOSIT" | "PAYMENT" | "EXTENSION";
-  method: "CASH" | "MPESA" | "BANK" | "OTHER";
+  method: "CASH" | "MPESA" | "CARD" | "BANK" | "OTHER";
+  reference: string | null;
   created_at: string;
   recorded_by: string | null;
   contracts: {
@@ -57,6 +58,7 @@ const KIND_BADGE: Record<TransactionRow["kind"], string> = {
 const METHOD_LABELS: Record<TransactionRow["method"], string> = {
   CASH: "Cash",
   MPESA: "M-Pesa",
+  CARD: "Card",
   BANK: "Bank",
   OTHER: "Other",
 };
@@ -189,8 +191,16 @@ export function RecentTransactions({
                       {t.kind.charAt(0) + t.kind.slice(1).toLowerCase()}
                     </Badge>
                   </TableCell>
-                  <TableCell className="hidden text-muted-foreground sm:table-cell">
-                    {METHOD_LABELS[t.method]}
+                  <TableCell className="hidden sm:table-cell">
+                    <span className="text-muted-foreground">{METHOD_LABELS[t.method]}</span>
+                    {t.reference && (
+                      <p
+                        className="max-w-40 truncate text-xs text-muted-foreground/70"
+                        title={t.reference}
+                      >
+                        {t.reference}
+                      </p>
+                    )}
                   </TableCell>
                   <TableCell className="hidden text-muted-foreground md:table-cell">
                     {(t.recorded_by && staffNames?.[t.recorded_by]) || "—"}

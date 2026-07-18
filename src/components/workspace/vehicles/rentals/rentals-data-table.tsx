@@ -24,7 +24,7 @@ export function RentalsDataTable({
   return (
     <div className="overflow-hidden rounded-lg border">
       <Table>
-        <TableHeader className="bg-muted/50">
+        <TableHeader className="dark:bg-black bg-white">
           <TableRow>
             <TableHead>Vehicle</TableHead>
             <TableHead>Client</TableHead>
@@ -38,7 +38,10 @@ export function RentalsDataTable({
         <TableBody>
           {data.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+              <TableCell
+                colSpan={7}
+                className="h-24 text-center text-muted-foreground"
+              >
                 No rentals match this filter.
               </TableCell>
             </TableRow>
@@ -53,12 +56,16 @@ export function RentalsDataTable({
                 </TableCell>
                 <TableCell>
                   <div className="font-medium">{r.clientName}</div>
-                  <div className="text-xs text-muted-foreground">{r.clientPhone}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {r.clientPhone}
+                  </div>
                 </TableCell>
                 <TableCell className="hidden text-muted-foreground md:table-cell">
                   {r.county}
                 </TableCell>
-                <TableCell className="tabular-nums">{kes(r.ratePerDay)}</TableCell>
+                <TableCell className="tabular-nums">
+                  {kes(r.ratePerDay)}
+                </TableCell>
                 <TableCell className="hidden text-muted-foreground tabular-nums sm:table-cell">
                   {shortDate(r.startDate)} → {shortDate(r.dueDate)}
                 </TableCell>

@@ -52,6 +52,7 @@ export interface ExpenseRow {
   amount: number;
   incurred_on: string;
   note: string | null;
+  created_by: string | null;
   cars: { reg_number: string } | null;
 }
 
@@ -86,10 +87,12 @@ export function ExpensesSection({
   orgId,
   expenses,
   carPicks,
+  staffNames,
 }: {
   orgId: string;
   expenses: ExpenseRow[];
   carPicks: ExpenseCarPick[];
+  staffNames?: Record<string, string>;
 }) {
   const router = useRouter();
   const isAdmin = useIsAdmin();
@@ -239,6 +242,7 @@ export function ExpensesSection({
                 <TableHead>Category</TableHead>
                 <TableHead className="hidden sm:table-cell">Vehicle</TableHead>
                 <TableHead className="hidden md:table-cell">Note</TableHead>
+                <TableHead className="hidden md:table-cell">Issued by</TableHead>
                 <TableHead>Amount</TableHead>
                 <TableHead className="w-20" />
               </TableRow>
@@ -257,6 +261,9 @@ export function ExpensesSection({
                   </TableCell>
                   <TableCell className="hidden max-w-60 truncate text-muted-foreground md:table-cell">
                     {e.note ?? "—"}
+                  </TableCell>
+                  <TableCell className="hidden text-muted-foreground md:table-cell">
+                    {(e.created_by && staffNames?.[e.created_by]) || "—"}
                   </TableCell>
                   <TableCell className="tabular-nums font-medium">{kes(e.amount)}</TableCell>
                   <TableCell>

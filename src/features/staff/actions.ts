@@ -143,6 +143,148 @@ export async function removeStaff(orgId: string, userId: string): Promise<void> 
   if (error) throw new Error(error.message);
 }
 
+export interface StaffActivityItem {
+  id: string;
+  kind:
+    | "RENTAL"
+    | "PAYMENT"
+    | "CHECKOUT"
+    | "CHECKIN"
+    | "COMPLAINT"
+    | "CLIENT"
+    | "EXPENSE"
+    | "VEHICLE";
+  title: string;
+  detail: string;
+  at: string; // ISO
+}
+
+const kesFmt = (n: number) => `KES ${Number(n).toLocaleString()}`;
+
+/**
+ * Everything a member has done, newest first (admin only) — rentals created,
+ * payments recorded, checkouts/checkins handled, complaints filed, clients
+ * registered, expenses issued, vehicles added.
+ */
+export async function getStaffActivity(
+  orgId: string,
+  userId: string
+): Promise<StaffActivityItem[]> {
+  const { supabase } = await assertAdmin(orgId);
+  const PER = 20;
+
+  const [contracts, payments, checkouts, checkins, complaints, clients, expenses, cars] =
+    await Promise.all([
+      supabase
+        .from("contracts")
+        .select("id, created_at, rate_per_day, duration_days, clients(full_name), cars(reg_number)")
+        .eq("org_id", orgId).eq("created_by", userId)
+        .order("created_at", { ascending: false }).limit(PER),
+      supabase
+        .from("payments")
+        .select("id, created_at, amount, kind, method, contracts(clients(full_name), cars(reg_number))")
+        .eq("org_id", orgId).eq("recorded_by", userId)
+        .order("created_at", { ascending: false }).limit(PER),
+      supabase
+        .from("checkout_logs")
+        .select("id, created_at, contracts(cars(reg_number), clients(full_name))")
+        .eq("org_id", orgId).eq("dispatched_by", userId)
+        .order("created_at", { ascending: false }).limit(PER),
+      supabase
+        .from("checkin_logs")
+        .select("id, created_at, contracts(cars(reg_number), clients(full_name))")
+        .eq("org_id", orgId).eq("received_by", userId)
+        .order("created_at", { ascending: false }).limit(PER),
+      supabase
+        .from("complaints")
+        .select("id, created_at, type, cars(reg_number)")
+        .eq("org_id", orgId).eq("created_by", userId)
+        .order("created_at", { ascending: false }).limit(PER),
+      supabase
+        .from("clients")
+        .select("id, created_at, full_name")
+        .eq("org_id", orgId).eq("created_by", userId)
+        .order("created_at", { ascending: false }).limit(PER),
+      supabase
+        .from("expenses")
+        .select("id, created_at, amount, category, note, cars(reg_number)")
+        .eq("org_id", orgId).eq("created_by", userId)
+        .order("created_at", { ascending: false }).limit(PER),
+      supabase
+        .from("cars")
+        .select("id, created_at, reg_number, make, model")
+        .eq("org_id", orgId).eq("created_by", userId)
+        .order("created_at", { ascending: false }).limit(PER),
+    ]);
+
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  const items: StaffActivityItem[] = [
+    ...((contracts.data ?? []) as any[]).map((c) => ({
+      id: `rental-${c.id}`,
+      kind: "RENTAL" as const,
+      title: `Created a rental — ${c.cars?.reg_number ?? "vehicle"}`,
+      detail: `${c.clients?.full_name ?? "client"} · ${c.duration_days} days @ ${kesFmt(c.rate_per_day)}/day`,
+      at: c.created_at,
+    })),
+    ...((payments.data ?? []) as any[]).map((p) => ({
+      id: `pay-${p.id}`,
+      kind: "PAYMENT" as const,
+      title: `Recorded ${kesFmt(p.amount)} (${String(p.method ?? "CASH").toLowerCase()})`,
+      detail: [p.contracts?.clients?.full_name, p.contracts?.cars?.reg_number]
+        .filter(Boolean)
+        .join(" · "),
+      at: p.created_at,
+    })),
+    ...((checkouts.data ?? []) as any[]).map((l) => ({
+      id: `out-${l.id}`,
+      kind: "CHECKOUT" as const,
+      title: `Checked out ${l.contracts?.cars?.reg_number ?? "a vehicle"}`,
+      detail: l.contracts?.clients?.full_name ?? "",
+      at: l.created_at,
+    })),
+    ...((checkins.data ?? []) as any[]).map((l) => ({
+      id: `in-${l.id}`,
+      kind: "CHECKIN" as const,
+      title: `Checked in ${l.contracts?.cars?.reg_number ?? "a vehicle"}`,
+      detail: l.contracts?.clients?.full_name ?? "",
+      at: l.created_at,
+    })),
+    ...((complaints.data ?? []) as any[]).map((c) => ({
+      id: `complaint-${c.id}`,
+      kind: "COMPLAINT" as const,
+      title: `Filed a complaint${c.cars?.reg_number ? ` on ${c.cars.reg_number}` : ""}`,
+      detail: String(c.type ?? "").toLowerCase(),
+      at: c.created_at,
+    })),
+    ...((clients.data ?? []) as any[]).map((c) => ({
+      id: `client-${c.id}`,
+      kind: "CLIENT" as const,
+      title: `Registered client ${c.full_name}`,
+      detail: "",
+      at: c.created_at,
+    })),
+    ...((expenses.data ?? []) as any[]).map((e) => ({
+      id: `expense-${e.id}`,
+      kind: "EXPENSE" as const,
+      title: `Issued expense ${kesFmt(e.amount)} (${String(e.category ?? "").toLowerCase()})`,
+      detail: [e.cars?.reg_number, e.note].filter(Boolean).join(" · "),
+      at: e.created_at,
+    })),
+    ...((cars.data ?? []) as any[]).map((c) => ({
+      id: `car-${c.id}`,
+      kind: "VEHICLE" as const,
+      title: `Added vehicle ${c.reg_number}`,
+      detail: [c.make, c.model].filter(Boolean).join(" "),
+      at: c.created_at,
+    })),
+  ];
+  /* eslint-enable @typescript-eslint/no-explicit-any */
+
+  return items
+    .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
+    .slice(0, 60);
+}
+
 /** Activate / deactivate a staff member (admin only). Never hard-deletes. */
 export async function setStaffActive(
   orgId: string,

@@ -21,7 +21,7 @@ export default async function StaffPage({
   const supabase = await createClient();
   const { data: members } = await supabase
     .from("org_members")
-    .select("user_id, role, is_active, full_name, email, phone, id_front_url, id_back_url, created_at")
+    .select("user_id, role, is_active, full_name, email, phone, id_front_url, id_back_url, last_seen_at, created_at")
     .eq("org_id", orgId)
     .order("role", { ascending: true })
     .order("created_at", { ascending: true });
