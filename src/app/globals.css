@@ -188,23 +188,25 @@
 }
 /* ── Liquid glass (mobile pill + expanders) — ported from the reference ── */
 :root {
-  --c-glass: #bbbbbc;
+  --c-glass: #f4f4f5;
   --c-light: #fff;
   --c-dark: #000;
   --glass-reflex-light: 1;
   --glass-reflex-dark: 1;
-  --glass-saturation: 150%;
+  --glass-saturation: 180%;
+  --glass-tint: 62%; /* how frosted the surface reads */
 }
 .dark {
   --c-glass: #2e2e30;
-  --glass-reflex-light: 0.4;
+  --glass-reflex-light: 0.55;
   --glass-reflex-dark: 1.4;
+  --glass-tint: 55%;
 }
 
 .liquid-glass {
-  background-color: color-mix(in srgb, var(--c-glass) 12%, transparent);
-  backdrop-filter: blur(8px) saturate(var(--glass-saturation));
-  -webkit-backdrop-filter: blur(8px) saturate(var(--glass-saturation));
+  background-color: color-mix(in srgb, var(--c-glass) var(--glass-tint), transparent);
+  backdrop-filter: blur(22px) saturate(var(--glass-saturation)) brightness(1.04);
+  -webkit-backdrop-filter: blur(22px) saturate(var(--glass-saturation)) brightness(1.04);
   box-shadow:
     inset 0 0 0 1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 10%), transparent),
     inset 1.8px 3px 0px -2px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent),
@@ -223,7 +225,12 @@
 
 /* The sliding "selected" blob inside the glass pill */
 .liquid-glass-blob {
-  background-color: color-mix(in srgb, var(--c-glass) 36%, transparent);
+  background-color: color-mix(in srgb, var(--c-light) 85%, transparent);
+}
+.dark .liquid-glass-blob {
+  background-color: color-mix(in srgb, var(--c-glass) 90%, transparent);
+}
+.liquid-glass-blob {
   box-shadow:
     inset 0 0 0 1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 10%), transparent),
     inset 2px 1px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent),

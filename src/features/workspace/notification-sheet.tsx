@@ -28,6 +28,13 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 import { cn } from "@/lib/utils";
 import {
   savePushSubscription,
@@ -287,14 +294,18 @@ export function NotificationSheet({
   orgId,
   notifications = [],
   triggerClassName,
+  mobile = false,
 }: {
   orgId: string;
   notifications?: WorkspaceNotification[];
   triggerClassName?: string;
+  /** On mobile, open as a bottom drawer instead of a side sheet. */
+  mobile?: boolean;
 }) {
   const router = useRouter();
   const [items, setItems] = useState(notifications);
   const [lastSeen, setLastSeen] = useState<number>(0);
+  const [snap, setSnap] = useState<number | string | null>(0.98);
 
   // Server refreshes bring new props — resync the local list.
   const [prev, setPrev] = useState(notifications);
@@ -339,28 +350,100 @@ export function NotificationSheet({
       .catch(() => toast.error("Couldn't clear everything — try again."));
   }
 
+  const trigger = (
+    <Button
+      className={cn("relative h-7 w-7", triggerClassName)}
+      variant={triggerClassName ? "ghost" : "outline"}
+    >
+      <Bell />
+      {unread > 0 && (
+        <span
+          className={cn(
+            "absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full text-[9px] font-bold text-white",
+            urgent ? "bg-red-500" : "bg-blue-500"
+          )}
+        >
+          {unread > 9 ? "9+" : unread}
+        </span>
+      )}
+    </Button>
+  );
+
+  const Toolbar =
+    items.length > 0 ? (
+      <div className="flex items-center justify-end gap-1 border-b px-2 py-1.5">
+        {unread > 0 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-1.5 text-xs text-muted-foreground"
+            onClick={markAllRead}
+          >
+            <CheckCheck className="size-3.5" />
+            Mark all as read
+          </Button>
+        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="gap-1.5 text-xs text-muted-foreground"
+          onClick={clearAll}
+        >
+          <Trash2 className="size-3.5" />
+          Clear all
+        </Button>
+      </div>
+    ) : null;
+
+  const List = (
+    <div className="flex-1 divide-y overflow-y-auto">
+      {items.length > 0 ? (
+        items.map((item) => (
+          <NotificationItem key={item.id} item={item} onDismiss={dismissOne} />
+        ))
+      ) : (
+        <div className="flex flex-col items-center gap-2 px-4 py-16 text-center">
+          <Bell className="size-8 text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">
+            You&apos;re all caught up — no notifications right now.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+
+  // Mobile → resizable bottom drawer: drag up to full height, down to close.
+  if (mobile) {
+    return (
+      <Drawer
+        snapPoints={[0.55, 0.98]}
+        activeSnapPoint={snap}
+        setActiveSnapPoint={setSnap}
+      >
+        <DrawerTrigger asChild>{trigger}</DrawerTrigger>
+        <DrawerContent className="h-[98svh] max-h-none">
+          <div className="flex items-center justify-between border-b px-3 py-2">
+            <DrawerTitle>Notifications</DrawerTitle>
+            <div className="flex items-center gap-1">
+              <PushToggle orgId={orgId} />
+              <DrawerClose
+                aria-label="Close notifications"
+                className="rounded p-1.5 text-muted-foreground hover:bg-muted"
+              >
+                <XIcon className="size-4" />
+              </DrawerClose>
+            </div>
+          </div>
+          {Toolbar}
+          {List}
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
   return (
     <Sheet>
-      <SheetTrigger
-        render={
-          <Button
-            className={cn("relative h-7 w-7", triggerClassName)}
-            variant={triggerClassName ? "ghost" : "outline"}
-          >
-            <Bell />
-            {unread > 0 && (
-              <span
-                className={cn(
-                  "absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full text-[9px] font-bold text-white",
-                  urgent ? "bg-red-500" : "bg-blue-500"
-                )}
-              >
-                {unread > 9 ? "9+" : unread}
-              </span>
-            )}
-          </Button>
-        }
-      />
+      <SheetTrigger render={trigger} />
       <SheetContent showCloseButton={false} className="p-0 bg-background">
         <div className="flex items-center justify-between border-b px-1 py-2">
           <div className="flex items-center gap-1">
@@ -374,46 +457,8 @@ export function NotificationSheet({
           </div>
           <PushToggle orgId={orgId} />
         </div>
-
-        {items.length > 0 && (
-          <div className="flex items-center justify-end gap-1 border-b px-2 py-1.5">
-            {unread > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-1.5 text-xs text-muted-foreground"
-                onClick={markAllRead}
-              >
-                <CheckCheck className="size-3.5" />
-                Mark all as read
-              </Button>
-            )}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-1.5 text-xs text-muted-foreground"
-              onClick={clearAll}
-            >
-              <Trash2 className="size-3.5" />
-              Clear all
-            </Button>
-          </div>
-        )}
-
-        <div className="flex-1 divide-y overflow-y-auto">
-          {items.length > 0 ? (
-            items.map((item) => (
-              <NotificationItem key={item.id} item={item} onDismiss={dismissOne} />
-            ))
-          ) : (
-            <div className="flex flex-col items-center gap-2 px-4 py-16 text-center">
-              <Bell className="size-8 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">
-                You&apos;re all caught up — no notifications right now.
-              </p>
-            </div>
-          )}
-        </div>
+        {Toolbar}
+        {List}
       </SheetContent>
     </Sheet>
   );

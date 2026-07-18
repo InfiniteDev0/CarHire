@@ -162,89 +162,96 @@ function SearchSheet({
   }
 
   return (
-    <SidePanel open={open} onClose={onClose}>
-      <div className="flex items-center gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
-          <Input
-            autoFocus
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search clients & vehicles…"
-            className="h-11 rounded-full pl-9"
-          />
-        </div>
-        <button type="button" onClick={onClose} className="text-sm text-zinc-500">
-          Cancel
-        </button>
-      </div>
-
-      <div className="flex gap-1.5">
-        {(
-          [
-            ["ALL", "All"],
-            ["VEHICLE", "Vehicles"],
-            ["CLIENT", "Clients"],
-          ] as const
-        ).map(([id, label]) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => setFilter(id)}
-            className={cn(
-              "rounded-full border px-3 py-1 text-xs transition-colors",
-              filter === id
-                ? "border-zinc-900 bg-zinc-900 text-white dark:border-white dark:bg-white dark:text-black"
-                : "border-zinc-300 text-zinc-500 dark:border-zinc-700"
-            )}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      <div className="min-h-40 flex-1">
-        {busy && (
-          <div className="flex justify-center py-6">
-            <Loader2 className="size-4 animate-spin text-zinc-500" />
+    <Drawer open={open} onOpenChange={(o) => !o && onClose()}>
+      <DrawerContent className="h-[96svh] max-h-none">
+        <DrawerTitle className="sr-only">Search</DrawerTitle>
+        <div className="flex flex-col gap-3 px-4 pt-2">
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                autoFocus
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search clients & vehicles…"
+                className="h-11 rounded-full pl-9"
+              />
+            </div>
+            <button type="button" onClick={onClose} className="text-sm text-muted-foreground">
+              Cancel
+            </button>
           </div>
-        )}
-        {!busy && query.trim().length >= 2 && shown.length === 0 && (
-          <p className="py-8 text-center text-sm text-zinc-500">Nothing matches “{query}”.</p>
-        )}
-        {!busy && query.trim().length < 2 && (
-          <p className="py-8 text-center text-sm text-zinc-500">
-            Type at least 2 characters to search your workspace.
-          </p>
-        )}
-        <div className="flex flex-col divide-y divide-zinc-200 dark:divide-zinc-800">
-          {shown.map((h) => (
-            <button
-              key={`${h.kind}-${h.id}`}
-              type="button"
-              onClick={() => openHit(h)}
-              className="flex items-center gap-3 py-3 text-left"
-            >
-              <span
+
+          <div className="flex gap-1.5">
+            {(
+              [
+                ["ALL", "All"],
+                ["VEHICLE", "Vehicles"],
+                ["CLIENT", "Clients"],
+              ] as const
+            ).map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setFilter(id)}
                 className={cn(
-                  "flex size-8 shrink-0 items-center justify-center rounded-lg",
-                  h.kind === "CLIENT"
-                    ? "bg-purple-100 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400"
-                    : "bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400"
+                  "rounded-full border px-3 py-1 text-xs transition-colors",
+                  filter === id
+                    ? "border-foreground bg-foreground text-background"
+                    : "border-input text-muted-foreground"
                 )}
               >
-                {h.kind === "CLIENT" ? <UserRound className="size-4" /> : <Car className="size-4" />}
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">{h.title}</p>
-                {h.detail && <p className="truncate text-xs text-zinc-500">{h.detail}</p>}
-              </div>
-              <ChevronRight className="size-4 text-zinc-400" />
-            </button>
-          ))}
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
-    </SidePanel>
+
+        <div className="mt-2 flex-1 overflow-y-auto scrollbar-pill px-4 pb-8">
+          {busy && (
+            <div className="flex justify-center py-6">
+              <Loader2 className="size-4 animate-spin text-muted-foreground" />
+            </div>
+          )}
+          {!busy && query.trim().length >= 2 && shown.length === 0 && (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              Nothing matches “{query}”.
+            </p>
+          )}
+          {!busy && query.trim().length < 2 && (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              Type at least 2 characters to search your workspace.
+            </p>
+          )}
+          <div className="flex flex-col divide-y divide-border">
+            {shown.map((h) => (
+              <button
+                key={`${h.kind}-${h.id}`}
+                type="button"
+                onClick={() => openHit(h)}
+                className="flex items-center gap-3 py-3 text-left"
+              >
+                <span
+                  className={cn(
+                    "flex size-8 shrink-0 items-center justify-center rounded-lg",
+                    h.kind === "CLIENT"
+                      ? "bg-purple-100 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400"
+                      : "bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400"
+                  )}
+                >
+                  {h.kind === "CLIENT" ? <UserRound className="size-4" /> : <Car className="size-4" />}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{h.title}</p>
+                  {h.detail && <p className="truncate text-xs text-muted-foreground">{h.detail}</p>}
+                </div>
+                <ChevronRight className="size-4 text-muted-foreground/60" />
+              </button>
+            ))}
+          </div>
+        </div>
+      </DrawerContent>
+    </Drawer>
   );
 }
 
@@ -547,10 +554,11 @@ export function MobileShell({
             );
           })}
 
-          {/* Notifications — same live feed as desktop */}
+          {/* Notifications — same live feed, but a bottom drawer on mobile */}
           <NotificationSheet
             orgId={orgId}
             notifications={notifications}
+            mobile
             triggerClassName="size-11 w-11 rounded-full border-0 bg-transparent text-muted-foreground shadow-none"
           />
 
