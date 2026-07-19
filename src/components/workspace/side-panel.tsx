@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useDragControls, type PanInfo } from "motion/react";
 
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -25,6 +25,13 @@ export function SidePanel({
   className?: string;
 }) {
   const isMobile = useIsMobile();
+  const dragControls = useDragControls();
+
+  // Drag the grab handle down far/fast enough to dismiss; otherwise the elastic
+  // constraint (bottom: 0) springs the sheet back into place on release.
+  function handleDragEnd(_: unknown, info: PanInfo) {
+    if (info.offset.y > 120 || info.velocity.y > 700) onClose();
+  }
 
   return (
     <AnimatePresence>
@@ -47,11 +54,20 @@ export function SidePanel({
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 32, stiffness: 340 }}
+              drag="y"
+              dragListener={false}
+              dragControls={dragControls}
+              dragConstraints={{ top: 0, bottom: 0 }}
+              dragElastic={{ top: 0, bottom: 0.6 }}
+              onDragEnd={handleDragEnd}
             >
+              {/* Grab handle — press and pull down to dismiss */}
               <div
-                className="mx-auto -mb-2 h-1.5 w-12 shrink-0 rounded-full bg-zinc-300 dark:bg-zinc-700"
-                onClick={onClose}
-              />
+                className="mx-auto -mb-2 flex w-full shrink-0 cursor-grab touch-none justify-center py-1 active:cursor-grabbing"
+                onPointerDown={(e) => dragControls.start(e)}
+              >
+                <div className="h-1.5 w-12 rounded-full bg-zinc-300 dark:bg-zinc-700" />
+              </div>
               {children}
             </motion.div>
           ) : (

@@ -18,21 +18,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-
-// Visual strength — 5 checks, drives the 4 bars. Zod enforces the first four.
-function calcStrength(p) {
-  if (!p) return { bars: 0, label: "" };
-  let score = 0;
-  if (p.length >= 8) score++;
-  if (/[a-z]/.test(p)) score++;
-  if (/[A-Z]/.test(p)) score++;
-  if (/[0-9]/.test(p)) score++;
-  if (/[^A-Za-z0-9]/.test(p)) score++;
-  const labels = ["Too weak", "Too weak", "Weak", "Fair", "Strong", "Very strong"];
-  return { bars: Math.min(score, 4), label: labels[score] };
-}
-
-const BAR_COLORS = ["bg-red-500", "bg-orange-500", "bg-yellow-500", "bg-green-500"];
+import { PasswordStrength } from "./password-strength";
 
 export function SignupForm({ className, onSwitch, ...props }: AuthFormProps) {
   const router = useRouter();
@@ -42,8 +28,6 @@ export function SignupForm({ className, onSwitch, ...props }: AuthFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const strength = calcStrength(password);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -164,22 +148,7 @@ export function SignupForm({ className, onSwitch, ...props }: AuthFormProps) {
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
-          {password.length > 0 && (
-            <div className="space-y-1">
-              <div className="flex gap-1">
-                {[0, 1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    className={cn(
-                      "h-1 flex-1 rounded transition-colors",
-                      i < strength.bars ? BAR_COLORS[strength.bars - 1] : "bg-zinc-700"
-                    )}
-                  />
-                ))}
-              </div>
-              <p className="text-xs text-muted-foreground">{strength.label}</p>
-            </div>
-          )}
+          <PasswordStrength password={password} />
           {errors.password && (
             <p className="text-xs text-destructive">{errors.password}</p>
           )}

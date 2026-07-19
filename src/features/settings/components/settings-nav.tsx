@@ -69,7 +69,7 @@ export function SettingsNav({ orgId, isAdmin }: { orgId: string; isAdmin: boolea
   const active = pathname.split("/").pop() ?? "";
 
   return (
-    <nav className="flex w-full shrink-0 bg-zinc-900 p-2 rounded-b-md flex-col gap-4 md:w-48">
+    <nav className="flex w-full shrink-0 bg-zinc-100 dark:bg-zinc-900 p-2 rounded-b-md flex-col gap-4 md:w-48">
       {isAdmin && <Group label="Workspace" items={WORKSPACE_ITEMS} base={base} active={active} />}
       <Group label="My settings" items={MY_ITEMS} base={base} active={active} />
     </nav>

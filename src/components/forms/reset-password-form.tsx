@@ -12,6 +12,7 @@ import { authErrorMessage } from "@/lib/auth-errors";
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { PasswordStrength } from "./password-strength";
 
 /**
  * Shown at /auth/reset-password after the user clicks the email link. The
@@ -90,6 +91,7 @@ export function ResetPasswordForm({ className, ...props }: ComponentProps<"form"
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
+          <PasswordStrength password={password} showRules />
           {errors.password && (
             <p className="text-xs text-destructive">{errors.password}</p>
           )}

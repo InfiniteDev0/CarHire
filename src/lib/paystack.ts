@@ -18,8 +18,15 @@ function secret(): string {
 
 export interface InitTransactionArgs {
   email: string;
-  /** Major currency units (e.g. KES 2500) — converted to the smallest unit here. */
-  amount: number;
+  /** Major currency units (e.g. KES 2500). One-time charge. Omit when `plan` is set. */
+  amount?: number;
+  /**
+   * Paystack plan code — turns the transaction into a recurring subscription.
+   * The plan carries its own amount/interval, so `amount` is not needed.
+   * Recurring billing requires a card (Paystack can't auto-charge M-Pesa), so
+   * the checkout is card-only when a plan is provided.
+   */
+  plan?: string;
   currency?: string;
   reference?: string;
   callbackUrl: string;
@@ -35,21 +42,30 @@ export interface InitTransactionResult {
 export async function initializeTransaction(
   args: InitTransactionArgs
 ): Promise<InitTransactionResult> {
+  if (!args.plan && args.amount == null) {
+    throw new Error("initializeTransaction needs a plan code or an amount.");
+  }
+
+  const body: Record<string, unknown> = {
+    email: args.email,
+    currency: args.currency ?? "KES",
+    reference: args.reference,
+    callback_url: args.callbackUrl,
+    metadata: args.metadata,
+    // Recurring subscriptions must be tokenised → card only. One-time charges
+    // can use the full set (M-Pesa via mobile_money, bank, USSD).
+    channels: args.plan ? ["card"] : ["card", "mobile_money", "bank", "ussd"],
+  };
+  if (args.plan) body.plan = args.plan;
+  else body.amount = Math.round((args.amount ?? 0) * 100); // KES → cents
+
   const res = await fetch(`${API}/transaction/initialize`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${secret()}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      email: args.email,
-      amount: Math.round(args.amount * 100), // KES → cents
-      currency: args.currency ?? "KES",
-      reference: args.reference,
-      callback_url: args.callbackUrl,
-      metadata: args.metadata,
-      channels: ["card", "mobile_money", "bank", "ussd"],
-    }),
+    body: JSON.stringify(body),
     cache: "no-store",
   });
 

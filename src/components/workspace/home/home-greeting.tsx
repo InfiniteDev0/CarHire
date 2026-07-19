@@ -20,8 +20,8 @@ export function HomeGreeting({
   role: string;
 }) {
   return (
-    <div className="flex items-center justify-between">
-      <div className="space-y-1">
+    <div className="flex flex-col md:flex-row gap-2 md:gap-0 justify-between">
+      <div className="flex justify-between items-center md:flex-col space-y-1">
         <h1 className="text-xl">
           {getGreeting()}, {name}
         </h1>
@@ -33,12 +33,12 @@ export function HomeGreeting({
 
       {/* quick CTAs */}
       <div className="flex items-center gap-2">
-        <Button asChild className="h-7 rounded-sm">
+        {/* <Button asChild className="h-7 rounded-sm">
           <Link href={`/workspace/${orgId}/rentals?new=1`}>Rent a car</Link>
         </Button>
         <Button asChild variant="outline" className="h-7 rounded-sm">
           <Link href={`/workspace/${orgId}/calendar`}>Open the calendar</Link>
-        </Button>
+        </Button> */}
       </div>
     </div>
   );

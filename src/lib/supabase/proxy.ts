@@ -2,11 +2,24 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 
 // Paths reachable without a session. Everything else requires auth.
-// The login/signup UI lives under /auth.
-const PUBLIC_PREFIXES = ["/auth"];
+// The login/signup UI lives under /auth; the Paystack webhook is a
+// server-to-server POST (no user session) that verifies its own signature.
+const PUBLIC_PREFIXES = ["/auth", "/api/paystack"];
+
+// Auth paths that MUST stay reachable even while signed in. The email-link
+// callback lands here with a fresh recovery/confirmation session, and the
+// "set a new password" screen only works once that session exists — so we
+// must NOT bounce an authenticated user away from these.
+const SIGNED_IN_ALLOWED = ["/auth/callback", "/auth/reset-password"];
 
 function isPublic(pathname) {
   return PUBLIC_PREFIXES.some(
+    (p) => pathname === p || pathname.startsWith(p + "/")
+  );
+}
+
+function allowedWhileSignedIn(pathname) {
+  return SIGNED_IN_ALLOWED.some(
     (p) => pathname === p || pathname.startsWith(p + "/")
   );
 }
@@ -54,8 +67,10 @@ export async function updateSession(request) {
     return NextResponse.redirect(url);
   }
 
-  // Signed in but sitting on an auth page → bounce to the router at "/".
-  if (user && isPublic(pathname)) {
+  // Signed in but sitting on an auth page → bounce to the router at "/",
+  // EXCEPT the callback + password-reset screens, which are meant to be used
+  // while holding a fresh email-link session.
+  if (user && isPublic(pathname) && !allowedWhileSignedIn(pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);

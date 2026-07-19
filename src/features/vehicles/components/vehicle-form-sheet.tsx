@@ -277,7 +277,7 @@ export function VehicleFormSheet({
         </div>
 
         {/* Location */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3">
           <OptionalSelect label="County" value={form.county} onChange={(v) => set("county", v)} options={KENYA_COUNTIES} disabled={isLoading} />
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="domicile">Domicile / base</Label>
@@ -286,7 +286,7 @@ export function VehicleFormSheet({
         </div>
 
         {/* Ownership + documents */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="ownerName">Owner name</Label>
             <Input id="ownerName" value={form.ownerName} onChange={(e) => set("ownerName", e.target.value)} placeholder="Company / person" disabled={isLoading} />

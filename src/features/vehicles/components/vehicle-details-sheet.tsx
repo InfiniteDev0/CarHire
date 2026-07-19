@@ -1,15 +1,26 @@
 "use client";
 
-import { useState } from "react";
-import { X, Pencil, Archive } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { X, Pencil, Archive, Maximize2, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
 import { SidePanel } from "./side-panel";
 import { VehicleStatusBadge } from "./vehicle-status-badge";
 import type { Vehicle } from "../types";
+import {
+  VEHICLE_TRIP_COLUMNS,
+  mapTrip,
+  tripDisplayStatus,
+  TRIP_STATUS_STYLE,
+  type VehicleTrip,
+} from "../trip-history";
 
 const kes = (n: number) => `KES ${n.toLocaleString()}`;
+const fmtDate = (iso: string) =>
+  new Date(iso).toLocaleDateString("en-KE", { day: "numeric", month: "short", year: "numeric" });
 
 const TABS = [
   { id: "rent", label: "Rent details" },
@@ -21,14 +32,15 @@ type TabId = (typeof TABS)[number]["id"];
 
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between border-b border-zinc-800/70 py-2 last:border-0">
-      <span className="text-zinc-500">{label}</span>
-      <span className="text-right text-zinc-200">{value || "—"}</span>
+    <div className="flex items-center justify-between border-b  py-2 last:border-0">
+      <span className="text-black dark:text-zinc-500">{label}</span>
+      <span className="text-right dark:text-zinc-200">{value || "—"}</span>
     </div>
   );
 }
 
 export function VehicleDetailsSheet({
+  orgId,
   vehicle,
   open,
   onOpenChange,
@@ -38,6 +50,7 @@ export function VehicleDetailsSheet({
   onRentOut,
   staffNames,
 }: {
+  orgId: string;
   vehicle: Vehicle | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -47,14 +60,43 @@ export function VehicleDetailsSheet({
   onRentOut?: (v: Vehicle) => void;
   staffNames?: Record<string, string>;
 }) {
+  const router = useRouter();
   const [tab, setTab] = useState<TabId>("rent");
-  // Reset to the first tab when a different vehicle is opened (render-time
-  // reset — React's recommended alternative to a setState-in-effect).
+  const [trips, setTrips] = useState<VehicleTrip[] | null>(null);
+  const [tripsLoading, setTripsLoading] = useState(false);
+
+  // Reset to the first tab (and drop cached trips) when a different vehicle is
+  // opened (render-time reset — React's alternative to a setState-in-effect).
   const [lastId, setLastId] = useState(vehicle?.id);
   if (vehicle?.id !== lastId) {
     setLastId(vehicle?.id);
     setTab("rent");
+    setTrips(null);
   }
+
+  // Lazily load the trip history the first time that tab is opened.
+  const vehicleId = vehicle?.id;
+  useEffect(() => {
+    if (!open || tab !== "history" || !vehicleId || trips !== null) return;
+    let cancelled = false;
+    setTripsLoading(true);
+    (async () => {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("contracts")
+        .select(VEHICLE_TRIP_COLUMNS)
+        .eq("org_id", orgId)
+        .eq("car_id", vehicleId)
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (cancelled) return;
+      setTrips((data ?? []).map(mapTrip));
+      setTripsLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, tab, vehicleId, trips, orgId]);
 
   if (!vehicle) return null;
   const title = [vehicle.make, vehicle.model].filter(Boolean).join(" ") || "Vehicle";
@@ -62,7 +104,7 @@ export function VehicleDetailsSheet({
 
   return (
     <SidePanel open={open} onClose={() => onOpenChange(false)}>
-      {/* Top: close + status */}
+      {/* Top: close + expand + status */}
       <div className="flex items-center justify-between">
         <Button
           onClick={() => onOpenChange(false)}
@@ -70,7 +112,17 @@ export function VehicleDetailsSheet({
         >
           <X className="size-4" />
         </Button>
-        <VehicleStatusBadge status={vehicle.status} />
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            aria-label="Open full page"
+            onClick={() => router.push(`/workspace/${orgId}/vehicles/${vehicle.id}`)}
+            className="flex size-8 cursor-pointer items-center justify-center rounded-full bg-zinc-800 text-white transition-colors hover:bg-zinc-700"
+          >
+            <Maximize2 className="size-3.5" />
+          </button>
+          <VehicleStatusBadge status={vehicle.status} />
+        </div>
       </div>
 
       {/* Image */}
@@ -80,7 +132,7 @@ export function VehicleDetailsSheet({
       </div>
 
       {/* Name + rate */}
-      <div className="flex items-end justify-between border-b border-zinc-800 pb-4">
+      <div className="flex items-end justify-between border-b dark:border-zinc-800">
         <div className="min-w-0">
           <h1 className="truncate text-xl font-bold tracking-tight">{title}</h1>
           <p className="mt-0.5 text-xs text-zinc-500">
@@ -100,14 +152,14 @@ export function VehicleDetailsSheet({
       </div>
 
       {/* Tabs */}
-      <div className="flex  items-center gap-4 overflow-x-auto border-b border-zinc-800 pb-px no-scrollbar">
+      <div className="flex  items-center gap-4 border-b dark:border-zinc-800 pb-px no-scrollbar">
         {TABS.map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
             className={cn(
               "relative whitespace-nowrap pb-2 text-sm font-medium transition-colors",
-              tab === t.id ? "text-white" : "text-zinc-500 hover:text-zinc-300"
+              tab === t.id ? "text-black dark:text-white" : "text-zinc-500 md:hover:text-zinc-300"
             )}
           >
             {t.label}
@@ -175,11 +227,52 @@ export function VehicleDetailsSheet({
         )}
 
         {tab === "history" && (
-          <div>
+          <div className="space-y-3">
             <InfoRow label="Total mileage" value={vehicle.mileage != null ? `${vehicle.mileage.toLocaleString()} km` : null} />
-            <div className="flex min-h-24 items-center justify-center pt-4 text-center text-xs text-zinc-600">
-              Trip history appears here once contracts exist (Phase 4/5).
-            </div>
+
+            {tripsLoading && (
+              <div className="flex justify-center py-6">
+                <Loader2 className="size-4 animate-spin text-zinc-500" />
+              </div>
+            )}
+
+            {!tripsLoading && trips && trips.length === 0 && (
+              <p className="py-6 text-center text-xs text-zinc-600">
+                No trips recorded for this vehicle yet.
+              </p>
+            )}
+
+            {!tripsLoading && trips && trips.length > 0 && (
+              <div className="flex flex-col gap-2">
+                {trips.map((t) => {
+                  const st = tripDisplayStatus(t);
+                  const start = t.contract_start ?? t.created_at;
+                  return (
+                    <div key={t.id} className="rounded-lg border border-zinc-800 p-2.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="truncate text-sm font-medium text-zinc-200">
+                          {t.clientName ?? "—"}
+                        </span>
+                        <span
+                          className={cn(
+                            "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium",
+                            TRIP_STATUS_STYLE[st]
+                          )}
+                        >
+                          {st}
+                        </span>
+                      </div>
+                      <div className="mt-1 flex items-center justify-between text-xs text-zinc-500">
+                        <span>
+                          {fmtDate(start)} · {t.duration_days} day{t.duration_days === 1 ? "" : "s"}
+                        </span>
+                        <span>{t.total_amount != null ? kes(t.total_amount) : ""}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
@@ -196,19 +289,27 @@ export function VehicleDetailsSheet({
 
       {/* Admin actions */}
       {isAdmin && (
-        <div className="flex gap-2 border-t border-zinc-800 pt-3">
-          <Button
-            variant="outline"
-            className="flex-1 border-zinc-700 bg-transparent text-red-400 hover:bg-zinc-900"
-            onClick={() => onDecommission(vehicle)}
-          >
-            <Archive className="size-4" />
-            Decommission
-          </Button>
-          <Button className="flex-1" onClick={() => onEdit(vehicle)}>
-            <Pencil className="size-4" />
-            Edit
-          </Button>
+        <div className="flex flex-col gap-1.5 border-t border-zinc-800 pt-3">
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="flex-1 bg-transparent text-red-400 hover:bg-zinc-900 disabled:opacity-40"
+              disabled={vehicle.status === "TRIP"}
+              onClick={() => onDecommission(vehicle)}
+            >
+              <Archive className="size-4" />
+              Decommission
+            </Button>
+            <Button className="flex-1" onClick={() => onEdit(vehicle)}>
+              <Pencil className="size-4" />
+              Edit
+            </Button>
+          </div>
+          {vehicle.status === "TRIP" && (
+            <p className="text-center text-xs text-zinc-500">
+              On a trip — check it in before decommissioning.
+            </p>
+          )}
         </div>
       )}
     </SidePanel>

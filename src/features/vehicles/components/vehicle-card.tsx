@@ -40,7 +40,7 @@ export function VehicleCard({
               e.stopPropagation();
               onEdit(vehicle);
             }}
-            className="rounded-full bg-background/70 p-1.5 text-muted-foreground backdrop-blur transition-colors hover:text-foreground"
+            className="cursor-pointer rounded-full bg-background/70 p-1.5 text-muted-foreground backdrop-blur transition-colors hover:text-foreground"
             aria-label="Edit vehicle"
           >
             <Pencil className="size-3.5" />
@@ -51,7 +51,7 @@ export function VehicleCard({
       <button
         type="button"
         onClick={() => onOpen(vehicle)}
-        className="w-full text-left"
+        className="w-full cursor-pointer text-left"
       >
         {/* Image (falls back to placeholder art) */}
         <div className="flex aspect-[16/10] items-center justify-center bg-muted/40 p-4">

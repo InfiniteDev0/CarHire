@@ -92,8 +92,7 @@ export function AppSidebar({
                     tooltip={item.title}
                     isActive={active}
                     render={<Link href={item.url} />}
-                    className="mb-1"
-                    // text-muted-foreground data-active:bg-transparent data-active:text-foreground data-active:font-medium group-data-[collapsible=icon]:data-active:bg-black group-data-[collapsible=icon]:data-active:text-white
+                    className="mb-1 text-muted-foreground data-active:bg-green-500/10 data-active:text-foreground data-active:font-medium group-data-[collapsible=icon]:data-active:bg-black group-data-[collapsible=icon]:data-active:text-white"
                   >
                     <item.icon />
                     <span>{item.title}</span>
@@ -101,7 +100,7 @@ export function AppSidebar({
                   {active && (
                     <motion.div
                       layoutId="sidebar-active-indicator"
-                      className="absolute inset-y-1.5 left-0 w-0.75 rounded-full bg-cyan-500 group-data-[collapsible=icon]:hidden"
+                      className="absolute inset-y-1.5 left-0 w-0.75 rounded-full bg-emerald-500 group-data-[collapsible=icon]:hidden"
                       transition={{
                         type: "spring",
                         stiffness: 500,

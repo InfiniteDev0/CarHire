@@ -134,6 +134,7 @@ export function VehiclesGrid({
 
       {/* Details */}
       <VehicleDetailsSheet
+        orgId={orgId}
         vehicle={detailsTarget}
         open={detailsOpen}
         onOpenChange={setDetailsOpen}

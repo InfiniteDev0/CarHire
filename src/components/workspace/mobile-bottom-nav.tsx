@@ -491,16 +491,16 @@ export function MobileShell({
 
       {/* ── Liquid-glass pill + "+" ───────────────────────────────────────── */}
       <nav className="fixed inset-x-0 bottom-4 z-40 flex items-center justify-center gap-2 md:hidden">
-        {/* Expanding apps grid */}
+        {/* Expanding apps grid — one glass container, ClickUp-style squircles */}
         <AnimatePresence>
           {gridOpen && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.85, y: 16 }}
+              initial={{ opacity: 0, scale: 0.9, y: 14 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.85, y: 16 }}
-              transition={{ type: "spring", stiffness: 380, damping: 30 }}
+              exit={{ opacity: 0, scale: 0.9, y: 14 }}
+              transition={{ type: "spring", stiffness: 420, damping: 32 }}
               style={{ transformOrigin: "bottom center" }}
-              className="liquid-glass absolute bottom-full mb-3 grid grid-cols-3 gap-3 rounded-3xl p-4"
+              className="liquid-glass absolute bottom-full left-1/2 mb-3 grid w-[min(88vw,20rem)] -translate-x-1/2 grid-cols-3 gap-x-2 gap-y-4 rounded-[1.75rem] p-5"
             >
               {GRID_APPS.filter((a) => isAdmin || !a.adminOnly).map((a) => {
                 const url = `${base}/${a.segment}`;
@@ -509,17 +509,17 @@ export function MobileShell({
                     key={a.segment}
                     href={url}
                     onClick={() => setGridOpen(false)}
-                    className="flex w-16 flex-col items-center gap-1.5"
+                    className="flex flex-col items-center gap-1.5"
                   >
                     <span
                       className={cn(
-                        "flex size-11 items-center justify-center rounded-2xl text-white shadow-sm",
+                        "flex size-14 items-center justify-center rounded-[1.15rem] text-white shadow-md shadow-black/10",
                         a.className
                       )}
                     >
-                      <a.icon className="size-5" />
+                      <a.icon className="size-6" />
                     </span>
-                    <span className="text-[10px] font-medium text-foreground/80">{a.title}</span>
+                    <span className="text-[11px] font-medium text-foreground/80">{a.title}</span>
                   </Link>
                 );
               })}

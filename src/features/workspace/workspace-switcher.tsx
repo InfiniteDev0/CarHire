@@ -61,7 +61,7 @@ export function WorkspaceSwitcher({
       <DropdownMenuTrigger
         render={
           <SidebarMenuButton size="lg" className="bg-accent">
-            <div className="flex aspect-square size-8 items-center justify-center rounded-sm bg-sidebar-primary text-sidebar-primary-foreground">
+            <div className="flex aspect-square size-8 items-center justify-center rounded-sm bg-emerald-600 text-sidebar-primary-foreground">
               <Car className="size-4" />
             </div>
             <div className="grid flex-1 text-left text-sm leading-tight">
@@ -70,14 +70,14 @@ export function WorkspaceSwitcher({
                 {PLAN_LABELS[plan]} plan
               </span>
             </div>
-            <ChevronsUpDown className="ml-auto size-4 text-muted-foreground" />
+            <ChevronsUpDown className="ml-auto size-4" />
           </SidebarMenuButton>
         }
       />
       <DropdownMenuContent
         align="start"
         sideOffset={6}
-        className="w-72 rounded-sm bg-background p-0"
+        className="w-72 rounded-sm bg-background backdrop-blur-3xl p-0"
       >
         {/* Current business */}
         <div className="flex items-start gap-3 p-3">

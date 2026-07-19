@@ -32,11 +32,11 @@ export default function RootLayout({ children }) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${outfit.variable}  h-full antialiased light`}
+      className={`${outfit.variable}  h-full antialiased dark`}
     >
       <body className="min-h-full flex flex-col">
         <PwaRegister />
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
           {children}
         </ThemeProvider>
         <Toaster position="top-center" theme="dark" richColors />

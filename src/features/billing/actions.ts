@@ -3,7 +3,8 @@
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { initializeTransaction, paystackConfigured } from "@/lib/paystack";
-import { planAmount, type PaidPlan, type Billing } from "./pricing";
+import { planCode } from "@/lib/plan-codes";
+import { type PaidPlan, type Billing } from "./pricing";
 
 async function assertAdmin(orgId: string) {
   const supabase = await createClient();
@@ -27,8 +28,10 @@ async function assertAdmin(orgId: string) {
 
 /**
  * Start a Paystack checkout for a paid plan. Returns the hosted-checkout URL —
- * the client redirects there; Paystack handles card / M-Pesa / bank, then
- * bounces back to the verify route which activates the plan only on success.
+ * the client redirects there. This is a RECURRING subscription (Paystack Plan),
+ * so it's card-only; Paystack then bounces back to the verify route for instant
+ * feedback, while the webhook keeps the plan's lifecycle (renewals, failures,
+ * cancellation) in sync afterwards.
  */
 export async function initPaystackCheckout(
   orgId: string,
@@ -42,13 +45,20 @@ export async function initPaystackCheckout(
   }
   if (!user.email) throw new Error("Your account has no email for the receipt.");
 
+  const code = planCode(plan, billing);
+  if (!code) {
+    throw new Error(
+      `No Paystack plan is configured for ${plan} (${billing.toLowerCase()}). Create it in Paystack and set the plan code in your environment.`
+    );
+  }
+
   const h = await headers();
   const origin = h.get("origin") ?? (h.get("host") ? `https://${h.get("host")}` : "");
   const callbackUrl = `${origin}/workspace/${orgId}/pricing/checkout/verify`;
 
   const { authorizationUrl } = await initializeTransaction({
     email: user.email,
-    amount: planAmount(plan, billing),
+    plan: code,
     currency: "KES",
     callbackUrl,
     metadata: { orgId, plan, billing, userId: user.id },

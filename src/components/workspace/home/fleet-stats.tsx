@@ -26,7 +26,7 @@ export function FleetStats({
             <Car className="size-3" /> Vehicles
           </Badge>
           <Button asChild className="h-6 rounded-sm px-2 text-xs">
-            <Link href={`/workspace/${orgId}/vehicles`}>Add</Link>
+            <Link href={`/workspace/${orgId}/vehicles?new=1`}>Add</Link>
           </Button>
         </div>
         <div>

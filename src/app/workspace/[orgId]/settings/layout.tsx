@@ -26,7 +26,7 @@ export default async function SettingsLayout({
           backgroundPosition: "top",
         }}
       >
-        <h1 className="text-xl">Settings</h1>
+        <h1 className="text-xl text-black dark:text-white">Settings</h1>
         <p className="text-sm text-muted-foreground">
           Workspace configuration and your account.
         </p>
@@ -34,7 +34,7 @@ export default async function SettingsLayout({
 
       <div className="flex flex-col h-120  gap-6 md:flex-row">
         <SettingsNav orgId={orgId} isAdmin={isAdmin} />
-        <div className="min-w-0 pt-2 overflow-y-scroll scrollbar-pill flex-1">{children}</div>
+        <div className="min-w-0 pt-2 md:overflow-y-scroll scrollbar-pill flex-1">{children}</div>
       </div>
     </div>
   );

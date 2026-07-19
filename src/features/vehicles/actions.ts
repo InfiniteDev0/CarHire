@@ -101,6 +101,19 @@ export async function updateCar(
 /** Soft-delete: keeps trip history intact by setting decommissioned_at. */
 export async function decommissionCar(orgId: string, carId: string): Promise<void> {
   const { supabase } = await assertAdmin(orgId);
+
+  // A car that's currently out with a client can't be pulled from the fleet —
+  // it has to be checked back in first.
+  const { data: car } = await supabase
+    .from("cars")
+    .select("status")
+    .eq("id", carId)
+    .eq("org_id", orgId)
+    .maybeSingle();
+  if (car?.status === "TRIP") {
+    throw new Error("This vehicle is on a trip. Check it back in before decommissioning.");
+  }
+
   const { error } = await supabase
     .from("cars")
     .update({ decommissioned_at: new Date().toISOString() })
