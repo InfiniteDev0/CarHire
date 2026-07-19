@@ -18,7 +18,15 @@ import { getWorkspaceNotifications } from "@/features/workspace/notifications";
 import { WorkspaceBreadcrumb } from "@/features/workspace/workspace-breadcrumb";
 import { WorkspaceStoreHydrator } from "@/components/workspace/workspace-store-hydrator";
 import type { MemberRole } from "@/lib/auth/membership";
-import { getOrgUsage, isAnyLimitReached, PLAN_LABELS, type OrgPlan } from "@/lib/limits";
+import {
+  getOrgUsage,
+  isAnyLimitReached,
+  PLAN_LABELS,
+  workspaceAllowance,
+  workspaceLimitMessage,
+  bestPlan,
+  type OrgPlan,
+} from "@/lib/limits";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { RainbowButton } from "@/components/ui/rainbow-button";
@@ -90,10 +98,12 @@ export default async function WorkspaceLayout({
       plan: (m.organizations!.plan ?? "FREE") as OrgPlan,
       role: m.role,
     }));
-  // Extra workspaces are a Business-plan feature.
-  const canCreateWorkspace = workspaces.some(
-    (w) => w.role === "admin" && w.plan === "BUSINESS"
-  );
+  // Workspace allowance scales with the user's best plan (Free 1 / Pro 3 /
+  // Business 6). You may create another until you're at that cap.
+  const adminPlans = workspaces.filter((w) => w.role === "admin").map((w) => w.plan);
+  const adminCount = adminPlans.length;
+  const canCreateWorkspace = adminCount < workspaceAllowance(adminPlans);
+  const workspaceMessage = workspaceLimitMessage(bestPlan(adminPlans));
 
   const displayName =
     (user.user_metadata?.full_name as string) || user.email || "User";
@@ -118,6 +128,7 @@ export default async function WorkspaceLayout({
           isAdmin={role === "admin"}
           workspaces={workspaces}
           canCreateWorkspace={canCreateWorkspace}
+          workspaceMessage={workspaceMessage}
         />
         <SidebarInset className="h-svh overflow-hidden">
           <header className="hidden md:flex h-12 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
@@ -179,6 +190,7 @@ export default async function WorkspaceLayout({
             vehicleCount={usage.vehicles}
             workspaces={workspaces}
             canCreateWorkspace={canCreateWorkspace}
+            workspaceMessage={workspaceMessage}
             notifications={notifications}
           />
           <div className="flex flex-1 flex-col gap-4 overflow-y-auto scrollbar-pill p-4 pb-28 md:pb-4">

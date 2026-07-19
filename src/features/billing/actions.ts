@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { initializeTransaction, paystackConfigured } from "@/lib/paystack";
 import { planCode } from "@/lib/plan-codes";
-import { type PaidPlan, type Billing } from "./pricing";
+import { planAmount, type PaidPlan, type Billing } from "./pricing";
 
 async function assertAdmin(orgId: string) {
   const supabase = await createClient();
@@ -59,6 +59,8 @@ export async function initPaystackCheckout(
   const { authorizationUrl } = await initializeTransaction({
     email: user.email,
     plan: code,
+    // Required by Paystack even with a plan; must match the plan's amount.
+    amount: planAmount(plan, billing),
     currency: "KES",
     callbackUrl,
     metadata: { orgId, plan, billing, userId: user.id },

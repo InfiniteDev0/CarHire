@@ -34,6 +34,7 @@ export function WorkspaceSwitcher({
   isAdmin,
   workspaces,
   canCreateWorkspace,
+  workspaceMessage,
 }: {
   orgId: string;
   orgName: string;
@@ -42,6 +43,7 @@ export function WorkspaceSwitcher({
   isAdmin: boolean;
   workspaces: WorkspaceEntry[];
   canCreateWorkspace: boolean;
+  workspaceMessage: string;
 }) {
   const router = useRouter();
   const base = `/workspace/${orgId}`;
@@ -51,7 +53,7 @@ export function WorkspaceSwitcher({
     if (canCreateWorkspace) {
       router.push("/onboarding");
     } else {
-      toast.error("Upgrade to the Business plan to run more than one workspace.");
+      toast.error(workspaceMessage);
       router.push(`${base}/pricing`);
     }
   }

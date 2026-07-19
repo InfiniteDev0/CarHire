@@ -10,6 +10,7 @@ export function StepFleetSize({ api }: { api: OnboardingApi }) {
   return (
     <OnboardingLayout
       currentStep={3}
+      totalSteps={api.totalSteps}
       onBack={api.goBack}
       onNext={api.goNext}
       nextDisabled={!api.canAdvance()}

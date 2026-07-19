@@ -11,5 +11,14 @@ export default async function OnboardingPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/auth");
 
-  return <OnboardingFlow />;
+  // If they already admin a workspace, this is an *additional* one — it inherits
+  // their paid plan, so the plan step is skipped.
+  const { count } = await supabase
+    .from("org_members")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .eq("role", "admin")
+    .eq("is_active", true);
+
+  return <OnboardingFlow isAdditional={(count ?? 0) > 0} />;
 }

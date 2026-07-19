@@ -4,6 +4,12 @@ import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createOrgSchema, toMoney, type CreateOrgInput } from "@/lib/validation/org";
+import {
+  workspaceAllowance,
+  workspaceLimitMessage,
+  bestPlan,
+  type OrgPlan,
+} from "@/lib/limits";
 
 export interface CompleteOnboardingResult {
   orgId: string;
@@ -25,25 +31,24 @@ export async function completeOnboarding(
   } = await supabase.auth.getUser();
   if (!user) throw new Error("You need to be signed in.");
 
-  // Extra workspaces are a Business-plan feature: your first is always free,
-  // but creating another requires being admin of a BUSINESS-plan org.
+  // Workspace allowance scales with the user's best plan (Free 1 / Pro 3 /
+  // Business 6). Your first is always free; beyond that you must be under the
+  // cap of the strongest plan among the orgs you already admin.
   const { data: existing } = await supabase
     .from("org_members")
     .select("role, organizations(plan)")
     .eq("user_id", user.id)
     .eq("is_active", true);
-  if (existing && existing.length > 0) {
-    const hasBusiness = (
-      existing as unknown as {
-        role: string;
-        organizations: { plan: string | null } | null;
-      }[]
-    ).some((m) => m.role === "admin" && m.organizations?.plan === "BUSINESS");
-    if (!hasBusiness) {
-      throw new Error(
-        "Upgrade to the Business plan to run more than one workspace."
-      );
-    }
+  const adminPlans = (
+    (existing ?? []) as unknown as {
+      role: string;
+      organizations: { plan: string | null } | null;
+    }[]
+  )
+    .filter((m) => m.role === "admin")
+    .map((m) => (m.organizations?.plan ?? "FREE") as OrgPlan);
+  if (adminPlans.length >= workspaceAllowance(adminPlans)) {
+    throw new Error(workspaceLimitMessage(bestPlan(adminPlans)));
   }
 
   const parsed = createOrgSchema.safeParse(input);
@@ -74,6 +79,19 @@ export async function completeOnboarding(
   }
 
   const orgId = org.id as string;
+
+  // Additional workspaces inherit the creator's best plan — one paid
+  // subscription covers all the workspaces their plan allows, so there's no
+  // second checkout. Written with the service role so plan can't be forged
+  // from the client. (The first workspace stays FREE until they pay.)
+  const inheritedPlan = bestPlan(adminPlans);
+  if (adminPlans.length > 0 && inheritedPlan !== "FREE") {
+    const admin = createAdminClient();
+    await admin
+      .from("organizations")
+      .update({ plan: inheritedPlan, plan_activated_at: new Date().toISOString() })
+      .eq("id", orgId);
+  }
 
   // Invite co-admins (needs service role — only spin it up if there are invites).
   let invitesSent = 0;

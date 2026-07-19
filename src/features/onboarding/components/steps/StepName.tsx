@@ -8,6 +8,7 @@ export function StepName({ api }: { api: OnboardingApi }) {
   return (
     <OnboardingLayout
       currentStep={1}
+      totalSteps={api.totalSteps}
       onNext={api.goNext}
       nextDisabled={!api.canAdvance()}
       title="What's your car-hire business called?"

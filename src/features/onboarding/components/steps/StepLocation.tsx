@@ -80,6 +80,7 @@ export function StepLocation({ api }: { api: OnboardingApi }) {
   return (
     <OnboardingLayout
       currentStep={2}
+      totalSteps={api.totalSteps}
       onBack={api.goBack}
       onNext={api.goNext}
       showSkip

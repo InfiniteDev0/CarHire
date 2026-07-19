@@ -25,11 +25,12 @@ export function StepInvite({ api }: { api: OnboardingApi }) {
   return (
     <OnboardingLayout
       currentStep={4}
+      totalSteps={api.totalSteps}
       onBack={api.goBack}
       onNext={api.goNext}
       showSkip
       onSkip={api.goNext}
-      nextLabel="Continue"
+      nextLabel={api.currentStep === api.totalSteps ? "Create workspace" : "Continue"}
       title="Invite a co-admin"
       subtitle="Optional. Co-admins can manage staff, cars and settings — just like you."
     >

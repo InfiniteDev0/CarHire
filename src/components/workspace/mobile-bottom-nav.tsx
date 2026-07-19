@@ -369,6 +369,7 @@ export function MobileShell({
   vehicleCount,
   workspaces,
   canCreateWorkspace,
+  workspaceMessage,
   notifications,
 }: {
   orgId: string;
@@ -380,6 +381,7 @@ export function MobileShell({
   vehicleCount: number;
   workspaces: WorkspaceEntry[];
   canCreateWorkspace: boolean;
+  workspaceMessage: string;
   notifications: WorkspaceNotification[];
 }) {
   const pathname = usePathname();
@@ -433,7 +435,7 @@ export function MobileShell({
     if (canCreateWorkspace) {
       router.push("/onboarding");
     } else {
-      toast.error("Upgrade to the Business plan to run more than one workspace.");
+      toast.error(workspaceMessage);
       router.push(`${base}/pricing`);
     }
   }

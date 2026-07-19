@@ -8,9 +8,11 @@ import { toast } from "sonner";
 export function NewWorkspaceButton({
   canCreateWorkspace,
   upgradeOrgId,
+  workspaceMessage,
 }: {
   canCreateWorkspace: boolean;
   upgradeOrgId: string;
+  workspaceMessage: string;
 }) {
   const router = useRouter();
 
@@ -18,7 +20,7 @@ export function NewWorkspaceButton({
     if (canCreateWorkspace) {
       router.push("/onboarding");
     } else {
-      toast.error("Upgrade to the Business plan to run more than one workspace.");
+      toast.error(workspaceMessage);
       router.push(`/workspace/${upgradeOrgId}/pricing`);
     }
   }

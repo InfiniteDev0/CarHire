@@ -134,6 +134,7 @@ const plans = [
 			"Unlimited vehicles",
 			"Unlimited staff members",
 			"Unlimited clients & rentals",
+			"Up to 3 workspaces",
 			"Contracts & check-in / check-out",
 			"Complaints & incident log",
 			"Priority support",
@@ -150,7 +151,7 @@ const plans = [
 		variant: "outline",
 		features: [
 			"Everything in Pro",
-			"Multiple workspaces",
+			"Up to 6 workspaces",
 			"Advanced reporting",
 			"Data export",
 			"Dedicated support",

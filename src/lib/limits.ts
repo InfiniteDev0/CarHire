@@ -12,6 +12,40 @@ export const PLAN_LABELS: Record<OrgPlan, string> = {
   BUSINESS: "Business",
 };
 
+// How many workspaces (businesses) a user may run on their best plan.
+// Free = the one they start with; Pro adds two more; Business up to six.
+export const WORKSPACE_LIMITS: Record<OrgPlan, number> = {
+  FREE: 1,
+  PRO: 3,
+  BUSINESS: 6,
+};
+
+const PLAN_RANK: Record<OrgPlan, number> = { FREE: 0, PRO: 1, BUSINESS: 2 };
+
+/** The strongest plan among a set (e.g. all the orgs a user admins). */
+export function bestPlan(plans: OrgPlan[]): OrgPlan {
+  return plans.reduce<OrgPlan>(
+    (best, p) => (PLAN_RANK[p] > PLAN_RANK[best] ? p : best),
+    "FREE"
+  );
+}
+
+/** How many workspaces this user is entitled to, given their orgs' plans. */
+export function workspaceAllowance(adminPlans: OrgPlan[]): number {
+  return WORKSPACE_LIMITS[bestPlan(adminPlans)];
+}
+
+/** The message to show when a user can't create another workspace. */
+export function workspaceLimitMessage(plan: OrgPlan): string {
+  if (plan === "BUSINESS") {
+    return `You've reached the maximum of ${WORKSPACE_LIMITS.BUSINESS} workspaces.`;
+  }
+  if (plan === "PRO") {
+    return `You're at your Pro limit of ${WORKSPACE_LIMITS.PRO} workspaces. Upgrade to Business for up to ${WORKSPACE_LIMITS.BUSINESS}.`;
+  }
+  return "Upgrade to Pro to run more than one workspace.";
+}
+
 /** The org's subscription plan (defaults to FREE if unreadable). */
 export async function getOrgPlan(
   supabase: SupabaseClient,

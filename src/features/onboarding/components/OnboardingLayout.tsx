@@ -1,16 +1,19 @@
 "use client";
 
 import type { ReactNode } from "react";
-import Image from "next/image";
 import { AnimatePresence, motion } from "motion/react";
-import { ChevronLeft, Loader2 } from "lucide-react";
+import { ChevronLeft, CircleCheck, Loader2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { TOTAL_STEPS } from "../config/onboarding.config";
+import { GridPattern } from "@/components/ui/grid-pattern";
+import { STEP_PANELS } from "./onboarding-demos";
 
 interface OnboardingLayoutProps {
   currentStep: number;
+  /** Number of segments in the progress bar (defaults to the full 5). */
+  totalSteps?: number;
   onBack?: () => void;
   onNext: () => void;
   nextLabel?: string;
@@ -27,6 +30,7 @@ interface OnboardingLayoutProps {
 
 export function OnboardingLayout({
   currentStep,
+  totalSteps = TOTAL_STEPS,
   onBack,
   onNext,
   nextLabel = "Continue",
@@ -53,18 +57,18 @@ export function OnboardingLayout({
             aria-label="Back"
             className={cn(
               "flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
-              !showBack && "invisible"
+              !showBack && "invisible",
             )}
           >
             <ChevronLeft className="size-5" />
           </button>
           <div className="flex flex-1 gap-1.5">
-            {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
+            {Array.from({ length: totalSteps }).map((_, i) => (
               <span
                 key={i}
                 className={cn(
                   "h-1 flex-1 rounded-full transition-colors",
-                  i < currentStep ? "bg-foreground" : "bg-muted"
+                  i < currentStep ? "bg-foreground" : "bg-muted",
                 )}
               />
             ))}
@@ -86,7 +90,9 @@ export function OnboardingLayout({
                   <h1 className="text-2xl font-semibold tracking-tight text-foreground">
                     {title}
                   </h1>
-                  {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
+                  {subtitle && (
+                    <p className="text-sm text-muted-foreground">{subtitle}</p>
+                  )}
                 </div>
                 <div>{children}</div>
               </motion.div>
@@ -106,26 +112,49 @@ export function OnboardingLayout({
             {nextLabel}
           </Button>
           {showSkip && (
-            <Button type="button" variant="ghost" onClick={onSkip} className="h-10 w-full">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={onSkip}
+              className="h-10 w-full"
+            >
               Skip for now
             </Button>
           )}
         </footer>
       </div>
 
-      {/* Right: per-step illustration (desktop only) */}
-      <div className="relative hidden overflow-hidden rounded-2xl md:block">
-        {illustration ?? (
-          <div className="flex size-full flex-col items-center justify-center gap-4 bg-linear-to-br from-primary/15 via-muted to-background">
-            <Image src="/logo.png" alt="" width={56} height={56} className="rounded-2xl shadow-sm" />
-            <div className="space-y-1 px-8 text-center">
-              <p className="text-lg font-semibold text-foreground">Lenzro CarHire</p>
-              <p className="max-w-xs text-sm text-muted-foreground">
-                Fleet, clients and contracts — one workspace per business.
-              </p>
+      {/* Right: per-step demonstration (desktop only) */}
+      <div className="relative hidden overflow-hidden rounded-2xl p-5 dark:bg-black md:block">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentStep}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className="flex h-full w-full flex-col items-center justify-center gap-3"
+          >
+            <p className="flex items-center gap-1.5 text-sm text-zinc-300">
+              <CircleCheck className="size-4 text-emerald-500" />
+              {(STEP_PANELS[currentStep] ?? STEP_PANELS[1]).caption}
+            </p>
+
+            {/* Demonstration of what this step configures */}
+            <div className="relative flex h-[500px] w-full flex-col items-center justify-center overflow-hidden rounded-lg border">
+              <GridPattern
+                width={20}
+                height={20}
+                x={-1}
+                y={-1}
+                className="[mask-image:linear-gradient(to_bottom_right,white,transparent,transparent)]"
+              />
+              <div className="relative z-20">
+                {(STEP_PANELS[currentStep] ?? STEP_PANELS[1]).demo}
+              </div>
             </div>
-          </div>
-        )}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );

@@ -1,7 +1,6 @@
 "use client";
 
 import { useOnboarding } from "../hooks/useOnboarding";
-import { TOTAL_STEPS } from "../config/onboarding.config";
 import { StepName } from "./steps/StepName";
 import { StepLocation } from "./steps/StepLocation";
 import { StepFleetSize } from "./steps/StepFleetSize";
@@ -9,11 +8,15 @@ import { StepInvite } from "./steps/StepInvite";
 import { StepPlan } from "./steps/StepPlan";
 import { CreatingWorkspace } from "./CreatingWorkspace";
 
-export default function OnboardingFlow() {
-  const api = useOnboarding();
+/**
+ * `isAdditional` = the user already has a workspace. Their plan step is skipped
+ * (the new workspace inherits their paid plan), so the wizard is 4 steps, not 5.
+ */
+export default function OnboardingFlow({ isAdditional = false }: { isAdditional?: boolean }) {
+  const api = useOnboarding(isAdditional ? 4 : 5);
 
   // Past the last step → run creation.
-  if (api.currentStep > TOTAL_STEPS || api.isSubmitting) {
+  if (api.currentStep > api.totalSteps || api.isSubmitting) {
     return <CreatingWorkspace api={api} />;
   }
 
@@ -27,7 +30,7 @@ export default function OnboardingFlow() {
     case 4:
       return <StepInvite api={api} />;
     case 5:
-      return <StepPlan api={api} />;
+      return isAdditional ? <StepName api={api} /> : <StepPlan api={api} />;
     default:
       return <StepName api={api} />;
   }

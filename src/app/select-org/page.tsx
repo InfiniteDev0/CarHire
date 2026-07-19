@@ -5,7 +5,13 @@ import { Car, ChevronRight } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
-import { PLAN_LABELS, type OrgPlan } from "@/lib/limits";
+import {
+  PLAN_LABELS,
+  workspaceAllowance,
+  workspaceLimitMessage,
+  bestPlan,
+  type OrgPlan,
+} from "@/lib/limits";
 import { NewWorkspaceButton } from "@/features/workspace/new-workspace-button";
 
 export const metadata = { title: "Choose a workspace · CarHire" };
@@ -40,9 +46,9 @@ export default async function SelectOrgPage() {
   if (workspaces.length === 0) redirect("/onboarding");
   if (workspaces.length === 1) redirect(`/workspace/${workspaces[0].id}`);
 
-  const canCreateWorkspace = workspaces.some(
-    (w) => w.role === "admin" && w.plan === "BUSINESS"
-  );
+  const adminPlans = workspaces.filter((w) => w.role === "admin").map((w) => w.plan);
+  const canCreateWorkspace = adminPlans.length < workspaceAllowance(adminPlans);
+  const workspaceMessage = workspaceLimitMessage(bestPlan(adminPlans));
   // Where "upgrade to create more" should send them — their first admin org.
   const upgradeOrgId = workspaces.find((w) => w.role === "admin")?.id ?? null;
 
@@ -83,6 +89,7 @@ export default async function SelectOrgPage() {
           <NewWorkspaceButton
             canCreateWorkspace={canCreateWorkspace}
             upgradeOrgId={upgradeOrgId}
+            workspaceMessage={workspaceMessage}
           />
         )}
       </div>

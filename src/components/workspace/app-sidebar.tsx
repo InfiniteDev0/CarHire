@@ -36,6 +36,7 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   isAdmin: boolean;
   workspaces: WorkspaceEntry[];
   canCreateWorkspace: boolean;
+  workspaceMessage: string;
 }
 
 export function AppSidebar({
@@ -47,6 +48,7 @@ export function AppSidebar({
   isAdmin,
   workspaces,
   canCreateWorkspace,
+  workspaceMessage,
   ...props
 }: AppSidebarProps) {
   const pathname = usePathname();
@@ -73,6 +75,7 @@ export function AppSidebar({
               isAdmin={isAdmin}
               workspaces={workspaces}
               canCreateWorkspace={canCreateWorkspace}
+              workspaceMessage={workspaceMessage}
             />
           </SidebarMenuItem>
         </SidebarMenu>

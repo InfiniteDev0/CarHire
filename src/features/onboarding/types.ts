@@ -31,6 +31,9 @@ export interface OnboardingState extends OnboardingData {
 }
 
 export interface OnboardingApi extends OnboardingState {
+  /** Steps shown in this run — 5 for a first workspace, 4 when the plan step
+   *  is skipped for an additional workspace (it inherits the paid plan). */
+  totalSteps: number;
   set: <K extends keyof OnboardingData>(key: K, value: OnboardingData[K]) => void;
   addInviteEmail: (email: string) => boolean;
   removeInviteEmail: (email: string) => void;

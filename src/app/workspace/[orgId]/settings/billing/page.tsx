@@ -74,10 +74,11 @@ export default async function BillingSettingsPage({
                     atLimit ? "font-medium text-red-600 dark:text-red-400" : "text-muted-foreground"
                   }
                 >
-                  {used} / {cap}
+                  {onFree ? `${used} / ${cap}` : `${used} · Unlimited`}
                 </span>
               </div>
-              <Progress value={Math.min(100, (used / cap) * 100)} />
+              {/* Paid plans have no cap, so no meter — just the live count. */}
+              {onFree && <Progress value={Math.min(100, (used / cap) * 100)} />}
             </div>
           );
         })}

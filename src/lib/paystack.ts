@@ -56,8 +56,11 @@ export async function initializeTransaction(
     // can use the full set (M-Pesa via mobile_money, bank, USSD).
     channels: args.plan ? ["card"] : ["card", "mobile_money", "bank", "ussd"],
   };
+  // Paystack requires `amount` on /transaction/initialize even when a `plan`
+  // is set (the plan's own amount is what actually gets charged) — omitting it
+  // fails with "Invalid Amount Sent". So always send the amount when we have it.
+  if (args.amount != null) body.amount = Math.round(args.amount * 100); // KES → cents
   if (args.plan) body.plan = args.plan;
-  else body.amount = Math.round((args.amount ?? 0) * 100); // KES → cents
 
   const res = await fetch(`${API}/transaction/initialize`, {
     method: "POST",

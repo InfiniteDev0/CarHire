@@ -21,8 +21,10 @@ const initialState: OnboardingState = {
   isSubmitting: false,
 };
 
-// currentStep === TOTAL_STEPS + 1 → hand off to the CreatingWorkspace screen.
-export function useOnboarding(): OnboardingApi {
+// currentStep === maxStep + 1 → hand off to the CreatingWorkspace screen.
+// `maxStep` is 5 for a first workspace, or 4 when the plan step is skipped
+// (an additional workspace inherits the creator's paid plan).
+export function useOnboarding(maxStep: number = TOTAL_STEPS): OnboardingApi {
   const [state, setState] = useState<OnboardingState>(initialState);
 
   const set = useCallback(
@@ -52,16 +54,20 @@ export function useOnboarding(): OnboardingApi {
   }, []);
 
   const goNext = useCallback(() => {
-    setState((prev) => ({ ...prev, currentStep: prev.currentStep + 1 }));
-  }, []);
+    // At the last step, hand off to the creating screen (maxStep + 1).
+    setState((prev) => ({
+      ...prev,
+      currentStep: prev.currentStep >= maxStep ? maxStep + 1 : prev.currentStep + 1,
+    }));
+  }, [maxStep]);
 
   const goBack = useCallback(() => {
     setState((prev) => ({ ...prev, currentStep: Math.max(1, prev.currentStep - 1) }));
   }, []);
 
   const goToCreating = useCallback(() => {
-    setState((prev) => ({ ...prev, currentStep: TOTAL_STEPS + 1 }));
-  }, []);
+    setState((prev) => ({ ...prev, currentStep: maxStep + 1 }));
+  }, [maxStep]);
 
   const setSubmitting = useCallback((v: boolean) => {
     setState((prev) => ({ ...prev, isSubmitting: v }));
@@ -81,6 +87,7 @@ export function useOnboarding(): OnboardingApi {
 
   return {
     ...state,
+    totalSteps: maxStep,
     set,
     addInviteEmail,
     removeInviteEmail,
