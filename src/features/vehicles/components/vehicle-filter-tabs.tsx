@@ -10,6 +10,7 @@ import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
@@ -88,7 +89,9 @@ export function VehicleFilterTabs({
           }
         />
         <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuLabel>Sort by</DropdownMenuLabel>
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>Sort by</DropdownMenuLabel>
+          </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuRadioGroup value={sort} onValueChange={(v) => onSortChange(v as VehicleSort)}>
             {SORT_OPTIONS.map((o) => (

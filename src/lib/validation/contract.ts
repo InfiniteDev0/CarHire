@@ -44,6 +44,9 @@ export const createContractSchema = z
     driverName: z.string().trim().max(80).optional().default(""),
     driverDlNumber: z.string().trim().max(30).optional().default(""),
     driverDlExpiry: z.string().trim().optional().default(""), // YYYY-MM-DD
+    // Additional-driver KYC (used when a client rents a concurrent vehicle).
+    driverIdNumber: z.string().trim().max(30).optional().default(""),
+    driverDocType: z.string().trim().max(12).optional().default(""), // ID | DL | PASSPORT
     durationDays: intField("Enter the rental days"),
     ratePerDay: z.string().trim().regex(/^\d+(\.\d{1,2})?$/, "Enter the daily rate"),
     depositAmount: z

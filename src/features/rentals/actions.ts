@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { assertUnderLimit } from "@/lib/limits";
 import {
   createContractSchema,
@@ -16,6 +17,7 @@ import {
 } from "@/lib/validation/contract";
 import { tripReportSchema, type TripReportInput } from "@/lib/validation/trip-report";
 import { sendPushToOrg } from "@/lib/push";
+import { formFile, uploadPhoto } from "@/lib/storage";
 import { isInCurfew, type CheckoutLog, type CheckinLog } from "./helpers";
 
 /** Throw unless the caller is an active member (staff or admin) of `orgId`. */
@@ -74,7 +76,7 @@ export async function createContract(
         .maybeSingle(),
       supabase
         .from("organizations")
-        .select("rate_floor, rate_ceiling")
+        .select("rate_floor, rate_ceiling, allow_multiple_rentals, max_concurrent_rentals")
         .eq("id", orgId)
         .maybeSingle(),
       supabase
@@ -89,10 +91,31 @@ export async function createContract(
   if (client.is_blocked) {
     throw new Error(`${client.full_name} is blocked and cannot hire until unblocked.`);
   }
-  if ((openContracts?.length ?? 0) > 0) {
-    throw new Error(
-      `${client.full_name} already has an open rental — one car per client until it's returned.`
-    );
+
+  // Concurrent-rental policy (admin-controlled in Settings → Operations).
+  const openCount = openContracts?.length ?? 0;
+  const allowMultiple = org?.allow_multiple_rentals ?? false;
+  const maxConcurrent = org?.max_concurrent_rentals ?? 1;
+  if (openCount > 0) {
+    if (!allowMultiple) {
+      throw new Error(
+        `${client.full_name} already has an open rental — one vehicle per client until it's returned.`
+      );
+    }
+    if (openCount >= maxConcurrent) {
+      throw new Error(
+        `${client.full_name} is at the limit of ${maxConcurrent} concurrent vehicles.`
+      );
+    }
+    // Client is already out with another car — they can't drive this one too.
+    if (v.isSelfDrive) {
+      throw new Error(
+        "This client is already on a trip — assign a designated driver for the extra vehicle."
+      );
+    }
+    if (!v.driverIdNumber) {
+      throw new Error("The additional driver's ID number is required.");
+    }
   }
   if (!car) throw new Error("Vehicle not found.");
   if (car.status !== "AVAILABLE") {
@@ -128,6 +151,8 @@ export async function createContract(
       driver_name: v.isSelfDrive ? null : v.driverName,
       driver_dl_number: v.isSelfDrive ? null : v.driverDlNumber,
       driver_dl_expiry: v.isSelfDrive ? null : v.driverDlExpiry || null,
+      driver_id_number: v.isSelfDrive ? null : v.driverIdNumber || null,
+      driver_doc_type: v.isSelfDrive ? null : v.driverDocType || null,
       rate_per_day: rate,
       duration_days: duration,
       routing: composeRouting(v.routeLegs) || null,
@@ -158,6 +183,40 @@ export async function createContract(
 }
 
 /**
+ * Upload an additional driver's document photos (front/back) for a contract and
+ * store their paths. Service-role upload (storage RLS), member-guarded on the
+ * contract. Best-effort — called from the wizard right after the rental exists.
+ */
+export async function uploadDriverDocs(
+  orgId: string,
+  contractId: string,
+  formData: FormData
+): Promise<void> {
+  const { supabase } = await assertMember(orgId);
+  const { data: contract } = await supabase
+    .from("contracts")
+    .select("id")
+    .eq("id", contractId)
+    .eq("org_id", orgId)
+    .maybeSingle();
+  if (!contract) throw new Error("Contract not found.");
+
+  const front = formFile(formData, "front");
+  const back = formFile(formData, "back");
+  if (!front && !back) return;
+
+  const admin = createAdminClient();
+  const dir = `drivers/${orgId}/${contractId}`;
+  const updates: Record<string, string> = {};
+  if (front) updates.driver_doc_front_url = await uploadPhoto(admin, "client-docs", dir, "front", front);
+  if (back) updates.driver_doc_back_url = await uploadPhoto(admin, "client-docs", dir, "back", back);
+
+  if (Object.keys(updates).length > 0) {
+    await admin.from("contracts").update(updates).eq("id", contractId).eq("org_id", orgId);
+  }
+}
+
+/**
  * Check-out: keys handed over. Curfew-guarded. Logs the dispatch, flips the
  * car to TRIP and activates the contract clock.
  */
@@ -181,7 +240,7 @@ export async function checkoutContract(
       .maybeSingle(),
     supabase
       .from("organizations")
-      .select("curfew_start, curfew_end")
+      .select("curfew_start, curfew_end, allow_multiple_rentals, max_concurrent_rentals")
       .eq("id", orgId)
       .maybeSingle(),
   ]);
@@ -191,7 +250,7 @@ export async function checkoutContract(
     throw new Error("Only draft contracts can be checked out.");
   }
 
-  // One car per client: refuse if they already have a live trip.
+  // Concurrent-trip policy — same rule as at creation.
   const { data: liveTrips } = await supabase
     .from("contracts")
     .select("id")
@@ -199,8 +258,16 @@ export async function checkoutContract(
     .eq("client_id", contract.client_id)
     .eq("status", "ACTIVE")
     .neq("id", contractId);
-  if ((liveTrips?.length ?? 0) > 0) {
-    throw new Error("This client is already out with another car — check it in first.");
+  const liveCount = liveTrips?.length ?? 0;
+  const allowMultiple = org?.allow_multiple_rentals ?? false;
+  const maxConcurrent = org?.max_concurrent_rentals ?? 1;
+  if (liveCount > 0) {
+    if (!allowMultiple) {
+      throw new Error("This client is already out with another car — check it in first.");
+    }
+    if (liveCount >= maxConcurrent) {
+      throw new Error(`This client is already out with ${maxConcurrent} vehicles (the limit).`);
+    }
   }
   if (isInCurfew(new Date(), org?.curfew_start ?? null, org?.curfew_end ?? null)) {
     throw new Error(
@@ -232,7 +299,14 @@ export async function checkoutContract(
     .eq("org_id", orgId);
   if (contractErr) throw new Error(contractErr.message);
 
-  await supabase.from("cars").update({ status: "TRIP" }).eq("id", contract.car_id).eq("org_id", orgId);
+  // Car status is a system state transition. Writes to `cars` are admin-only
+  // (cars_write RLS), so use the service role — otherwise a STAFF checkout/
+  // checkin silently fails to flip the car and it drifts out of sync.
+  await createAdminClient()
+    .from("cars")
+    .update({ status: "TRIP" })
+    .eq("id", contract.car_id)
+    .eq("org_id", orgId);
 
   await sendPushToOrg(orgId, {
     title: "Vehicle checked out",
@@ -307,7 +381,13 @@ export async function checkinContract(
     .eq("org_id", orgId);
   if (contractErr) throw new Error(contractErr.message);
 
-  await supabase.from("cars").update({ status: "AVAILABLE" }).eq("id", contract.car_id).eq("org_id", orgId);
+  // Service role: staff can't write `cars` under RLS, so free the car here or
+  // it stays stuck on TRIP after a staff check-in (see checkout note above).
+  await createAdminClient()
+    .from("cars")
+    .update({ status: "AVAILABLE" })
+    .eq("id", contract.car_id)
+    .eq("org_id", orgId);
 
   await sendPushToOrg(orgId, {
     title: "Vehicle returned",

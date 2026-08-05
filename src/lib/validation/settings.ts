@@ -22,7 +22,7 @@ export const orgGeneralSchema = z.object({
 });
 export type OrgGeneralInput = z.infer<typeof orgGeneralSchema>;
 
-/** Workspace → Operations: curfew + rate guardrails. */
+/** Workspace → Operations: curfew + rate guardrails + concurrent-rental policy. */
 export const orgOperationsSchema = z
   .object({
     curfewStart: timeField,
@@ -30,6 +30,15 @@ export const orgOperationsSchema = z
     rateFloor: moneyField,
     rateCeiling: moneyField,
     refuelPenalty: moneyField,
+    // Let a single client hold more than one rental at a time.
+    allowMultipleRentals: z.boolean().optional().default(false),
+    // Cap when the above is on (whole number).
+    maxConcurrentRentals: z
+      .string()
+      .trim()
+      .regex(/^$|^\d+$/, "Whole number")
+      .optional()
+      .default(""),
   })
   .superRefine((v, ctx) => {
     if ((v.curfewStart && !v.curfewEnd) || (!v.curfewStart && v.curfewEnd)) {
@@ -44,6 +53,13 @@ export const orgOperationsSchema = z
         code: "custom",
         path: ["rateCeiling"],
         message: "Ceiling must be at least the floor",
+      });
+    }
+    if (v.allowMultipleRentals && v.maxConcurrentRentals && Number(v.maxConcurrentRentals) < 2) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["maxConcurrentRentals"],
+        message: "Allow at least 2 vehicles when multiple rentals are on",
       });
     }
   });

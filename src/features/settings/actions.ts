@@ -72,6 +72,11 @@ export async function updateOrgOperations(
       rate_floor: v.rateFloor ? Number(v.rateFloor) : null,
       rate_ceiling: v.rateCeiling ? Number(v.rateCeiling) : null,
       refuel_penalty_per_level: v.refuelPenalty ? Number(v.refuelPenalty) : 1500,
+      allow_multiple_rentals: v.allowMultipleRentals,
+      // When multiple is on, default the cap to 2; otherwise it's just 1.
+      max_concurrent_rentals: v.allowMultipleRentals
+        ? Math.max(2, Number(v.maxConcurrentRentals) || 2)
+        : 1,
     })
     .eq("id", orgId);
 

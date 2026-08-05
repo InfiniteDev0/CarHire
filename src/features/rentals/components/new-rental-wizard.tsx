@@ -13,8 +13,9 @@ import { cn } from "@/lib/utils";
 import { SidePanel } from "@/components/workspace/side-panel";
 import { useIsAdmin } from "@/lib/store/workspace-store";
 import { createContractSchema, composeRouting, type RouteLeg } from "@/lib/validation/contract";
-import { createContract } from "../actions";
+import { createContract, uploadDriverDocs } from "../actions";
 import { isInCurfew } from "../helpers";
+import { photoError } from "@/lib/storage";
 
 export interface PickClient {
   id: string;
@@ -40,7 +41,15 @@ export interface OrgRules {
   rate_floor: number | null;
   rate_ceiling: number | null;
   refuel_penalty_per_level: number | null;
+  allow_multiple_rentals: boolean;
+  max_concurrent_rentals: number;
 }
+
+const DOC_TYPES = [
+  { v: "ID", label: "National ID" },
+  { v: "DL", label: "Driving licence" },
+  { v: "PASSPORT", label: "Passport" },
+] as const;
 
 const STEPS = ["Client", "Vehicle", "Driver", "Terms", "Review"] as const;
 const kes = (n: number) => `KES ${n.toLocaleString()}`;
@@ -53,6 +62,7 @@ export function NewRentalWizard({
   clients,
   cars,
   rules,
+  openRentalsByClient,
   open,
   onOpenChange,
   initialCarId,
@@ -61,6 +71,7 @@ export function NewRentalWizard({
   clients: PickClient[];
   cars: PickCar[];
   rules: OrgRules;
+  openRentalsByClient: Record<string, number>;
   open: boolean;
   onOpenChange: (o: boolean) => void;
   initialCarId?: string | null;
@@ -76,6 +87,10 @@ export function NewRentalWizard({
   const [driverName, setDriverName] = useState("");
   const [driverDlNumber, setDriverDlNumber] = useState("");
   const [driverDlExpiry, setDriverDlExpiry] = useState("");
+  const [driverIdNumber, setDriverIdNumber] = useState("");
+  const [driverDocType, setDriverDocType] = useState<string>("ID");
+  const [docFront, setDocFront] = useState<File | null>(null);
+  const [docBack, setDocBack] = useState<File | null>(null);
   const [durationDays, setDurationDays] = useState("1");
   const [ratePerDay, setRatePerDay] = useState("");
   const [depositAmount, setDepositAmount] = useState("");
@@ -97,6 +112,10 @@ export function NewRentalWizard({
       setDriverName("");
       setDriverDlNumber("");
       setDriverDlExpiry("");
+      setDriverIdNumber("");
+      setDriverDocType("ID");
+      setDocFront(null);
+      setDocBack(null);
       setDurationDays("1");
       setRatePerDay("");
       setDepositAmount("");
@@ -107,6 +126,25 @@ export function NewRentalWizard({
 
   const client = clients.find((c) => c.id === clientId) ?? null;
   const car = cars.find((c) => c.id === carId) ?? null;
+
+  // Concurrent-rental policy.
+  const openCount = clientId ? openRentalsByClient[clientId] ?? 0 : 0;
+  const allowMultiple = rules.allow_multiple_rentals;
+  const maxConcurrent = rules.max_concurrent_rentals || 1;
+  const isConcurrent = openCount > 0;
+  // Blocked = client already has a rental and either multiples are off or
+  // they're at the cap. Needs extra driver = allowed concurrent rental.
+  const concurrentBlocked = isConcurrent && (!allowMultiple || openCount >= maxConcurrent);
+  const needsExtraDriver = isConcurrent && allowMultiple && openCount < maxConcurrent;
+
+  // A client already on a trip can't self-drive the extra car — force a driver.
+  const [lastDriveClient, setLastDriveClient] = useState(clientId);
+  if (clientId !== lastDriveClient) {
+    setLastDriveClient(clientId);
+    if ((openRentalsByClient[clientId] ?? 0) > 0 && rules.allow_multiple_rentals) {
+      setIsSelfDrive(false);
+    }
+  }
 
   const filteredClients = useMemo(() => {
     const q = clientSearch.trim().toLowerCase();
@@ -138,11 +176,16 @@ export function NewRentalWizard({
   function canAdvance(): boolean {
     switch (step) {
       case 0:
-        return !!client && !client.is_blocked;
+        return !!client && !client.is_blocked && !concurrentBlocked;
       case 1:
         return !!car;
-      case 2:
-        return isSelfDrive || (!!driverName && !!driverDlNumber && !!driverDlExpiry);
+      case 2: {
+        if (isSelfDrive) return true;
+        const base = !!driverName && !!driverDlNumber && !!driverDlExpiry;
+        // Concurrent rental → the extra driver's ID + document photos are required.
+        if (!needsExtraDriver) return base;
+        return base && !!driverIdNumber && !!docFront && !!docBack;
+      }
       case 3:
         return (
           Number(durationDays) >= 1 &&
@@ -166,6 +209,13 @@ export function NewRentalWizard({
     setRouteLegs((legs) => legs.map((l, idx) => (idx === i ? { ...l, [key]: value } : l)));
   }
 
+  function onDocFile(setter: (f: File | null) => void, file: File | null) {
+    if (!file) return setter(null);
+    const err = photoError(file);
+    if (err) return toast.error(err);
+    setter(file);
+  }
+
   async function handleCreate() {
     if (isLoading) return;
     const input = {
@@ -175,6 +225,8 @@ export function NewRentalWizard({
       driverName,
       driverDlNumber,
       driverDlExpiry,
+      driverIdNumber,
+      driverDocType,
       durationDays,
       ratePerDay,
       depositAmount,
@@ -188,7 +240,18 @@ export function NewRentalWizard({
     }
     setIsLoading(true);
     try {
-      await createContract(orgId, parsed.data);
+      const { contractId } = await createContract(orgId, parsed.data);
+      // Upload the additional driver's document photos, if provided.
+      if (!isSelfDrive && (docFront || docBack)) {
+        const fd = new FormData();
+        if (docFront) fd.append("front", docFront);
+        if (docBack) fd.append("back", docBack);
+        try {
+          await uploadDriverDocs(orgId, contractId, fd);
+        } catch {
+          toast.error("Rental created, but the driver's photos didn't upload — add them later.");
+        }
+      }
       toast.success("Rental created as a draft — check it out to start the trip");
       router.refresh();
       onOpenChange(false);
@@ -349,22 +412,33 @@ export function NewRentalWizard({
                   {[
                     { v: true, label: "Self-drive" },
                     { v: false, label: "Designated driver" },
-                  ].map((o) => (
-                    <button
-                      key={o.label}
-                      type="button"
-                      onClick={() => setIsSelfDrive(o.v)}
-                      className={cn(
-                        "flex-1 rounded-md border px-3 py-2 text-sm transition-colors",
-                        isSelfDrive === o.v
-                          ? "border-white bg-white text-black"
-                          : "border-zinc-800 text-zinc-300 hover:border-zinc-600"
-                      )}
-                    >
-                      {o.label}
-                    </button>
-                  ))}
+                  ].map((o) => {
+                    const disabled = o.v && needsExtraDriver;
+                    return (
+                      <button
+                        key={o.label}
+                        type="button"
+                        disabled={disabled}
+                        onClick={() => setIsSelfDrive(o.v)}
+                        className={cn(
+                          "flex-1 rounded-md border px-3 py-2 text-sm transition-colors",
+                          isSelfDrive === o.v
+                            ? "border-white bg-white text-black"
+                            : "border-zinc-800 text-zinc-300 hover:border-zinc-600",
+                          disabled && "cursor-not-allowed opacity-40"
+                        )}
+                      >
+                        {o.label}
+                      </button>
+                    );
+                  })}
                 </div>
+                {needsExtraDriver && (
+                  <p className="text-xs text-amber-400">
+                    {client?.full_name || "This client"} is already on a trip — the extra
+                    vehicle needs its own driver with ID on file.
+                  </p>
+                )}
                 {isSelfDrive ? (
                   <p className="text-xs text-zinc-500">
                     {client?.full_name || "The client"} drives. Their ID is already on file.
@@ -394,6 +468,79 @@ export function NewRentalWizard({
                     <p className="text-xs text-zinc-600">
                       Expired licences are blocked at creation.
                     </p>
+
+                    {/* Additional-driver KYC */}
+                    <div className="flex flex-col gap-1.5">
+                      <Label>Driver ID number{needsExtraDriver && " *"}</Label>
+                      <input
+                        className={inputClass}
+                        value={driverIdNumber}
+                        onChange={(e) => setDriverIdNumber(e.target.value)}
+                        placeholder="National ID / passport number"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <Label>Document type</Label>
+                      <div className="flex gap-2">
+                        {DOC_TYPES.map((d) => (
+                          <button
+                            key={d.v}
+                            type="button"
+                            onClick={() => setDriverDocType(d.v)}
+                            className={cn(
+                              "flex-1 rounded-md border px-2 py-1.5 text-xs transition-colors",
+                              driverDocType === d.v
+                                ? "border-white bg-white text-black"
+                                : "border-zinc-800 text-zinc-300 hover:border-zinc-600"
+                            )}
+                          >
+                            {d.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <label className="flex cursor-pointer flex-col gap-1.5">
+                        <Label>Front{needsExtraDriver && " *"}</Label>
+                        <div
+                          className={cn(
+                            "flex h-16 items-center justify-center rounded-md border border-dashed text-xs",
+                            docFront ? "border-emerald-600 text-emerald-400" : "border-zinc-700 text-zinc-500"
+                          )}
+                        >
+                          {docFront ? "Selected ✓" : "Upload photo"}
+                        </div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => onDocFile(setDocFront, e.target.files?.[0] ?? null)}
+                        />
+                      </label>
+                      <label className="flex cursor-pointer flex-col gap-1.5">
+                        <Label>Back{needsExtraDriver && " *"}</Label>
+                        <div
+                          className={cn(
+                            "flex h-16 items-center justify-center rounded-md border border-dashed text-xs",
+                            docBack ? "border-emerald-600 text-emerald-400" : "border-zinc-700 text-zinc-500"
+                          )}
+                        >
+                          {docBack ? "Selected ✓" : "Upload photo"}
+                        </div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => onDocFile(setDocBack, e.target.files?.[0] ?? null)}
+                        />
+                      </label>
+                    </div>
+                    {needsExtraDriver && (
+                      <p className="text-xs text-zinc-600">
+                        The driver&apos;s ID number and one document (front &amp; back) are
+                        required — the client already has a vehicle out.
+                      </p>
+                    )}
                   </div>
                 )}
               </>
@@ -527,6 +674,27 @@ export function NewRentalWizard({
         </AnimatePresence>
       </div>
 
+      {/* Concurrent-rental notice */}
+      {client && isConcurrent && (
+        <div
+          className={cn(
+            "flex items-start gap-2 rounded-md border p-3 text-xs",
+            concurrentBlocked
+              ? "border-red-500/20 bg-red-500/10 text-red-400"
+              : "border-amber-500/20 bg-amber-500/10 text-amber-400"
+          )}
+        >
+          <TriangleAlert className="mt-0.5 size-4 shrink-0" />
+          <span>
+            {concurrentBlocked
+              ? !allowMultiple
+                ? `${client.full_name} already has a vehicle out — one rental per client. Check it in first, or enable multiple rentals in Settings → Operations.`
+                : `${client.full_name} is at the limit of ${maxConcurrent} vehicles at once.`
+              : `${client.full_name} already has ${openCount} vehicle${openCount === 1 ? "" : "s"} out. They can't drive another, so a designated driver with ID is required for this one.`}
+          </span>
+        </div>
+      )}
+
       {/* Footer nav */}
       <div className="flex items-center justify-between border-t border-zinc-800 pt-3">
         <Button
@@ -548,7 +716,7 @@ export function NewRentalWizard({
         ) : (
           <Button
             className="bg-white text-black hover:bg-zinc-200"
-            disabled={isLoading}
+            disabled={isLoading || concurrentBlocked}
             onClick={handleCreate}
           >
             {isLoading && <Loader2 className="size-4 animate-spin" />}

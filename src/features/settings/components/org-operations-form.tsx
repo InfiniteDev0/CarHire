@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 import { orgOperationsSchema } from "@/lib/validation/settings";
 import { updateOrgOperations } from "../actions";
 
@@ -17,6 +18,8 @@ export interface OrgOperations {
   rateFloor: string;
   rateCeiling: string;
   refuelPenalty: string;
+  allowMultipleRentals: boolean;
+  maxConcurrentRentals: string;
 }
 
 export function OrgOperationsForm({
@@ -153,6 +156,59 @@ export function OrgOperationsForm({
               disabled={isLoading}
             />
           </div>
+        </div>
+      </div>
+
+      <div>
+        <h2 className="text-sm font-medium">Multiple rentals per client</h2>
+        <p className="mb-3 text-xs text-muted-foreground">
+          By default a client can only hold one rental at a time. Turn this on to
+          let a client hire several vehicles at once — each extra rental then
+          requires its own designated driver with ID on file.
+        </p>
+        <div className="flex flex-col gap-3">
+          <button
+            type="button"
+            role="switch"
+            aria-checked={form.allowMultipleRentals}
+            disabled={isLoading}
+            onClick={() => set("allowMultipleRentals", !form.allowMultipleRentals)}
+            className="flex items-center justify-between rounded-lg border p-3 text-left"
+          >
+            <span className="text-sm">Allow a client to rent multiple vehicles at once</span>
+            <span
+              className={cn(
+                "relative h-5 w-9 shrink-0 rounded-full transition-colors",
+                form.allowMultipleRentals ? "bg-foreground" : "bg-input"
+              )}
+            >
+              <span
+                className={cn(
+                  "absolute top-0.5 size-4 rounded-full bg-background transition-all",
+                  form.allowMultipleRentals ? "left-4" : "left-0.5"
+                )}
+              />
+            </span>
+          </button>
+
+          {form.allowMultipleRentals && (
+            <div className="flex max-w-40 flex-col gap-1.5">
+              <Label htmlFor="maxConcurrentRentals">Max vehicles per client</Label>
+              <Input
+                id="maxConcurrentRentals"
+                type="number"
+                min={2}
+                value={form.maxConcurrentRentals}
+                onChange={(e) => set("maxConcurrentRentals", e.target.value)}
+                placeholder="2"
+                disabled={isLoading}
+                aria-invalid={!!errors.maxConcurrentRentals}
+              />
+              {errors.maxConcurrentRentals && (
+                <p className="text-xs text-destructive">{errors.maxConcurrentRentals}</p>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

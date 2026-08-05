@@ -18,7 +18,9 @@ export default async function OperationsSettingsPage({
   const supabase = await createClient();
   const { data: org } = await supabase
     .from("organizations")
-    .select("curfew_start, curfew_end, rate_floor, rate_ceiling, refuel_penalty_per_level")
+    .select(
+      "curfew_start, curfew_end, rate_floor, rate_ceiling, refuel_penalty_per_level, allow_multiple_rentals, max_concurrent_rentals"
+    )
     .eq("id", orgId)
     .maybeSingle();
 
@@ -31,6 +33,9 @@ export default async function OperationsSettingsPage({
     rateCeiling: org?.rate_ceiling != null ? String(org.rate_ceiling) : "",
     refuelPenalty:
       org?.refuel_penalty_per_level != null ? String(org.refuel_penalty_per_level) : "1500",
+    allowMultipleRentals: org?.allow_multiple_rentals ?? false,
+    maxConcurrentRentals:
+      org?.max_concurrent_rentals != null ? String(org.max_concurrent_rentals) : "2",
   };
 
   return (

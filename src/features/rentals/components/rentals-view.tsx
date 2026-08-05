@@ -39,6 +39,7 @@ export function RentalsView({
   clients,
   cars,
   rules,
+  openRentalsByClient,
   openNewOnLoad,
   initialCarId,
   staffNames,
@@ -48,6 +49,7 @@ export function RentalsView({
   clients: PickClient[];
   cars: PickCar[];
   rules: OrgRules;
+  openRentalsByClient: Record<string, number>;
   openNewOnLoad: boolean;
   initialCarId: string | null;
   staffNames?: Record<string, string>;
@@ -213,6 +215,7 @@ export function RentalsView({
         clients={clients}
         cars={cars}
         rules={rules}
+        openRentalsByClient={openRentalsByClient}
         open={wizardOpen}
         onOpenChange={setWizardOpen}
         initialCarId={initialCarId}

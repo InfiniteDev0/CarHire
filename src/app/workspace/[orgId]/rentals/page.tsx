@@ -37,7 +37,9 @@ export default async function RentalsPage({
       .order("reg_number"),
     supabase
       .from("organizations")
-      .select("curfew_start, curfew_end, rate_floor, rate_ceiling, refuel_penalty_per_level")
+      .select(
+        "curfew_start, curfew_end, rate_floor, rate_ceiling, refuel_penalty_per_level, allow_multiple_rentals, max_concurrent_rentals"
+      )
       .eq("id", orgId)
       .maybeSingle(),
     getStaffNames(supabase, orgId),
@@ -52,7 +54,18 @@ export default async function RentalsPage({
     rate_floor: orgRes.data?.rate_floor ?? null,
     rate_ceiling: orgRes.data?.rate_ceiling ?? null,
     refuel_penalty_per_level: orgRes.data?.refuel_penalty_per_level ?? null,
+    allow_multiple_rentals: orgRes.data?.allow_multiple_rentals ?? false,
+    max_concurrent_rentals: orgRes.data?.max_concurrent_rentals ?? 1,
   };
+
+  // How many open (DRAFT/ACTIVE) rentals each client already holds — powers the
+  // wizard's concurrent-rental message and the additional-driver requirement.
+  const openRentalsByClient: Record<string, number> = {};
+  for (const c of contracts) {
+    if (c.status === "DRAFT" || c.status === "ACTIVE") {
+      openRentalsByClient[c.client_id] = (openRentalsByClient[c.client_id] ?? 0) + 1;
+    }
+  }
 
   // ?new=1 opens the wizard; ?new=<carId> opens it with that car preselected.
   const openNew = !!newParam;
@@ -73,6 +86,7 @@ export default async function RentalsPage({
         clients={clients}
         cars={cars}
         rules={rules}
+        openRentalsByClient={openRentalsByClient}
         openNewOnLoad={openNew}
         initialCarId={initialCarId}
         staffNames={staffNames}

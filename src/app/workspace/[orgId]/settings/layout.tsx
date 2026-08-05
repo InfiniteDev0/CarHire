@@ -32,9 +32,9 @@ export default async function SettingsLayout({
         </p>
       </div>
 
-      <div className="flex flex-col h-120  gap-6 md:flex-row">
+      <div className="flex flex-col h-135  gap-6 md:flex-row">
         <SettingsNav orgId={orgId} isAdmin={isAdmin} />
-        <div className="min-w-0 pt-2 md:overflow-y-scroll scrollbar-pill flex-1">{children}</div>
+        <div className="min-w-0 pt-2 md:overflow-y-scroll pb-10 scrollbar-pill flex-1">{children}</div>
       </div>
     </div>
   );
