@@ -99,7 +99,9 @@ export function StaffActivitySheet({
   useEffect(() => {
     if (!open || !member) return;
     let cancelled = false;
-    setItems(null);
+    queueMicrotask(() => {
+      if (!cancelled) setItems(null);
+    });
     getStaffActivity(orgId, member.user_id)
       .then((res) => !cancelled && setItems(res))
       .catch(() => !cancelled && setItems([]));

@@ -14,6 +14,14 @@ const moneyField = z
   .optional()
   .default("");
 
+// Hour of day 0–23 (string from the form).
+const hourField = z
+  .string()
+  .trim()
+  .regex(/^$|^([0-9]|1[0-9]|2[0-3])$/, "Use an hour 0–23")
+  .optional()
+  .default("");
+
 /** Workspace → General: identity fields. */
 export const orgGeneralSchema = z.object({
   name: z.string().trim().min(2, "Enter the business name").max(80),
@@ -39,6 +47,12 @@ export const orgOperationsSchema = z
       .regex(/^$|^\d+$/, "Whole number")
       .optional()
       .default(""),
+    // Calendar display settings.
+    calBadgeVariant: z.enum(["dot", "colored", "mixed"]).optional().default("colored"),
+    calVisibleStart: hourField,
+    calVisibleEnd: hourField,
+    calWorkStart: hourField,
+    calWorkEnd: hourField,
   })
   .superRefine((v, ctx) => {
     if ((v.curfewStart && !v.curfewEnd) || (!v.curfewStart && v.curfewEnd)) {

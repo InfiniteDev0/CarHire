@@ -10,6 +10,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Vendored / downloaded third-party code — not held to our lint rules.
+    "src/components/big-calendar-main/**",
+    "src/components/tablecn-main/**",
   ]),
   // shadcn / magic-ui primitives are third-party-sourced. The React-Compiler
   // hooks rules flag legitimate-but-nonideal patterns in them; keep those as

@@ -1,8 +1,8 @@
 import { parseISO, isWithinInterval, differenceInDays, startOfDay, endOfDay } from "date-fns";
 
-import { MonthEventBadge } from "@/calendar/components/month-view/month-event-badge";
+import { MonthEventBadge } from "@cal/calendar/components/month-view/month-event-badge";
 
-import type { IEvent } from "@/calendar/interfaces";
+import type { IEvent } from "@cal/calendar/interfaces";
 
 interface IProps {
   selectedDate: Date;

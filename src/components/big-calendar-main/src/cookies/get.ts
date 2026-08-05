@@ -1,14 +1,10 @@
-import { cookies } from "next/headers";
-
-import { THEMES_VALUES } from "@/constants/theme.const";
-import { DEFAULT_VALUES } from "@/constants/cookies.const";
-import { THEME_COOKIE_NAME } from "@/constants/cookies.const";
+import { THEMES_VALUES } from "@cal/constants/theme.const";
+import { DEFAULT_VALUES } from "@cal/constants/cookies.const";
 
 export type TTheme = (typeof THEMES_VALUES)[number];
 
+// The host app manages theme via next-themes, so the calendar just uses its
+// default here instead of reading a cookie (cookies() is async in Next 16).
 export function getTheme(): TTheme {
-  const cookieStore = cookies();
-  const theme = cookieStore.get(THEME_COOKIE_NAME)?.value;
-  if (!THEMES_VALUES.includes(theme as TTheme)) return DEFAULT_VALUES.theme as TTheme;
-  return theme as TTheme;
+  return DEFAULT_VALUES.theme as TTheme;
 }

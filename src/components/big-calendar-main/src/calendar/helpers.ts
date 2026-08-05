@@ -26,8 +26,8 @@ import {
   isWithinInterval,
 } from "date-fns";
 
-import type { ICalendarCell, IEvent } from "@/calendar/interfaces";
-import type { TCalendarView, TVisibleHours, TWorkingHours } from "@/calendar/types";
+import type { ICalendarCell, IEvent } from "@cal/calendar/interfaces";
+import type { TCalendarView, TVisibleHours, TWorkingHours } from "@cal/calendar/types";
 
 // ================ Header helper functions ================ //
 

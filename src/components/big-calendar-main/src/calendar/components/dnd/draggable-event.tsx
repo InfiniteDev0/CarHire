@@ -4,9 +4,9 @@ import { useDrag } from "react-dnd";
 import { useRef, useEffect } from "react";
 import { getEmptyImage } from "react-dnd-html5-backend";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@cal/lib/utils";
 
-import type { IEvent } from "@/calendar/interfaces";
+import type { IEvent } from "@cal/calendar/interfaces";
 
 export const ItemTypes = {
   EVENT: "event",

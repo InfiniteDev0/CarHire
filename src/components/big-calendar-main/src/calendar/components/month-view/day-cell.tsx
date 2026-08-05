@@ -2,16 +2,16 @@ import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { isToday, startOfDay } from "date-fns";
 
-import { useCalendar } from "@/calendar/contexts/calendar-context";
+import { useCalendar } from "@cal/calendar/contexts/calendar-context";
 
-import { EventBullet } from "@/calendar/components/month-view/event-bullet";
-import { DroppableDayCell } from "@/calendar/components/dnd/droppable-day-cell";
-import { MonthEventBadge } from "@/calendar/components/month-view/month-event-badge";
+import { EventBullet } from "@cal/calendar/components/month-view/event-bullet";
+import { DroppableDayCell } from "@cal/calendar/components/dnd/droppable-day-cell";
+import { MonthEventBadge } from "@cal/calendar/components/month-view/month-event-badge";
 
-import { cn } from "@/lib/utils";
-import { getMonthCellEvents } from "@/calendar/helpers";
+import { cn } from "@cal/lib/utils";
+import { getMonthCellEvents } from "@cal/calendar/helpers";
 
-import type { ICalendarCell, IEvent } from "@/calendar/interfaces";
+import type { ICalendarCell, IEvent } from "@cal/calendar/interfaces";
 
 interface IProps {
   cell: ICalendarCell;

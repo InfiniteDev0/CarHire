@@ -2,16 +2,16 @@
 
 import { useState } from "react";
 import { Info, Moon } from "lucide-react";
-import { useCalendar } from "@/calendar/contexts/calendar-context";
+import { useCalendar } from "@cal/calendar/contexts/calendar-context";
 
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { TimeInput } from "@/components/ui/time-input";
+import { Button } from "@cal/components/ui/button";
+import { Switch } from "@cal/components/ui/switch";
+import { TimeInput } from "@cal/components/ui/time-input";
 
 import type { TimeValue } from "react-aria-components";
-import { TooltipContent } from "@/components/ui/tooltip";
-import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { TooltipContent } from "@cal/components/ui/tooltip";
+import { Tooltip, TooltipTrigger } from "@cal/components/ui/tooltip";
+import { TooltipProvider } from "@cal/components/ui/tooltip";
 
 const DAYS_OF_WEEK = [
   { index: 0, name: "Sunday" },

@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { sendPushToOrg } from "@/lib/push";
+import { emitEvent } from "@/lib/events";
 import type { WorkspaceNotification } from "./notification-sheet";
 
 const kes = (n: number) => `KES ${Number(n).toLocaleString()}`;
@@ -142,10 +142,14 @@ export async function getWorkspaceNotifications(
       .is("overdue_notified_at", null)
       .select("id");
     if (stamped && stamped.length > 0) {
-      await sendPushToOrg(orgId, {
+      await emitEvent({
+        type: "rental.overdue",
+        orgId,
         title: `${c.cars?.reg_number ?? "A vehicle"} is OVERDUE`,
         body: `${c.clients?.full_name ?? "Client"} has kept the car past the contract deadline — follow up.`,
-        url: `/workspace/${orgId}/rentals`,
+        href: `/workspace/${orgId}/rentals`,
+        entityType: "contract",
+        entityId: c.id,
       });
     }
   }

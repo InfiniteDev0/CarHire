@@ -199,6 +199,16 @@ function NotificationItem({
   );
 }
 
+// VAPID keys are base64url — the Push API needs them as bytes, not a string.
+function urlBase64ToUint8Array(base64String: string): Uint8Array {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const raw = atob(base64);
+  const output = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) output[i] = raw.charCodeAt(i);
+  return output;
+}
+
 /** Browser push toggle — subscribes this device via the service worker. */
 function PushToggle({ orgId }: { orgId: string }) {
   const [state, setState] = useState<"unknown" | "off" | "on" | "busy" | "unsupported">(
@@ -230,25 +240,46 @@ function PushToggle({ orgId }: { orgId: string }) {
   }, []);
 
   async function enable() {
+    const vapid = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+    if (!vapid) {
+      // Deployed build is missing the public VAPID key — the real cause of the
+      // "missing applicationServerKey" browser error.
+      toast.error("Push isn't set up for this site yet — the notification key is missing.");
+      return;
+    }
+
     setState("busy");
     try {
       const permission = await Notification.requestPermission();
-      if (permission !== "granted") {
-        toast.error("Notifications are blocked — allow them in your browser settings.");
+      if (permission === "denied") {
+        toast.error("Notifications are blocked. Turn them on in your browser's site settings, then try again.");
         setState("off");
         return;
       }
-      const reg = await navigator.serviceWorker.register("/sw.js");
+      if (permission !== "granted") {
+        setState("off");
+        return;
+      }
+
+      const reg =
+        (await navigator.serviceWorker.getRegistration("/sw.js")) ??
+        (await navigator.serviceWorker.register("/sw.js"));
       await navigator.serviceWorker.ready;
+
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+        applicationServerKey: urlBase64ToUint8Array(vapid) as BufferSource,
       });
       await savePushSubscription(orgId, sub.toJSON() as never);
-      toast.success("Push notifications enabled on this device");
+      toast.success("You'll get alerts on this device now 🔔");
       setState("on");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Couldn't enable notifications.");
+      const msg = err instanceof Error ? err.message : "";
+      toast.error(
+        /applicationServerKey|manifest/i.test(msg)
+          ? "Couldn't turn on push — the site's notification key looks misconfigured."
+          : "Couldn't enable notifications. Please try again."
+      );
       setState("off");
     }
   }

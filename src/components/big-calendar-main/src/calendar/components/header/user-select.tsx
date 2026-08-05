@@ -1,8 +1,8 @@
-import { useCalendar } from "@/calendar/contexts/calendar-context";
+import { useCalendar } from "@cal/calendar/contexts/calendar-context";
 
-import { AvatarGroup } from "@/components/ui/avatar-group";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AvatarGroup } from "@cal/components/ui/avatar-group";
+import { Avatar, AvatarFallback, AvatarImage } from "@cal/components/ui/avatar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@cal/components/ui/select";
 
 export function UserSelect() {
   const { users, selectedUserId, setSelectedUserId } = useCalendar();

@@ -18,7 +18,8 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@cal/*": ["./src/components/big-calendar-main/src/*"]
     },
     "plugins": [
       {
@@ -35,6 +36,7 @@
     "**/*.tsx"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "src/components/tablecn-main"
   ]
 }

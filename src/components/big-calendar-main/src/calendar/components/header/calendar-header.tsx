@@ -1,22 +1,32 @@
-import Link from "next/link";
 import { Columns, Grid3x3, List, Plus, Grid2x2, CalendarRange } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@cal/components/ui/button";
+import { cn } from "@cal/lib/utils";
 
-import { UserSelect } from "@/calendar/components/header/user-select";
-import { TodayButton } from "@/calendar/components/header/today-button";
-import { DateNavigator } from "@/calendar/components/header/date-navigator";
-import { AddEventDialog } from "@/calendar/components/dialogs/add-event-dialog";
+import { useCalendar } from "@cal/calendar/contexts/calendar-context";
+import { UserSelect } from "@cal/calendar/components/header/user-select";
+import { TodayButton } from "@cal/calendar/components/header/today-button";
+import { DateNavigator } from "@cal/calendar/components/header/date-navigator";
+import { AddEventDialog } from "@cal/calendar/components/dialogs/add-event-dialog";
 
-import type { IEvent } from "@/calendar/interfaces";
-import type { TCalendarView } from "@/calendar/types";
+import type { IEvent } from "@cal/calendar/interfaces";
+import type { TCalendarView } from "@cal/calendar/types";
 
 interface IProps {
   view: TCalendarView;
   events: IEvent[];
 }
 
+const VIEW_BUTTONS: { view: TCalendarView; label: string; icon: typeof List }[] = [
+  { view: "day", label: "View by day", icon: List },
+  { view: "week", label: "View by week", icon: Columns },
+  { view: "month", label: "View by month", icon: Grid2x2 },
+  { view: "year", label: "View by year", icon: Grid3x3 },
+  { view: "agenda", label: "View by agenda", icon: CalendarRange },
+];
+
 export function CalendarHeader({ view, events }: IProps) {
+  const { setView } = useCalendar();
   return (
     <div className="flex flex-col gap-4 border-b p-4 lg:flex-row lg:items-center lg:justify-between">
       <div className="flex items-center gap-3">
@@ -26,60 +36,25 @@ export function CalendarHeader({ view, events }: IProps) {
 
       <div className="flex flex-col items-center gap-1.5 sm:flex-row sm:justify-between">
         <div className="flex w-full items-center gap-1.5">
-          <div className="inline-flex first:rounded-r-none last:rounded-l-none [&:not(:first-child):not(:last-child)]:rounded-none">
-            <Button asChild aria-label="View by day" size="icon" variant={view === "day" ? "default" : "outline"} className="rounded-r-none [&_svg]:size-5">
-              <Link href="/day-view">
-                <List strokeWidth={1.8} />
-              </Link>
-            </Button>
-
-            <Button
-              asChild
-              aria-label="View by week"
-              size="icon"
-              variant={view === "week" ? "default" : "outline"}
-              className="-ml-px rounded-none [&_svg]:size-5"
-            >
-              <Link href="/week-view">
-                <Columns strokeWidth={1.8} />
-              </Link>
-            </Button>
-
-            <Button
-              asChild
-              aria-label="View by month"
-              size="icon"
-              variant={view === "month" ? "default" : "outline"}
-              className="-ml-px rounded-none [&_svg]:size-5"
-            >
-              <Link href="/month-view">
-                <Grid2x2 strokeWidth={1.8} />
-              </Link>
-            </Button>
-
-            <Button
-              asChild
-              aria-label="View by year"
-              size="icon"
-              variant={view === "year" ? "default" : "outline"}
-              className="-ml-px rounded-none [&_svg]:size-5"
-            >
-              <Link href="/year-view">
-                <Grid3x3 strokeWidth={1.8} />
-              </Link>
-            </Button>
-
-            <Button
-              asChild
-              aria-label="View by agenda"
-              size="icon"
-              variant={view === "agenda" ? "default" : "outline"}
-              className="-ml-px rounded-l-none [&_svg]:size-5"
-            >
-              <Link href="/agenda-view">
-                <CalendarRange strokeWidth={1.8} />
-              </Link>
-            </Button>
+          <div className="inline-flex">
+            {VIEW_BUTTONS.map((b, i) => (
+              <Button
+                key={b.view}
+                type="button"
+                aria-label={b.label}
+                size="icon"
+                variant={view === b.view ? "default" : "outline"}
+                onClick={() => setView(b.view)}
+                className={cn(
+                  "-ml-px [&_svg]:size-5",
+                  i === 0 && "ml-0 rounded-r-none",
+                  i === VIEW_BUTTONS.length - 1 && "rounded-l-none",
+                  i !== 0 && i !== VIEW_BUTTONS.length - 1 && "rounded-none"
+                )}
+              >
+                <b.icon strokeWidth={1.8} />
+              </Button>
+            ))}
           </div>
 
           <UserSelect />

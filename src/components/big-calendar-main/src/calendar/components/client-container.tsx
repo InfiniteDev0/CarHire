@@ -3,25 +3,19 @@
 import { useMemo } from "react";
 import { isSameDay, parseISO } from "date-fns";
 
-import { useCalendar } from "@/calendar/contexts/calendar-context";
+import { useCalendar } from "@cal/calendar/contexts/calendar-context";
 
-import { DndProviderWrapper } from "@/calendar/components/dnd/dnd-provider";
+import { DndProviderWrapper } from "@cal/calendar/components/dnd/dnd-provider";
 
-import { CalendarHeader } from "@/calendar/components/header/calendar-header";
-import { CalendarYearView } from "@/calendar/components/year-view/calendar-year-view";
-import { CalendarMonthView } from "@/calendar/components/month-view/calendar-month-view";
-import { CalendarAgendaView } from "@/calendar/components/agenda-view/calendar-agenda-view";
-import { CalendarDayView } from "@/calendar/components/week-and-day-view/calendar-day-view";
-import { CalendarWeekView } from "@/calendar/components/week-and-day-view/calendar-week-view";
+import { CalendarHeader } from "@cal/calendar/components/header/calendar-header";
+import { CalendarYearView } from "@cal/calendar/components/year-view/calendar-year-view";
+import { CalendarMonthView } from "@cal/calendar/components/month-view/calendar-month-view";
+import { CalendarAgendaView } from "@cal/calendar/components/agenda-view/calendar-agenda-view";
+import { CalendarDayView } from "@cal/calendar/components/week-and-day-view/calendar-day-view";
+import { CalendarWeekView } from "@cal/calendar/components/week-and-day-view/calendar-week-view";
 
-import type { TCalendarView } from "@/calendar/types";
-
-interface IProps {
-  view: TCalendarView;
-}
-
-export function ClientContainer({ view }: IProps) {
-  const { selectedDate, selectedUserId, events } = useCalendar();
+export function ClientContainer() {
+  const { view, selectedDate, selectedUserId, events } = useCalendar();
 
   const filteredEvents = useMemo(() => {
     return events.filter(event => {

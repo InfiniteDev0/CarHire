@@ -1,16 +1,17 @@
 import { cloneElement, Children, forwardRef, useMemo } from "react";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@cal/lib/utils";
 
-import type { ElementRef, HTMLAttributes, ReactElement } from "react";
+import type { CSSProperties, HTMLAttributes, ReactElement } from "react";
 
 // ================================== //
 
-type TAvatarGroupRef = ElementRef<"div">;
+type TAvatarGroupRef = HTMLDivElement;
 type TAvatarGroupProps = HTMLAttributes<HTMLDivElement> & { max?: number; spacing?: number };
+type AvatarChildProps = { className?: string; style?: CSSProperties };
 
 const AvatarGroup = forwardRef<TAvatarGroupRef, TAvatarGroupProps>(({ className, children, max = 1, spacing = 10, ...props }, ref) => {
-  const avatarItems = Children.toArray(children) as ReactElement[];
+  const avatarItems = Children.toArray(children) as ReactElement<AvatarChildProps>[];
 
   const renderContent = useMemo(() => {
     return (

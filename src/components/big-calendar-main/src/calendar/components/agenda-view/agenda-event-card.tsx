@@ -4,11 +4,11 @@ import { format, parseISO } from "date-fns";
 import { cva } from "class-variance-authority";
 import { Clock, Text, User } from "lucide-react";
 
-import { useCalendar } from "@/calendar/contexts/calendar-context";
+import { useCalendar } from "@cal/calendar/contexts/calendar-context";
 
-import { EventDetailsDialog } from "@/calendar/components/dialogs/event-details-dialog";
+import { EventDetailsDialog } from "@cal/calendar/components/dialogs/event-details-dialog";
 
-import type { IEvent } from "@/calendar/interfaces";
+import type { IEvent } from "@cal/calendar/interfaces";
 import type { VariantProps } from "class-variance-authority";
 
 const agendaEventCardVariants = cva(

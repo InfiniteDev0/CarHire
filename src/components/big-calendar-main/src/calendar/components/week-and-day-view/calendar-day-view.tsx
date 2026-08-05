@@ -1,21 +1,21 @@
 import { Calendar, Clock, User } from "lucide-react";
 import { parseISO, areIntervalsOverlapping, format } from "date-fns";
 
-import { useCalendar } from "@/calendar/contexts/calendar-context";
+import { useCalendar } from "@cal/calendar/contexts/calendar-context";
 
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { SingleCalendar } from "@/components/ui/single-calendar";
+import { ScrollArea } from "@cal/components/ui/scroll-area";
+import { SingleCalendar } from "@cal/components/ui/single-calendar";
 
-import { AddEventDialog } from "@/calendar/components/dialogs/add-event-dialog";
-import { EventBlock } from "@/calendar/components/week-and-day-view/event-block";
-import { DroppableTimeBlock } from "@/calendar/components/dnd/droppable-time-block";
-import { CalendarTimeline } from "@/calendar/components/week-and-day-view/calendar-time-line";
-import { DayViewMultiDayEventsRow } from "@/calendar/components/week-and-day-view/day-view-multi-day-events-row";
+import { AddEventDialog } from "@cal/calendar/components/dialogs/add-event-dialog";
+import { EventBlock } from "@cal/calendar/components/week-and-day-view/event-block";
+import { DroppableTimeBlock } from "@cal/calendar/components/dnd/droppable-time-block";
+import { CalendarTimeline } from "@cal/calendar/components/week-and-day-view/calendar-time-line";
+import { DayViewMultiDayEventsRow } from "@cal/calendar/components/week-and-day-view/day-view-multi-day-events-row";
 
-import { cn } from "@/lib/utils";
-import { groupEvents, getEventBlockStyle, isWorkingHour, getCurrentEvents, getVisibleHours } from "@/calendar/helpers";
+import { cn } from "@cal/lib/utils";
+import { groupEvents, getEventBlockStyle, isWorkingHour, getCurrentEvents, getVisibleHours } from "@cal/calendar/helpers";
 
-import type { IEvent } from "@/calendar/interfaces";
+import type { IEvent } from "@cal/calendar/interfaces";
 
 interface IProps {
   singleDayEvents: IEvent[];
@@ -139,7 +139,7 @@ export function CalendarDayView({ singleDayEvents, multiDayEvents }: IProps) {
       </div>
 
       <div className="hidden w-64 divide-y border-l md:block">
-        <SingleCalendar className="mx-auto w-fit" mode="single" selected={selectedDate} onSelect={setSelectedDate} initialFocus />
+        <SingleCalendar className="mx-auto w-fit" mode="single" selected={selectedDate} onSelect={setSelectedDate} autoFocus />
 
         <div className="flex-1 space-y-3">
           {currentEvents.length > 0 ? (

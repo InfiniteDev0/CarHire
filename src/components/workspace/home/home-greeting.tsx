@@ -21,8 +21,8 @@ export function HomeGreeting({
 }) {
   return (
     <div className="flex flex-col md:flex-row gap-2 md:gap-0 justify-between">
-      <div className="flex justify-between items-center md:flex-col space-y-1">
-        <h1 className="text-xl">
+      <div className="flex justify-between md:flex-col space-y-1">
+        <h1 className="text-md md:text-xl">
           {getGreeting()}, {name}
         </h1>
         <Badge variant="secondary">

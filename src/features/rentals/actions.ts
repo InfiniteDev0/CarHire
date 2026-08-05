@@ -16,7 +16,7 @@ import {
   type ExtendInput,
 } from "@/lib/validation/contract";
 import { tripReportSchema, type TripReportInput } from "@/lib/validation/trip-report";
-import { sendPushToOrg } from "@/lib/push";
+import { emitEvent } from "@/lib/events";
 import { formFile, uploadPhoto } from "@/lib/storage";
 import { isInCurfew, type CheckoutLog, type CheckinLog } from "./helpers";
 
@@ -308,10 +308,15 @@ export async function checkoutContract(
     .eq("id", contract.car_id)
     .eq("org_id", orgId);
 
-  await sendPushToOrg(orgId, {
+  await emitEvent({
+    type: "vehicle.checked_out",
+    orgId,
     title: "Vehicle checked out",
     body: "A trip just started — keys handed over.",
-    url: `/workspace/${orgId}/rentals`,
+    href: `/workspace/${orgId}/rentals`,
+    entityType: "contract",
+    entityId: contractId,
+    actorId: user.id,
   });
 }
 
@@ -389,10 +394,15 @@ export async function checkinContract(
     .eq("id", contract.car_id)
     .eq("org_id", orgId);
 
-  await sendPushToOrg(orgId, {
+  await emitEvent({
+    type: "vehicle.returned",
+    orgId,
     title: "Vehicle returned",
     body: "A car is back at base and the contract is completed.",
-    url: `/workspace/${orgId}/rentals`,
+    href: `/workspace/${orgId}/rentals`,
+    entityType: "contract",
+    entityId: contractId,
+    actorId: user.id,
   });
 
   // Unpaid balance becomes client debt (blocks future rentals until cleared).
@@ -490,10 +500,15 @@ export async function extendContract(
     });
   }
 
-  await sendPushToOrg(orgId, {
+  await emitEvent({
+    type: "rental.extended",
+    orgId,
     title: "Rental extended",
     body: `${extra} extra day(s) authorized — KES ${paid.toLocaleString()} collected.`,
-    url: `/workspace/${orgId}/rentals`,
+    href: `/workspace/${orgId}/rentals`,
+    entityType: "contract",
+    entityId: contractId,
+    actorId: user.id,
   });
 
   const { error } = await supabase
@@ -551,10 +566,15 @@ export async function recordPayment(
     recorded_by: user.id,
   });
 
-  await sendPushToOrg(orgId, {
+  await emitEvent({
+    type: "payment.received",
+    orgId,
     title: "Payment received",
     body: `KES ${amount.toLocaleString()} was recorded.`,
-    url: `/workspace/${orgId}/financials`,
+    href: `/workspace/${orgId}/financials`,
+    entityType: "contract",
+    entityId: contractId,
+    actorId: user.id,
   });
 
   if (contract.status === "COMPLETED") {

@@ -1,4 +1,4 @@
-import { CALENDAR_ITEMS_MOCK, USERS_MOCK } from "@/calendar/mocks";
+import { CALENDAR_ITEMS_MOCK, USERS_MOCK } from "@cal/calendar/mocks";
 
 export const getEvents = async () => {
   // TO DO: implement this

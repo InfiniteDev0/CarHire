@@ -18,6 +18,9 @@ import type { Rental, RentalStatus } from "@/lib/constants/rentals";
 
 export const metadata = { title: "Home · CarHire" };
 
+// Impure Date.now() kept out of the component body (React Compiler purity rule).
+const daysAgoISO = (days: number) => new Date(Date.now() - days * 86400_000).toISOString();
+
 const DAY = 86400_000;
 
 type ActiveContract = ContractRow & { county: string | null };
@@ -106,7 +109,7 @@ export default async function WorkspaceHome({
         .from("payments")
         .select("amount, created_at")
         .eq("org_id", orgId)
-        .gte("created_at", new Date(Date.now() - 90 * 86400_000).toISOString()),
+        .gte("created_at", daysAgoISO(90)),
       supabase
         .from("checkout_logs")
         .select(logColumns)

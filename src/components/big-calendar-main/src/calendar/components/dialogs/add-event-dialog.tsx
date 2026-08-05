@@ -1,302 +1,230 @@
 "use client";
 
-import { useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { AlertTriangle } from "lucide-react";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { format } from "date-fns";
+import { Car, Bell, Loader2, ChevronLeft, ChevronDownIcon } from "lucide-react";
 
-import { useDisclosure } from "@/hooks/use-disclosure";
-import { useCalendar } from "@/calendar/contexts/calendar-context";
+import { useDisclosure } from "@cal/hooks/use-disclosure";
+import { useCalendar } from "@cal/calendar/contexts/calendar-context";
 
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { TimeInput } from "@/components/ui/time-input";
-import { SingleDayPicker } from "@/components/ui/single-day-picker";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Form, FormField, FormLabel, FormItem, FormControl, FormMessage } from "@/components/ui/form";
-import { Select, SelectItem, SelectContent, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogHeader, DialogClose, DialogContent, DialogTrigger, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogHeader, DialogContent, DialogTrigger, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
-import { eventSchema } from "@/calendar/schemas";
+import { createReminder } from "@/features/calendar/actions";
 
-import type { TimeValue } from "react-aria-components";
-import type { TEventFormData } from "@/calendar/schemas";
+const REMINDER_COLORS = [
+  { value: "yellow", label: "Yellow", dot: "bg-yellow-500" },
+  { value: "blue", label: "Blue", dot: "bg-blue-500" },
+  { value: "green", label: "Green", dot: "bg-green-500" },
+  { value: "red", label: "Red", dot: "bg-red-500" },
+  { value: "purple", label: "Purple", dot: "bg-purple-500" },
+  { value: "orange", label: "Orange", dot: "bg-orange-500" },
+  { value: "gray", label: "Gray", dot: "bg-neutral-500" },
+] as const;
 
 interface IProps {
   children: React.ReactNode;
   startDate?: Date;
+  // Accepted for API-compatibility with the calendar's day/time cells; unused.
   startTime?: { hour: number; minute: number };
 }
 
-export function AddEventDialog({ children, startDate, startTime }: IProps) {
-  const { users } = useCalendar();
-
+export function AddEventDialog({ children, startDate }: IProps) {
+  const { orgId } = useCalendar();
+  const router = useRouter();
   const { isOpen, onClose, onToggle } = useDisclosure();
 
-  const form = useForm<TEventFormData>({
-    resolver: zodResolver(eventSchema),
-    defaultValues: {
-      title: "",
-      description: "",
-      startDate: typeof startDate !== "undefined" ? startDate : undefined,
-      startTime: typeof startTime !== "undefined" ? startTime : undefined,
-    },
-  });
+  const [mode, setMode] = useState<"choose" | "reminder">("choose");
+  const [title, setTitle] = useState("");
+  const [note, setNote] = useState("");
+  const [date, setDate] = useState<Date | undefined>(startDate);
+  const [dateOpen, setDateOpen] = useState(false);
+  const [time, setTime] = useState("09:00");
+  const [color, setColor] = useState<string>("yellow");
+  const [saving, setSaving] = useState(false);
 
-  const onSubmit = (_values: TEventFormData) => {
-    // TO DO: Create use-add-event hook
+  function reset() {
+    setMode("choose");
+    setTitle("");
+    setNote("");
+    setDate(startDate);
+    setTime("09:00");
+    setColor("yellow");
+  }
+
+  function goToNewRental() {
     onClose();
-    form.reset();
-  };
+    router.push(`/workspace/${orgId}/rentals?new=1`);
+  }
 
-  useEffect(() => {
-    form.reset({
-      startDate,
-      startTime,
-    });
-  }, [startDate, startTime, form]);
+  async function saveReminder() {
+    if (saving) return;
+    if (!title.trim() || !date) return;
+    setSaving(true);
+    try {
+      const [h, m] = time.split(":").map(Number);
+      const remindAt = new Date(date);
+      remindAt.setHours(h || 9, m || 0, 0, 0);
+      await createReminder(orgId, {
+        title: title.trim(),
+        note: note.trim() || undefined,
+        remindAt: remindAt.toISOString(),
+        color,
+      });
+      onClose();
+      reset();
+      router.refresh();
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onToggle}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(o) => {
+        onToggle();
+        if (!o) reset();
+      }}
+    >
       <DialogTrigger asChild>{children}</DialogTrigger>
 
       <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Add New Event</DialogTitle>
-          <DialogDescription>
-            <AlertTriangle className="mr-1 inline-block size-4 text-yellow-500" />
-            This form is for demonstration purposes only and will not actually create an event. In a real application, submit the form to the backend API to
-            save the event.
-          </DialogDescription>
-        </DialogHeader>
+        {mode === "choose" ? (
+          <>
+            <DialogHeader>
+              <DialogTitle>Add to the calendar</DialogTitle>
+              <DialogDescription>Start a rental, or set a reminder with a note.</DialogDescription>
+            </DialogHeader>
 
-        <Form {...form}>
-          <form id="event-form" onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 py-4">
-            <FormField
-              control={form.control}
-              name="user"
-              render={({ field, fieldState }) => (
-                <FormItem>
-                  <FormLabel>Responsible</FormLabel>
-                  <FormControl>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger data-invalid={fieldState.invalid}>
-                        <SelectValue placeholder="Select an option" />
-                      </SelectTrigger>
+            <div className="grid gap-2 py-1">
+              <button
+                type="button"
+                onClick={goToNewRental}
+                className="flex items-center gap-3 rounded-lg border p-3 text-left transition-colors hover:bg-muted"
+              >
+                <span className="flex size-10 items-center justify-center rounded-lg bg-blue-500/15 text-blue-500">
+                  <Car className="size-5" />
+                </span>
+                <span>
+                  <span className="block text-sm font-medium">New rental</span>
+                  <span className="block text-xs text-muted-foreground">Opens the new-rental flow</span>
+                </span>
+              </button>
 
-                      <SelectContent>
-                        {users.map(user => (
-                          <SelectItem key={user.id} value={user.id} className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <Avatar key={user.id} className="size-6">
-                                <AvatarImage src={user.picturePath ?? undefined} alt={user.name} />
-                                <AvatarFallback className="text-xxs">{user.name[0]}</AvatarFallback>
-                              </Avatar>
+              <button
+                type="button"
+                onClick={() => setMode("reminder")}
+                className="flex items-center gap-3 rounded-lg border p-3 text-left transition-colors hover:bg-muted"
+              >
+                <span className="flex size-10 items-center justify-center rounded-lg bg-yellow-500/15 text-yellow-500">
+                  <Bell className="size-5" />
+                </span>
+                <span>
+                  <span className="block text-sm font-medium">Set a reminder</span>
+                  <span className="block text-xs text-muted-foreground">A note pinned to a date &amp; time</span>
+                </span>
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <button type="button" onClick={() => setMode("choose")} aria-label="Back">
+                  <ChevronLeft className="size-4" />
+                </button>
+                New reminder
+              </DialogTitle>
+            </DialogHeader>
 
-                              <p className="truncate">{user.name}</p>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid gap-4 py-1">
+              <div className="grid gap-1.5">
+                <Label>Title</Label>
+                <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Call client about return" />
+              </div>
 
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field, fieldState }) => (
-                <FormItem>
-                  <FormLabel htmlFor="title">Title</FormLabel>
-
-                  <FormControl>
-                    <Input id="title" placeholder="Enter a title" data-invalid={fieldState.invalid} {...field} />
-                  </FormControl>
-
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="flex items-start gap-2">
-              <FormField
-                control={form.control}
-                name="startDate"
-                render={({ field, fieldState }) => (
-                  <FormItem className="flex-1">
-                    <FormLabel htmlFor="startDate">Start Date</FormLabel>
-
-                    <FormControl>
-                      <SingleDayPicker
-                        id="startDate"
-                        value={field.value}
-                        onSelect={date => field.onChange(date as Date)}
-                        placeholder="Select a date"
-                        data-invalid={fieldState.invalid}
+              <div className="flex items-end gap-3">
+                <div className="grid flex-1 gap-1.5">
+                  <Label htmlFor="reminder-date">Date</Label>
+                  <Popover open={dateOpen} onOpenChange={setDateOpen}>
+                    <PopoverTrigger asChild>
+                      <Button id="reminder-date" variant="outline" className="w-full justify-between font-normal">
+                        {date ? format(date, "PPP") : "Select date"}
+                        <ChevronDownIcon className="size-4" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={date}
+                        captionLayout="dropdown"
+                        defaultMonth={date}
+                        onSelect={(d) => {
+                          setDate(d);
+                          setDateOpen(false);
+                        }}
                       />
-                    </FormControl>
+                    </PopoverContent>
+                  </Popover>
+                </div>
 
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <div className="grid w-32 gap-1.5">
+                  <Label htmlFor="reminder-time">Time</Label>
+                  <Input
+                    id="reminder-time"
+                    type="time"
+                    step="1"
+                    value={time}
+                    onChange={(e) => setTime(e.target.value)}
+                    className="appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+                  />
+                </div>
+              </div>
 
-              <FormField
-                control={form.control}
-                name="startTime"
-                render={({ field, fieldState }) => (
-                  <FormItem className="flex-1">
-                    <FormLabel>Start Time</FormLabel>
+              <div className="grid gap-1.5">
+                <Label>Colour</Label>
+                <Select value={color} onValueChange={setColor}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {REMINDER_COLORS.map((c) => (
+                      <SelectItem key={c.value} value={c.value}>
+                        <span className="flex items-center gap-2">
+                          <span className={`size-3.5 rounded-full ${c.dot}`} />
+                          {c.label}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-                    <FormControl>
-                      <TimeInput value={field.value as TimeValue} onChange={field.onChange} hourCycle={12} data-invalid={fieldState.invalid} />
-                    </FormControl>
-
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid gap-1.5">
+                <Label>Note</Label>
+                <Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Add any details…" rows={4} />
+              </div>
             </div>
 
-            <div className="flex items-start gap-2">
-              <FormField
-                control={form.control}
-                name="endDate"
-                render={({ field, fieldState }) => (
-                  <FormItem className="flex-1">
-                    <FormLabel>End Date</FormLabel>
-                    <FormControl>
-                      <SingleDayPicker
-                        value={field.value}
-                        onSelect={date => field.onChange(date as Date)}
-                        placeholder="Select a date"
-                        data-invalid={fieldState.invalid}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="endTime"
-                render={({ field, fieldState }) => (
-                  <FormItem className="flex-1">
-                    <FormLabel>End Time</FormLabel>
-
-                    <FormControl>
-                      <TimeInput value={field.value as TimeValue} onChange={field.onChange} hourCycle={12} data-invalid={fieldState.invalid} />
-                    </FormControl>
-
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="color"
-              render={({ field, fieldState }) => (
-                <FormItem>
-                  <FormLabel>Color</FormLabel>
-                  <FormControl>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger data-invalid={fieldState.invalid}>
-                        <SelectValue placeholder="Select an option" />
-                      </SelectTrigger>
-
-                      <SelectContent>
-                        <SelectItem value="blue">
-                          <div className="flex items-center gap-2">
-                            <div className="size-3.5 rounded-full bg-blue-600" />
-                            Blue
-                          </div>
-                        </SelectItem>
-
-                        <SelectItem value="green">
-                          <div className="flex items-center gap-2">
-                            <div className="size-3.5 rounded-full bg-green-600" />
-                            Green
-                          </div>
-                        </SelectItem>
-
-                        <SelectItem value="red">
-                          <div className="flex items-center gap-2">
-                            <div className="size-3.5 rounded-full bg-red-600" />
-                            Red
-                          </div>
-                        </SelectItem>
-
-                        <SelectItem value="yellow">
-                          <div className="flex items-center gap-2">
-                            <div className="size-3.5 rounded-full bg-yellow-600" />
-                            Yellow
-                          </div>
-                        </SelectItem>
-
-                        <SelectItem value="purple">
-                          <div className="flex items-center gap-2">
-                            <div className="size-3.5 rounded-full bg-purple-600" />
-                            Purple
-                          </div>
-                        </SelectItem>
-
-                        <SelectItem value="orange">
-                          <div className="flex items-center gap-2">
-                            <div className="size-3.5 rounded-full bg-orange-600" />
-                            Orange
-                          </div>
-                        </SelectItem>
-
-                        <SelectItem value="gray">
-                          <div className="flex items-center gap-2">
-                            <div className="size-3.5 rounded-full bg-neutral-600" />
-                            Gray
-                          </div>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field, fieldState }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-
-                  <FormControl>
-                    <Textarea {...field} value={field.value} data-invalid={fieldState.invalid} />
-                  </FormControl>
-
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </form>
-        </Form>
-
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button type="button" variant="outline">
-              Cancel
-            </Button>
-          </DialogClose>
-
-          <Button form="event-form" type="submit">
-            Create Event
-          </Button>
-        </DialogFooter>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setMode("choose")}>
+                Back
+              </Button>
+              <Button type="button" onClick={saveReminder} disabled={saving || !title.trim() || !date}>
+                {saving && <Loader2 className="mr-1 size-4 animate-spin" />}
+                Save reminder
+              </Button>
+            </DialogFooter>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );

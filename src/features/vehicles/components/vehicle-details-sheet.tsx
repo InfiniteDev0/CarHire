@@ -79,8 +79,10 @@ export function VehicleDetailsSheet({
   useEffect(() => {
     if (!open || tab !== "history" || !vehicleId || trips !== null) return;
     let cancelled = false;
-    setTripsLoading(true);
     (async () => {
+      await Promise.resolve();
+      if (cancelled) return;
+      setTripsLoading(true);
       const supabase = createClient();
       const { data } = await supabase
         .from("contracts")

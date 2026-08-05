@@ -1,12 +1,12 @@
 import { useMemo } from "react";
 
-import { useCalendar } from "@/calendar/contexts/calendar-context";
+import { useCalendar } from "@cal/calendar/contexts/calendar-context";
 
-import { DayCell } from "@/calendar/components/month-view/day-cell";
+import { DayCell } from "@cal/calendar/components/month-view/day-cell";
 
-import { getCalendarCells, calculateMonthEventPositions } from "@/calendar/helpers";
+import { getCalendarCells, calculateMonthEventPositions } from "@cal/calendar/helpers";
 
-import type { IEvent } from "@/calendar/interfaces";
+import type { IEvent } from "@cal/calendar/interfaces";
 
 interface IProps {
   singleDayEvents: IEvent[];

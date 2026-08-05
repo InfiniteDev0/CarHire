@@ -27,14 +27,21 @@ export function DraggableSections({
 
   // Restore saved order once mounted (append any new sections at the end).
   useEffect(() => {
-    try {
-      const saved: string[] = JSON.parse(localStorage.getItem(storageKey) ?? "[]");
-      const valid = saved.filter((id) => ids.includes(id));
-      const missing = ids.filter((id) => !valid.includes(id));
-      if (valid.length > 0) setOrder([...valid, ...missing]);
-    } catch {
-      /* corrupted storage — keep default order */
-    }
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      try {
+        const saved: string[] = JSON.parse(localStorage.getItem(storageKey) ?? "[]");
+        const valid = saved.filter((id) => ids.includes(id));
+        const missing = ids.filter((id) => !valid.includes(id));
+        if (valid.length > 0) setOrder([...valid, ...missing]);
+      } catch {
+        /* corrupted storage — keep default order */
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storageKey]);
 

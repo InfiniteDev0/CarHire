@@ -3,11 +3,11 @@
 import { useState } from "react";
 import { Info } from "lucide-react";
 
-import { useCalendar } from "@/calendar/contexts/calendar-context";
+import { useCalendar } from "@cal/calendar/contexts/calendar-context";
 
-import { Button } from "@/components/ui/button";
-import { TimeInput } from "@/components/ui/time-input";
-import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
+import { Button } from "@cal/components/ui/button";
+import { TimeInput } from "@cal/components/ui/time-input";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@cal/components/ui/tooltip";
 
 import type { TimeValue } from "react-aria-components";
 

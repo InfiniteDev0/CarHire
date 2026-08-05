@@ -8,6 +8,13 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { orgOperationsSchema } from "@/lib/validation/settings";
 import { updateOrgOperations } from "../actions";
@@ -20,6 +27,11 @@ export interface OrgOperations {
   refuelPenalty: string;
   allowMultipleRentals: boolean;
   maxConcurrentRentals: string;
+  calBadgeVariant: "dot" | "colored" | "mixed";
+  calVisibleStart: string;
+  calVisibleEnd: string;
+  calWorkStart: string;
+  calWorkEnd: string;
 }
 
 export function OrgOperationsForm({
@@ -209,6 +221,67 @@ export function OrgOperationsForm({
               )}
             </div>
           )}
+        </div>
+      </div>
+
+      <div>
+        <h2 className="text-sm font-medium">Calendar</h2>
+        <p className="mb-3 text-xs text-muted-foreground">
+          How the workspace calendar looks — the visible day window, working
+          hours (shaded on the calendar) and how event badges are styled.
+        </p>
+        <div className="flex flex-col gap-4">
+          <div className="flex max-w-xs flex-col gap-1.5">
+            <Label>Event badge style</Label>
+            <Select
+              value={form.calBadgeVariant}
+              onValueChange={(v) =>
+                set("calBadgeVariant", v as OrgOperations["calBadgeVariant"])
+              }
+              disabled={isLoading}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="colored">Colored</SelectItem>
+                <SelectItem value="dot">Dot</SelectItem>
+                <SelectItem value="mixed">Mixed</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="calVisibleStart">Day starts (hour 0–23)</Label>
+              <Input
+                id="calVisibleStart"
+                type="number"
+                min={0}
+                max={23}
+                value={form.calVisibleStart}
+                onChange={(e) => set("calVisibleStart", e.target.value)}
+                disabled={isLoading}
+                aria-invalid={!!errors.calVisibleStart}
+              />
+              {errors.calVisibleStart && (
+                <p className="text-xs text-destructive">{errors.calVisibleStart}</p>
+              )}
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="calVisibleEnd">Day ends (hour 0–23)</Label>
+              <Input
+                id="calVisibleEnd"
+                type="number"
+                min={0}
+                max={23}
+                value={form.calVisibleEnd}
+                onChange={(e) => set("calVisibleEnd", e.target.value)}
+                disabled={isLoading}
+                aria-invalid={!!errors.calVisibleEnd}
+              />
+            </div>
+          </div>
         </div>
       </div>
 

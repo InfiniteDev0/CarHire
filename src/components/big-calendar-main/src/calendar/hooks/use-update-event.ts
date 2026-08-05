@@ -1,6 +1,6 @@
-import { useCalendar } from "@/calendar/contexts/calendar-context";
+import { useCalendar } from "@cal/calendar/contexts/calendar-context";
 
-import type { IEvent } from "@/calendar/interfaces";
+import type { IEvent } from "@cal/calendar/interfaces";
 
 export function useUpdateEvent() {
   const { setLocalEvents } = useCalendar();

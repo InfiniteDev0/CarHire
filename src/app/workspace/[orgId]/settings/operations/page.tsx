@@ -4,8 +4,20 @@ import {
   OrgOperationsForm,
   type OrgOperations,
 } from "@/features/settings/components/org-operations-form";
+import { CalendarWorkingHoursForm } from "@/features/settings/components/calendar-working-hours-form";
+import type { WorkingHours } from "@/features/settings/actions";
 
 export const metadata = { title: "Operations · Settings · CarHire" };
+
+const DEFAULT_WORKING: WorkingHours = {
+  0: { from: 0, to: 0 },
+  1: { from: 9, to: 17 },
+  2: { from: 9, to: 17 },
+  3: { from: 9, to: 17 },
+  4: { from: 9, to: 17 },
+  5: { from: 9, to: 17 },
+  6: { from: 9, to: 13 },
+};
 
 export default async function OperationsSettingsPage({
   params,
@@ -19,10 +31,12 @@ export default async function OperationsSettingsPage({
   const { data: org } = await supabase
     .from("organizations")
     .select(
-      "curfew_start, curfew_end, rate_floor, rate_ceiling, refuel_penalty_per_level, allow_multiple_rentals, max_concurrent_rentals"
+      "curfew_start, curfew_end, rate_floor, rate_ceiling, refuel_penalty_per_level, allow_multiple_rentals, max_concurrent_rentals, cal_badge_variant, cal_visible_start, cal_visible_end, cal_work_start, cal_work_end, cal_working_hours"
     )
     .eq("id", orgId)
     .maybeSingle();
+
+  const workingHours = (org?.cal_working_hours as WorkingHours) ?? DEFAULT_WORKING;
 
   // time columns come back as "HH:MM:SS" — trim for the time inputs.
   const t = (v: string | null) => (v ? v.slice(0, 5) : "");
@@ -36,6 +50,11 @@ export default async function OperationsSettingsPage({
     allowMultipleRentals: org?.allow_multiple_rentals ?? false,
     maxConcurrentRentals:
       org?.max_concurrent_rentals != null ? String(org.max_concurrent_rentals) : "2",
+    calBadgeVariant: (org?.cal_badge_variant as "dot" | "colored" | "mixed") ?? "colored",
+    calVisibleStart: String(org?.cal_visible_start ?? 7),
+    calVisibleEnd: String(org?.cal_visible_end ?? 18),
+    calWorkStart: String(org?.cal_work_start ?? 8),
+    calWorkEnd: String(org?.cal_work_end ?? 17),
   };
 
   return (
@@ -47,6 +66,10 @@ export default async function OperationsSettingsPage({
         </p>
       </div>
       <OrgOperationsForm orgId={orgId} initial={initial} />
+
+      <div className="mt-2 max-w-xl border-t pt-6">
+        <CalendarWorkingHoursForm orgId={orgId} initial={workingHours} />
+      </div>
     </div>
   );
 }

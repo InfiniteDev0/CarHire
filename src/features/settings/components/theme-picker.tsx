@@ -14,6 +14,9 @@ export function ThemePicker() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
+  // Standard SSR "mounted" flag; the compiler's set-state-in-effect rule is a
+  // false positive here (this settings UI is intentionally kept as-is).
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setMounted(true), []);
 
   return (

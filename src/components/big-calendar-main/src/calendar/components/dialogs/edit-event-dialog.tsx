@@ -5,25 +5,25 @@ import { useForm } from "react-hook-form";
 import { AlertTriangle } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { useDisclosure } from "@/hooks/use-disclosure";
-import { useCalendar } from "@/calendar/contexts/calendar-context";
-import { useUpdateEvent } from "@/calendar/hooks/use-update-event";
+import { useDisclosure } from "@cal/hooks/use-disclosure";
+import { useCalendar } from "@cal/calendar/contexts/calendar-context";
+import { useUpdateEvent } from "@cal/calendar/hooks/use-update-event";
 
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { TimeInput } from "@/components/ui/time-input";
-import { SingleDayPicker } from "@/components/ui/single-day-picker";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Form, FormField, FormLabel, FormItem, FormControl, FormMessage } from "@/components/ui/form";
-import { Select, SelectItem, SelectContent, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogHeader, DialogClose, DialogContent, DialogTrigger, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@cal/components/ui/input";
+import { Button } from "@cal/components/ui/button";
+import { Textarea } from "@cal/components/ui/textarea";
+import { TimeInput } from "@cal/components/ui/time-input";
+import { SingleDayPicker } from "@cal/components/ui/single-day-picker";
+import { Avatar, AvatarFallback, AvatarImage } from "@cal/components/ui/avatar";
+import { Form, FormField, FormLabel, FormItem, FormControl, FormMessage } from "@cal/components/ui/form";
+import { Select, SelectItem, SelectContent, SelectTrigger, SelectValue } from "@cal/components/ui/select";
+import { Dialog, DialogHeader, DialogClose, DialogContent, DialogTrigger, DialogTitle, DialogDescription, DialogFooter } from "@cal/components/ui/dialog";
 
-import { eventSchema } from "@/calendar/schemas";
+import { eventSchema } from "@cal/calendar/schemas";
 
-import type { IEvent } from "@/calendar/interfaces";
+import type { IEvent } from "@cal/calendar/interfaces";
 import type { TimeValue } from "react-aria-components";
-import type { TEventFormData } from "@/calendar/schemas";
+import type { TEventFormData } from "@cal/calendar/schemas";
 
 interface IProps {
   children: React.ReactNode;

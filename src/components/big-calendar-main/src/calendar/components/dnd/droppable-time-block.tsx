@@ -3,12 +3,12 @@
 import { useDrop } from "react-dnd";
 import { parseISO, differenceInMilliseconds } from "date-fns";
 
-import { useUpdateEvent } from "@/calendar/hooks/use-update-event";
+import { useUpdateEvent } from "@cal/calendar/hooks/use-update-event";
 
-import { cn } from "@/lib/utils";
-import { ItemTypes } from "@/calendar/components/dnd/draggable-event";
+import { cn } from "@cal/lib/utils";
+import { ItemTypes } from "@cal/calendar/components/dnd/draggable-event";
 
-import type { IEvent } from "@/calendar/interfaces";
+import type { IEvent } from "@cal/calendar/interfaces";
 
 interface DroppableTimeBlockProps {
   date: Date;

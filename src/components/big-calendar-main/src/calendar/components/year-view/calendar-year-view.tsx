@@ -1,11 +1,11 @@
 import { useMemo } from "react";
 import { addMonths, startOfYear } from "date-fns";
 
-import { useCalendar } from "@/calendar/contexts/calendar-context";
+import { useCalendar } from "@cal/calendar/contexts/calendar-context";
 
-import { YearViewMonth } from "@/calendar/components/year-view/year-view-month";
+import { YearViewMonth } from "@cal/calendar/components/year-view/year-view-month";
 
-import type { IEvent } from "@/calendar/interfaces";
+import type { IEvent } from "@cal/calendar/interfaces";
 
 interface IProps {
   allEvents: IEvent[];

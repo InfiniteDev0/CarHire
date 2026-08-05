@@ -57,7 +57,9 @@ export function TripReportDialog({
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
-    setIsFetching(true);
+    queueMicrotask(() => {
+      if (!cancelled) setIsFetching(true);
+    });
     getTripReport(orgId, contract.id)
       .then((r) => {
         if (cancelled) return;

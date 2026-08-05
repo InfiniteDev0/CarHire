@@ -3,10 +3,13 @@
 import { createContext, useContext, useState } from "react";
 
 import type { Dispatch, SetStateAction } from "react";
-import type { IEvent, IUser } from "@/calendar/interfaces";
-import type { TBadgeVariant, TVisibleHours, TWorkingHours } from "@/calendar/types";
+import type { IEvent, IUser } from "@cal/calendar/interfaces";
+import type { TBadgeVariant, TCalendarView, TVisibleHours, TWorkingHours } from "@cal/calendar/types";
 
 interface ICalendarContext {
+  orgId: string;
+  view: TCalendarView;
+  setView: (view: TCalendarView) => void;
   selectedDate: Date;
   setSelectedDate: (date: Date | undefined) => void;
   selectedUserId: IUser["id"] | "all";
@@ -36,10 +39,29 @@ const WORKING_HOURS = {
 
 const VISIBLE_HOURS = { from: 7, to: 18 };
 
-export function CalendarProvider({ children, users, events }: { children: React.ReactNode; users: IUser[]; events: IEvent[] }) {
-  const [badgeVariant, setBadgeVariant] = useState<TBadgeVariant>("colored");
-  const [visibleHours, setVisibleHours] = useState<TVisibleHours>(VISIBLE_HOURS);
-  const [workingHours, setWorkingHours] = useState<TWorkingHours>(WORKING_HOURS);
+export function CalendarProvider({
+  children,
+  orgId,
+  users,
+  events,
+  initialView = "month",
+  initialBadge,
+  initialVisible,
+  initialWorking,
+}: {
+  children: React.ReactNode;
+  orgId: string;
+  users: IUser[];
+  events: IEvent[];
+  initialView?: TCalendarView;
+  initialBadge?: TBadgeVariant;
+  initialVisible?: TVisibleHours;
+  initialWorking?: TWorkingHours;
+}) {
+  const [view, setView] = useState<TCalendarView>(initialView);
+  const [badgeVariant, setBadgeVariant] = useState<TBadgeVariant>(initialBadge ?? "colored");
+  const [visibleHours, setVisibleHours] = useState<TVisibleHours>(initialVisible ?? VISIBLE_HOURS);
+  const [workingHours, setWorkingHours] = useState<TWorkingHours>(initialWorking ?? WORKING_HOURS);
 
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedUserId, setSelectedUserId] = useState<IUser["id"] | "all">("all");
@@ -58,6 +80,9 @@ export function CalendarProvider({ children, users, events }: { children: React.
   return (
     <CalendarContext.Provider
       value={{
+        orgId,
+        view,
+        setView,
         selectedDate,
         setSelectedDate: handleSelectDate,
         selectedUserId,

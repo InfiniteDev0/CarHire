@@ -2,11 +2,11 @@ import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { format, isSameDay, parseISO, getDaysInMonth, startOfMonth } from "date-fns";
 
-import { useCalendar } from "@/calendar/contexts/calendar-context";
+import { useCalendar } from "@cal/calendar/contexts/calendar-context";
 
-import { YearViewDayCell } from "@/calendar/components/year-view/year-view-day-cell";
+import { YearViewDayCell } from "@cal/calendar/components/year-view/year-view-day-cell";
 
-import type { IEvent } from "@/calendar/interfaces";
+import type { IEvent } from "@cal/calendar/interfaces";
 
 interface IProps {
   month: Date;
