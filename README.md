@@ -2,7 +2,7 @@
 
 **Socdal by [Nidaam Solutions](https://nidaam.co.ke)** — a multi-tenant car-hire
 management workspace: fleet, clients, rental contracts, payments and staff, with
-one fully isolated workspace per business.
+one fully isolated workspace per business
 
 Stack: Next.js 16 (App Router) · Supabase (auth, Postgres, storage, RLS) ·
 Tailwind v4 + shadcn/ui · Paystack billing.
