@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import { BrandMark, BrandAttribution } from "@/components/brand/logo";
 import { redirect } from "next/navigation";
 import { Car, ChevronRight } from "lucide-react";
 
@@ -14,7 +14,7 @@ import {
 } from "@/lib/limits";
 import { NewWorkspaceButton } from "@/features/workspace/new-workspace-button";
 
-export const metadata = { title: "Choose a workspace · CarHire" };
+export const metadata = { title: "Choose a workspace · Socdal" };
 
 /** Landing picker for users who belong to more than one business. */
 export default async function SelectOrgPage() {
@@ -55,7 +55,7 @@ export default async function SelectOrgPage() {
   return (
     <div className="flex min-h-svh flex-col items-center justify-center gap-8 p-6">
       <div className="flex flex-col items-center gap-3 text-center">
-        <Image src="/logo.png" alt="" width={44} height={44} className="rounded-xl" />
+        <BrandMark className="size-11" />
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold tracking-tight">Choose a workspace</h1>
           <p className="text-sm text-muted-foreground">
@@ -93,6 +93,7 @@ export default async function SelectOrgPage() {
           />
         )}
       </div>
+      <BrandAttribution />
     </div>
   );
 }

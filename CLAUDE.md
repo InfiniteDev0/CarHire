@@ -1,7 +1,7 @@
 @AGENTS.md
 
 
-CarHire — MVP Roadmap (Multi-Tenant)
+Socdal — MVP Roadmap (Multi-Tenant)
 
 Key decision locked in: one admin can own multiple, fully-isolated
 organizations (businesses). Everything downstream is scoped by org_id.
@@ -54,7 +54,7 @@ Auth wiring DONE (client-side @supabase/ssr, Zod validation, sonner toasts):
  [x] forgot password → reset email → /auth/callback → /auth/reset-password
  [x] /auth/callback route (exchangeCodeForSession), Toaster in root layout
  [x] sign-out button + /onboarding stub (real create-org form still TODO)
- [x] Bruno collection at bruno/carhire-auth for manual GoTrue testing
+ [x] Bruno collection at bruno/socdal-auth for manual GoTrue testing
 Remaining Phase 1: real /onboarding (create org), /select-org, org context,
 /workspace/[orgId] shell + membership guard.
 
@@ -143,7 +143,7 @@ Phase 5 — Checkout / Checkin Operational Flow  [DONE]
      (must match client name); inserts checkout_logs, car → TRIP, contract →
      ACTIVE, start=now, expiration=now+duration
  [x] Checkin dialog — returned_by, received_by=current staff, mileage, fuel;
-     refuel penalty auto-suggested (KES 1500/gauge step short, editable);
+     refuel penalty auto-suggested ($1500/gauge step short, editable);
      inserts checkin_logs, car → AVAILABLE, contract → COMPLETED; unpaid
      balance rolls into clients.debt_owed
  [x] Overdue — computed on read (displayStatus): ACTIVE past expiration shows

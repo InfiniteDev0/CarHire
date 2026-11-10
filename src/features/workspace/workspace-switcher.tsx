@@ -63,7 +63,7 @@ export function WorkspaceSwitcher({
       <DropdownMenuTrigger
         render={
           <SidebarMenuButton size="lg" className="bg-accent">
-            <div className="flex aspect-square size-8 items-center justify-center rounded-sm bg-emerald-600 text-sidebar-primary-foreground">
+            <div className="flex aspect-square size-8 items-center justify-center rounded-sm bg-sidebar-primary text-sidebar-primary-foreground">
               <Car className="size-4" />
             </div>
             <div className="grid flex-1 text-left text-sm leading-tight">

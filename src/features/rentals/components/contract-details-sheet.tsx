@@ -35,8 +35,8 @@ import {
   PaymentDialog,
 } from "./rental-dialogs";
 import { TripReportDialog } from "./trip-report-dialog";
+import { money } from "@/lib/money";
 
-const kes = (n: number) => `KES ${Number(n).toLocaleString()}`;
 const fmt = (iso: string | null) =>
   iso
     ? new Date(iso).toLocaleString("en-KE", {
@@ -135,16 +135,16 @@ export function ContractDetailsSheet({
       <div className="grid grid-cols-3 gap-2 text-center">
         <div className="rounded-md bg-zinc-900 p-2.5">
           <p className="text-xs text-zinc-500">Total</p>
-          <p className="text-sm font-bold">{kes(contract.total_amount ?? 0)}</p>
+          <p className="text-sm font-bold">{money(contract.total_amount ?? 0)}</p>
         </div>
         <div className="rounded-md bg-zinc-900 p-2.5">
           <p className="text-xs text-zinc-500">Paid</p>
-          <p className="text-sm font-bold text-emerald-400">{kes(contract.amount_paid ?? 0)}</p>
+          <p className="text-sm font-bold text-emerald-400">{money(contract.amount_paid ?? 0)}</p>
         </div>
         <div className="rounded-md bg-zinc-900 p-2.5">
           <p className="text-xs text-zinc-500">Balance</p>
           <p className={`text-sm font-bold ${balance > 0 ? "text-red-400" : "text-zinc-300"}`}>
-            {kes(Math.max(0, balance))}
+            {money(Math.max(0, balance))}
           </p>
         </div>
       </div>
@@ -153,12 +153,12 @@ export function ContractDetailsSheet({
       <div className="flex-1 text-sm text-zinc-400">
         <Row label="Period" value={`${fmt(contract.contract_start)} → ${fmt(contract.contract_expiration)}`} />
         <Row label="Duration" value={`${contract.duration_days} days`} />
-        <Row label="Rate" value={`${kes(Number(contract.rate_per_day))}/day`} />
+        <Row label="Rate" value={`${money(Number(contract.rate_per_day))}/day`} />
         {contract.deposit_amount > 0 && (
-          <Row label="Deposit" value={kes(contract.deposit_amount)} />
+          <Row label="Deposit" value={money(contract.deposit_amount)} />
         )}
         {contract.refuel_penalty > 0 && (
-          <Row label="Refuel penalty" value={kes(contract.refuel_penalty)} />
+          <Row label="Refuel penalty" value={money(contract.refuel_penalty)} />
         )}
         <Row
           label="Driver"
@@ -204,7 +204,7 @@ export function ContractDetailsSheet({
                   {logs.checkin.mileage?.toLocaleString() ?? "—"} km · Fuel{" "}
                   {logs.checkin.fuel_at_return ? FUEL_LABELS[logs.checkin.fuel_at_return] : "—"}
                   {logs.checkin.refuel_penalty > 0 &&
-                    ` · Penalty ${kes(logs.checkin.refuel_penalty)}`}
+                    ` · Penalty ${money(logs.checkin.refuel_penalty)}`}
                 </p>
                 {logs.checkout?.mileage != null && logs.checkin.mileage != null && (
                   <p className="mt-1 text-zinc-500">
@@ -292,7 +292,7 @@ export function ContractDetailsSheet({
             {balance > 0 && (
               <Button className="w-full" onClick={() => setPaymentOpen(true)}>
                 <Banknote className="size-4" />
-                Record payment ({kes(balance)} outstanding)
+                Record payment ({money(balance)} outstanding)
               </Button>
             )}
             <Button

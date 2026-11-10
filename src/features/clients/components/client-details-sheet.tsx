@@ -11,8 +11,8 @@ import { cn } from "@/lib/utils";
 import { SidePanel } from "@/components/workspace/side-panel";
 import { setClientBlocked } from "../actions";
 import type { ClientRow, ClientContract } from "../types";
+import { money } from "@/lib/money";
 
-const kes = (n: number) => `KES ${Number(n).toLocaleString()}`;
 const shortDate = (iso: string | null) =>
   iso ? new Date(iso).toLocaleDateString("en-KE", { day: "numeric", month: "short", year: "numeric" }) : "—";
 
@@ -143,13 +143,13 @@ export function ClientDetailsSheet({
             {client.debt_owed > 0 && (
               <>
                 <p className="text-xs text-zinc-500">Debt owed</p>
-                <p className="font-bold text-red-400">{kes(client.debt_owed)}</p>
+                <p className="font-bold text-red-400">{money(client.debt_owed)}</p>
               </>
             )}
             {activeBalance > 0 && (
               <>
                 <p className="text-xs text-zinc-500">Owing on active rental</p>
-                <p className="font-bold text-amber-400">{kes(activeBalance)}</p>
+                <p className="font-bold text-amber-400">{money(activeBalance)}</p>
               </>
             )}
           </div>
@@ -312,8 +312,8 @@ export function ClientDetailsSheet({
                     {shortDate(c.contract_expiration)} · {c.duration_days ?? "—"} days
                   </p>
                   <p className="mt-1 text-xs text-zinc-500">
-                    Total {c.total_amount != null ? kes(c.total_amount) : "—"} · Paid{" "}
-                    {c.amount_paid != null ? kes(c.amount_paid) : "—"}
+                    Total {c.total_amount != null ? money(c.total_amount) : "—"} · Paid{" "}
+                    {c.amount_paid != null ? money(c.amount_paid) : "—"}
                   </p>
                 </div>
               ))

@@ -18,8 +18,8 @@ import { getClientPhotoUrls, getClientContracts, type ClientDocUrls } from "../a
 import type { ClientRow, ClientContract } from "../types";
 import { ClientFormSheet } from "./client-form-sheet";
 import { ClientDetailsSheet } from "./client-details-sheet";
+import { money } from "@/lib/money";
 
-const kes = (n: number) => `KES ${Number(n).toLocaleString()}`;
 
 export function ClientsView({
   orgId,
@@ -131,7 +131,7 @@ export function ClientsView({
                   <TableCell className="text-muted-foreground">{c.phone || "—"}</TableCell>
                   <TableCell>
                     {c.debt_owed > 0 ? (
-                      <span className="font-medium text-red-500">{kes(c.debt_owed)}</span>
+                      <span className="font-medium text-red-500">{money(c.debt_owed)}</span>
                     ) : (
                       <span className="text-muted-foreground">—</span>
                     )}

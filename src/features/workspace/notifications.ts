@@ -1,8 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { emitEvent } from "@/lib/events";
 import type { WorkspaceNotification } from "./notification-sheet";
+import { money } from "@/lib/money";
 
-const kes = (n: number) => `KES ${Number(n).toLocaleString()}`;
 const DAY = 86400_000;
 
 interface ContractSlice {
@@ -111,7 +111,7 @@ export async function getWorkspaceNotifications(
     items.push({
       id: `pay-${p.id}`,
       kind: "PAYMENT",
-      title: `${kes(Number(p.amount))} received`,
+      title: `${money(Number(p.amount))} received`,
       detail: [p.contracts?.clients?.full_name, p.contracts?.cars?.reg_number]
         .filter(Boolean)
         .join(" · "),

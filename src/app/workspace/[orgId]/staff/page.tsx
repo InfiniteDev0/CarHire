@@ -8,7 +8,7 @@ import {
   type StaffPhotoUrls,
 } from "@/features/staff/components/staff-table";
 
-export const metadata = { title: "Staff · CarHire" };
+export const metadata = { title: "Staff · Socdal" };
 
 export default async function StaffPage({
   params,

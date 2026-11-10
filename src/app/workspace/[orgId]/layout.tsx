@@ -1,6 +1,14 @@
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AppSidebar } from "@/components/workspace/app-sidebar";
+import { TopNav } from "@/components/workspace/top-nav";
+import { NavUser } from "@/components/workspace/nav-user";
+import { BrandMark } from "@/components/brand/logo";
+import { WorkspaceSwitcher } from "@/features/workspace/workspace-switcher";
+import { NavLayoutToggle } from "@/features/workspace/nav-layout-toggle";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { NAV_LAYOUT_COOKIE, parseNavLayout } from "@/lib/nav-layout";
 import { Separator } from "@/components/ui/separator";
 import {
   SidebarInset,
@@ -32,7 +40,9 @@ import Link from "next/link";
 import { RainbowButton } from "@/components/ui/rainbow-button";
 
 /**
- * Workspace shell — sidebar + header, applied to every /workspace/[orgId] page.
+ * Workspace shell — navigation + header, applied to every /workspace/[orgId] page.
+ * Desktop navigation is the user's choice (top navigation or sidebar), saved in a
+ * cookie so the right shell renders on the server with no flash.
  * Guards membership server-side: RLS only returns the org row if the user is a
  * member, so a missing row means "not your org" → back to the entry router.
  */
@@ -44,6 +54,8 @@ export default async function WorkspaceLayout({
   params: Promise<{ orgId: string }>;
 }) {
   const { orgId } = await params;
+  const navLayout = parseNavLayout((await cookies()).get(NAV_LAYOUT_COOKIE)?.value);
+  const useSidebarNav = navLayout === "sidebar";
   const supabase = await createClient();
   
  
@@ -119,28 +131,50 @@ export default async function WorkspaceLayout({
           userEmail={user.email ?? ""}
         />
         <PresenceHeartbeat orgId={org.id} />
-        <AppSidebar
-          orgId={org.id}
-          orgName={org.name}
-          user={{ name: displayName, email: user.email ?? "", avatar: "" }}
-          plan={plan}
-          staffCount={staffCount ?? 0}
-          isAdmin={role === "admin"}
-          workspaces={workspaces}
-          canCreateWorkspace={canCreateWorkspace}
-          workspaceMessage={workspaceMessage}
-        />
+        {useSidebarNav && (
+          <AppSidebar
+            orgId={org.id}
+            orgName={org.name}
+            user={{ name: displayName, email: user.email ?? "", avatar: "" }}
+            plan={plan}
+            staffCount={staffCount ?? 0}
+            isAdmin={role === "admin"}
+            workspaces={workspaces}
+            canCreateWorkspace={canCreateWorkspace}
+            workspaceMessage={workspaceMessage}
+          />
+        )}
         <SidebarInset className="h-svh overflow-hidden">
-          <header className="hidden md:flex h-12 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+          <header className={`hidden md:flex ${useSidebarNav ? "h-12" : "h-14"} shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12`}>
             <div className="flex items-center justify-between gap-2 w-full px-4">
-              <div className="flex items-center gap-2">
-                <SidebarTrigger className="-ml-1" />
-                <Separator
-                  orientation="vertical"
-                  className="mr-2 data-vertical:h-4 data-vertical:self-auto"
-                />
-                <WorkspaceBreadcrumb orgId={org.id} orgName={org.name} />
-              </div>
+              {useSidebarNav ? (
+                <div className="flex items-center gap-2">
+                  <SidebarTrigger className="-ml-1" />
+                  <Separator
+                    orientation="vertical"
+                    className="mr-2 data-vertical:h-4 data-vertical:self-auto"
+                  />
+                  <WorkspaceBreadcrumb orgId={org.id} orgName={org.name} />
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <Link href={`/workspace/${org.id}`} aria-label="Workspace home">
+                    <BrandMark className="size-6" />
+                  </Link>
+                  <div className="w-56">
+                    <WorkspaceSwitcher
+                      orgId={org.id}
+                      orgName={org.name}
+                      plan={plan}
+                      staffCount={staffCount ?? 0}
+                      isAdmin={role === "admin"}
+                      workspaces={workspaces}
+                      canCreateWorkspace={canCreateWorkspace}
+                      workspaceMessage={workspaceMessage}
+                    />
+                  </div>
+                </div>
+              )}
               <div className="flex items-center gap-5">
                 <LiveClock />
                 {/* cta */}
@@ -164,10 +198,21 @@ export default async function WorkspaceLayout({
                   )}
                   {/* notification trigger and sheet */}
                   <NotificationSheet orgId={org.id} notifications={notifications} />
+                  <ThemeToggle />
+                  <NavLayoutToggle layout={navLayout} />
                 </div>
+                {!useSidebarNav && (
+                  <div className="w-52">
+                    <NavUser
+                      user={{ name: displayName, email: user.email ?? "", avatar: "" }}
+                      menuSide="bottom"
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </header>
+          {!useSidebarNav && <TopNav orgId={org.id} isAdmin={role === "admin"} />}
           {/* banner — only when a free-plan limit is reached */}
           {atLimit && (
             <div className="flex h-7 w-full items-center justify-center gap-2 bg-red-400 text-sm text-red-950">

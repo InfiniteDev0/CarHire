@@ -2,12 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, CheckCircle2, ShieldCheck, ArrowRight } from "lucide-react";
+import { Loader2, CheckCircle2, ShieldCheck, ArrowRight, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { initPaystackCheckout } from "../actions";
+import { money } from "@/lib/money";
+import { BRAND, whatsappLink } from "@/lib/brand";
+import { useWorkspaceStore } from "@/lib/store/workspace-store";
 
 type PaidPlan = "PRO" | "BUSINESS";
 type Billing = "MONTHLY" | "ANNUAL";
@@ -15,9 +18,9 @@ type Billing = "MONTHLY" | "ANNUAL";
 const PLAN_META: Record<PaidPlan, { name: string; monthly: number; features: string[] }> = {
   PRO: {
     name: "Pro",
-    monthly: 2500,
+    monthly: 35,
     features: [
-      "Unlimited vehicles, staff and clients",
+      "Up to 20 vehicles, unlimited staff and clients",
       "Contracts, check-in / check-out & extensions",
       "Complaints & incident log",
       "Trip reports & printable agreements",
@@ -26,9 +29,10 @@ const PLAN_META: Record<PaidPlan, { name: string; monthly: number; features: str
   },
   BUSINESS: {
     name: "Business",
-    monthly: 6000,
+    monthly: 69,
     features: [
       "Everything in Pro",
+      "Unlimited vehicles",
       "Multiple workspaces",
       "Advanced reporting",
       "Data export",
@@ -38,7 +42,8 @@ const PLAN_META: Record<PaidPlan, { name: string; monthly: number; features: str
 };
 
 const ANNUAL_DISCOUNT = 0.2;
-const kes = (n: number) => `KES ${n.toLocaleString()}`;
+// Round to whole cents (annual prices are not always whole dollars).
+const cents = (n: number) => Math.round(n * 100) / 100;
 
 export function CheckoutView({
   orgId,
@@ -58,9 +63,25 @@ export function CheckoutView({
   const [isLoading, setIsLoading] = useState(false);
 
   const monthlyPrice =
-    billing === "ANNUAL" ? Math.round(meta.monthly * (1 - ANNUAL_DISCOUNT)) : meta.monthly;
+    billing === "ANNUAL" ? cents(meta.monthly * (1 - ANNUAL_DISCOUNT)) : meta.monthly;
   const dueToday =
-    billing === "ANNUAL" ? Math.round(meta.monthly * (1 - ANNUAL_DISCOUNT) * 12) : meta.monthly;
+    billing === "ANNUAL" ? cents(meta.monthly * (1 - ANNUAL_DISCOUNT) * 12) : meta.monthly;
+
+  // Until Paystack is connected, orders are placed over WhatsApp and the plan
+  // is activated by Nidaam once payment is confirmed.
+  const userEmail = useWorkspaceStore((s) => s.userEmail);
+  const orderLink = whatsappLink(
+    [
+      `Hello ${BRAND.company}, I would like to order ${BRAND.name} ${meta.name}.`,
+      `Workspace: ${orgName}`,
+      `Billing: ${billing === "ANNUAL" ? "Annual" : "Monthly"}`,
+      `Amount due: ${money(dueToday)}`,
+      userEmail ? `Account email: ${userEmail}` : null,
+      `Workspace ID: ${orgId}`,
+    ]
+      .filter(Boolean)
+      .join("\n"),
+  );
 
   async function handlePay() {
     if (isLoading || !paymentsEnabled) return;
@@ -80,9 +101,9 @@ export function CheckoutView({
       {/* Left — plan + what you unlock */}
       <div className="flex flex-col gap-6">
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">Activate CarHire {meta.name}</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Activate Socdal {meta.name}</h1>
           <p className="text-sm text-muted-foreground">
-            Unlock everything for {orgName} in seconds.
+            Unlock everything for {orgName}.
           </p>
         </div>
 
@@ -100,7 +121,7 @@ export function CheckoutView({
                 id: "ANNUAL" as Billing,
                 title: "Annual",
                 sub: "Commit for a year and save 20%.",
-                price: Math.round(meta.monthly * (1 - ANNUAL_DISCOUNT)),
+                price: cents(meta.monthly * (1 - ANNUAL_DISCOUNT)),
               },
             ] as const
           ).map((o) => {
@@ -130,7 +151,7 @@ export function CheckoutView({
                   </div>
                 </div>
                 <p className="shrink-0 text-sm">
-                  <span className="text-lg font-bold">{kes(o.price)}</span>
+                  <span className="text-lg font-bold">{money(o.price)}</span>
                   <span className="text-muted-foreground"> /mo</span>
                 </p>
               </button>
@@ -159,31 +180,45 @@ export function CheckoutView({
             <span className="text-muted-foreground">
               {meta.name} · {billing === "ANNUAL" ? "Annual" : "Monthly"}
             </span>
-            <span>{kes(monthlyPrice)}/mo</span>
+            <span>{money(monthlyPrice)}/mo</span>
           </div>
           {billing === "ANNUAL" && (
             <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
               <span>Annual saving (20%)</span>
-              <span>−{kes(Math.round(meta.monthly * 12 * ANNUAL_DISCOUNT))}</span>
+              <span>−{money(cents(meta.monthly * 12 * ANNUAL_DISCOUNT))}</span>
             </div>
           )}
         </div>
 
         <div className="flex items-center justify-between border-t pt-3">
           <span className="text-sm text-muted-foreground">Due today</span>
-          <span className="text-lg font-bold">{kes(dueToday)}</span>
+          <span className="text-lg font-bold">{money(dueToday)}</span>
         </div>
 
-        <Button className="w-full gap-2" disabled={isLoading || !paymentsEnabled} onClick={handlePay}>
-          {isLoading && <Loader2 className="size-4 animate-spin" />}
-          Pay with Paystack
-        </Button>
-
-        {!paymentsEnabled && (
-          <p className="rounded-md bg-amber-50 p-2 text-xs text-amber-700 dark:bg-amber-950 dark:text-amber-300">
-            Payments aren&apos;t connected yet — add your Paystack keys
-            (PAYSTACK_SECRET_KEY + NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY) to enable checkout.
-          </p>
+        {paymentsEnabled ? (
+          <Button className="w-full gap-2" disabled={isLoading} onClick={handlePay}>
+            {isLoading && <Loader2 className="size-4 animate-spin" />}
+            Pay with Paystack
+          </Button>
+        ) : (
+          <>
+            <Button asChild className="w-full gap-2">
+              <a href={orderLink} target="_blank" rel="noreferrer">
+                <MessageCircle className="size-4" />
+                Order on WhatsApp
+              </a>
+            </Button>
+            <p className="rounded-md bg-primary/10 p-2 text-xs text-muted-foreground">
+              This opens WhatsApp with your order filled in. Send it to{" "}
+              <span className="font-medium text-foreground">{BRAND.whatsappDisplay}</span> and we
+              will share payment details, then activate {meta.name} on this workspace once payment
+              is confirmed. Prefer email? Write to{" "}
+              <a href={`mailto:${BRAND.email}`} className="font-medium text-foreground underline">
+                {BRAND.email}
+              </a>
+              .
+            </p>
+          </>
         )}
 
         <button
@@ -195,10 +230,12 @@ export function CheckoutView({
           <ArrowRight className="size-3.5" />
         </button>
 
-        <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
-          <ShieldCheck className="mt-0.5 size-3.5 shrink-0" />
-          Paystack handles card and M-Pesa securely — we never see your card details.
-        </p>
+        {paymentsEnabled && (
+          <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
+            <ShieldCheck className="mt-0.5 size-3.5 shrink-0" />
+            Paystack handles card and M-Pesa securely — we never see your card details.
+          </p>
+        )}
       </div>
     </div>
   );

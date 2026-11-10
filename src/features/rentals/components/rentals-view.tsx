@@ -25,8 +25,8 @@ import {
 } from "../helpers";
 import { NewRentalWizard, type PickClient, type PickCar, type OrgRules } from "./new-rental-wizard";
 import { ContractDetailsSheet, STATUS_BADGE } from "./contract-details-sheet";
+import { money } from "@/lib/money";
 
-const kes = (n: number) => `KES ${Number(n).toLocaleString()}`;
 const shortDate = (iso: string | null) =>
   iso ? new Date(iso).toLocaleDateString("en-KE", { day: "numeric", month: "short" }) : "—";
 
@@ -186,11 +186,11 @@ export function RentalsView({
                       {shortDate(c.contract_start ?? c.created_at)} → {shortDate(c.contract_expiration)}
                     </TableCell>
                     <TableCell className="hidden tabular-nums sm:table-cell">
-                      {kes(c.total_amount ?? 0)}
+                      {money(c.total_amount ?? 0)}
                     </TableCell>
                     <TableCell className="tabular-nums">
                       {balance > 0 ? (
-                        <span className="font-medium text-red-500">{kes(balance)}</span>
+                        <span className="font-medium text-red-500">{money(balance)}</span>
                       ) : (
                         <span className="text-muted-foreground">—</span>
                       )}

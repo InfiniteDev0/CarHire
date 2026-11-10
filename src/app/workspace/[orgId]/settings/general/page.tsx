@@ -5,7 +5,7 @@ import {
   type OrgGeneral,
 } from "@/features/settings/components/org-general-form";
 
-export const metadata = { title: "General · Settings · CarHire" };
+export const metadata = { title: "General · Settings · Socdal" };
 
 export default async function GeneralSettingsPage({
   params,

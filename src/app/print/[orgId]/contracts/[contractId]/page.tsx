@@ -3,10 +3,10 @@ import { createClient } from "@/lib/supabase/server";
 import { signPath } from "@/lib/storage";
 import { PrintButton } from "@/features/rentals/components/print-button";
 import type { NextOfKin } from "@/lib/validation/client";
+import { money } from "@/lib/money";
 
-export const metadata = { title: "Rental agreement · CarHire" };
+export const metadata = { title: "Rental agreement · Socdal" };
 
-const kes = (n: number | null | undefined) => `KES ${Number(n ?? 0).toLocaleString()}`;
 const fmtDate = (iso: string | null) =>
   iso
     ? new Date(iso).toLocaleString("en-KE", {
@@ -217,11 +217,11 @@ export default async function ContractPrintPage({
         </h2>
         <div className="grid grid-cols-2 gap-x-8">
           <Field label="Duration" value={`${contract.duration_days} days`} />
-          <Field label="Rate per day" value={kes(contract.rate_per_day)} />
-          <Field label="Total amount" value={kes(contract.total_amount)} />
-          <Field label="Pickup deposit (paid)" value={kes(contract.deposit_amount)} />
-          <Field label="Paid to date" value={kes(contract.amount_paid)} />
-          <Field label="Balance due" value={kes(balance)} />
+          <Field label="Rate per day" value={money(contract.rate_per_day)} />
+          <Field label="Total amount" value={money(contract.total_amount)} />
+          <Field label="Pickup deposit (paid)" value={money(contract.deposit_amount)} />
+          <Field label="Paid to date" value={money(contract.amount_paid)} />
+          <Field label="Balance due" value={money(balance)} />
           <Field label="Trip starts" value={fmtDate(contract.contract_start)} />
           <Field label="Contract expires" value={fmtDate(contract.contract_expiration)} />
           <Field label="Authorized routes" value={contract.routing} />
@@ -249,8 +249,8 @@ export default async function ContractPrintPage({
                 <tr key={i} className="border-b border-dotted border-neutral-300">
                   <td className="py-1">{fmtDate(e.created_at)}</td>
                   <td className="py-1">{e.extra_days}</td>
-                  <td className="py-1">{kes(e.required_payment)}</td>
-                  <td className="py-1">{kes(e.amount_paid)}</td>
+                  <td className="py-1">{money(e.required_payment)}</td>
+                  <td className="py-1">{money(e.amount_paid)}</td>
                 </tr>
               ))}
             </tbody>
@@ -293,7 +293,7 @@ export default async function ContractPrintPage({
         <ol className="list-decimal space-y-1 pl-5 text-xs leading-relaxed">
           <li>
             The vehicle must be returned with the same fuel level it left with. A refuel
-            penalty of KES 1,500 per missing gauge step applies at check-in.
+            penalty of $1,500 per missing gauge step applies at check-in.
           </li>
           <li>
             Keeping the vehicle past the contract expiry without an authorized extension

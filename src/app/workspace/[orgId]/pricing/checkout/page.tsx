@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { paystackConfigured } from "@/lib/paystack";
 import { CheckoutView } from "@/features/billing/components/checkout-view";
 
-export const metadata = { title: "Checkout · CarHire" };
+export const metadata = { title: "Checkout · Socdal" };
 
 export default async function CheckoutPage({
   params,

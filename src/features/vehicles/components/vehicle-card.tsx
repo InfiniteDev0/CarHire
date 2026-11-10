@@ -3,8 +3,8 @@
 import { Pencil } from "lucide-react";
 import { VehicleStatusBadge } from "./vehicle-status-badge";
 import type { Vehicle } from "../types";
+import { money } from "@/lib/money";
 
-const kes = (n: number) => `KES ${n.toLocaleString()}`;
 
 export function VehicleCard({
   vehicle,
@@ -76,7 +76,7 @@ export function VehicleCard({
           <div className="shrink-0 text-right">
             {vehicle.rate_per_day != null ? (
               <p className="font-semibold">
-                {kes(vehicle.rate_per_day)}
+                {money(vehicle.rate_per_day)}
                 <span className="text-xs font-normal text-muted-foreground"> /day</span>
               </p>
             ) : (

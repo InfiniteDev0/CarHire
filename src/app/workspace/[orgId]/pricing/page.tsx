@@ -3,7 +3,7 @@ import { PricingSection } from "@/components/pricing-section";
 import { PaymentResultToast } from "@/features/billing/components/payment-result-toast";
 import type { OrgPlan } from "@/lib/limits";
 
-export const metadata = { title: "Pricing · CarHire" };
+export const metadata = { title: "Pricing · Socdal" };
 
 export default async function PricingPage({
   params,

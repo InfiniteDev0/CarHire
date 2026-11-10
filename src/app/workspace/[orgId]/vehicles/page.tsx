@@ -4,7 +4,7 @@ import { getStaffNames } from "@/lib/staff-names";
 import { VehiclesGrid } from "@/features/vehicles/components/vehicles-grid";
 import { VEHICLE_COLUMNS, type Vehicle } from "@/features/vehicles/types";
 
-export const metadata = { title: "Vehicles · CarHire" };
+export const metadata = { title: "Vehicles · Socdal" };
 
 export default async function VehiclesPage({
   params,

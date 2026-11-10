@@ -7,7 +7,7 @@ import {
 import { CalendarWorkingHoursForm } from "@/features/settings/components/calendar-working-hours-form";
 import type { WorkingHours } from "@/features/settings/actions";
 
-export const metadata = { title: "Operations · Settings · CarHire" };
+export const metadata = { title: "Operations · Settings · Socdal" };
 
 const DEFAULT_WORKING: WorkingHours = {
   0: { from: 0, to: 0 },

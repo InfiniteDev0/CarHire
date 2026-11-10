@@ -1,4 +1,4 @@
-# CarHire — Setup
+# Socdal — Setup
 
 Multi-tenant car-rental admin. One user can own many isolated organizations;
 every record is scoped by `org_id` and enforced with Supabase RLS.

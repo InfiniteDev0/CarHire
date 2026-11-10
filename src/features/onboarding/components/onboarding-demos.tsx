@@ -98,9 +98,9 @@ function MembersDemo() {
 // Step 5 — plan
 function PlanDemo() {
   const plans = [
-    { name: "Free", price: "KES 0", popular: false },
-    { name: "Pro", price: "KES 2,500", popular: true },
-    { name: "Business", price: "KES 6,000", popular: false },
+    { name: "Free", price: "$0", popular: false },
+    { name: "Pro", price: "$35", popular: true },
+    { name: "Business", price: "$69", popular: false },
   ];
   return (
     <div className="w-64 space-y-2">

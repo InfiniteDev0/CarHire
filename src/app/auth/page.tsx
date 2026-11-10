@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { BrandLogo, BrandAttribution } from "@/components/brand/logo";
+import { BRAND } from "@/lib/brand";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { ChevronLeft } from "lucide-react";
 import { toast } from "sonner";
 
@@ -62,13 +65,10 @@ export default function AuthPage() {
             className="object-cover"
             sizes="100vw"
           />
-          <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-black/10" />
+          <div className="absolute inset-0 bg-linear-to-t from-brand-ink/90 via-brand-ink/30 to-brand-ink/10" />
 
           <div className="relative flex flex-col gap-6 text-white">
-            <span className="flex items-center gap-2 font-medium">
-              <Image src="/logo.png" alt="" width={32} height={32} className="rounded-md" />
-              Lenzro CarHire
-            </span>
+            <BrandLogo byline markClassName="size-8" />
             <div className="space-y-1">
               <p className="text-2xl font-semibold">Run your fleet from your phone.</p>
               <p className="text-sm text-white/80">
@@ -78,7 +78,7 @@ export default function AuthPage() {
             <button
               type="button"
               onClick={() => setStarted(true)}
-              className="w-full rounded-full bg-white py-3.5 text-center font-medium text-black transition-opacity active:opacity-80"
+              className="w-full rounded-full bg-primary py-3.5 text-center font-medium text-primary-foreground transition-opacity active:opacity-80"
             >
               Get started
             </button>
@@ -92,18 +92,22 @@ export default function AuthPage() {
             started && "translate-x-0"
           )}
         >
-          <button
-            type="button"
-            onClick={() => setStarted(false)}
-            aria-label="Back"
-            className="-ml-2 flex size-9 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
-          >
-            <ChevronLeft className="size-5" />
-          </button>
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => setStarted(false)}
+              aria-label="Back"
+              className="-ml-2 flex size-9 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
+            >
+              <ChevronLeft className="size-5" />
+            </button>
+            <ThemeToggle />
+          </div>
 
           <div className="flex flex-1 items-center justify-center">
             <AuthForms mode={mode} setMode={setMode} />
           </div>
+          <BrandAttribution className="justify-center" />
         </div>
       </div>
 
@@ -118,28 +122,29 @@ export default function AuthPage() {
             className="object-cover"
             sizes="50vw"
           />
-          <div className="absolute inset-0 bg-linear-to-t from-black/70 to-transparent" />
-          <div className="absolute bottom-8 left-8 right-8 text-white">
-            <p className="text-lg font-medium">Lenzro CarHire</p>
-            <p className="text-sm text-white/80">
-              Fleet, clients and contracts — one workspace per business.
+          <div className="absolute inset-0 bg-linear-to-t from-brand-ink/85 via-brand-ink/20 to-transparent" />
+          <div className="absolute bottom-8 left-8 right-8 space-y-4 text-white">
+            <span className="block h-1 w-12 rounded-full bg-primary" />
+            <p className="max-w-md text-3xl font-semibold leading-tight tracking-tight">
+              Run your whole fleet from one place.
+            </p>
+            <p className="text-sm text-white/80">{BRAND.tagline}</p>
+            <p className="text-xs text-white/60">
+              {BRAND.name} by {BRAND.company} · {BRAND.companyDomain}
             </p>
           </div>
         </div>
 
         <div className="flex flex-col gap-4 p-6 md:p-10">
-          <div className="flex justify-center gap-2 md:justify-start">
-            <span className="flex items-center gap-2 font-medium">
-              <span className="flex size-8 items-center justify-center overflow-hidden text-primary-foreground">
-                <Image src="/logo.png" alt="" width={32} height={32} className="rounded-md" />
-              </span>
-              Lenzro CarHire
-            </span>
+          <div className="flex items-center justify-between gap-2">
+            <BrandLogo byline />
+            <ThemeToggle />
           </div>
 
           <div className="flex flex-1 items-center justify-center">
             <AuthForms mode={mode} setMode={setMode} />
           </div>
+          <BrandAttribution className="justify-center md:justify-start" />
         </div>
       </div>
     </>

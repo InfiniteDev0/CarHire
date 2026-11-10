@@ -47,6 +47,31 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  --color-brand: var(--brand);
+  --color-brand-ink: var(--brand-ink);
+  /* Nidaam blue ramp — blue-* and sky-* utilities resolve to the brand scale. */
+  --color-blue-50: #ebf9ff;
+  --color-blue-100: #d1f1ff;
+  --color-blue-200: #a8e4ff;
+  --color-blue-300: #70d3ff;
+  --color-blue-400: #33c0ff;
+  --color-blue-500: #00aeff;
+  --color-blue-600: #008fd6;
+  --color-blue-700: #0070a8;
+  --color-blue-800: #005580;
+  --color-blue-900: #003d5c;
+  --color-blue-950: #00273d;
+  --color-sky-50: #ebf9ff;
+  --color-sky-100: #d1f1ff;
+  --color-sky-200: #a8e4ff;
+  --color-sky-300: #70d3ff;
+  --color-sky-400: #33c0ff;
+  --color-sky-500: #00aeff;
+  --color-sky-600: #008fd6;
+  --color-sky-700: #0070a8;
+  --color-sky-800: #005580;
+  --color-sky-900: #003d5c;
+  --color-sky-950: #00273d;
   --animate-rainbow: rainbow var(--speed, 2s) infinite linear;
   --color-color-5: var(--color-5);
   --color-color-4: var(--color-4);
@@ -64,82 +89,81 @@
 }
 
 :root {
-  --background: oklch(95.514% 0.00011 271.152);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  /* ── Socdal by Nidaam Solutions — brand tokens ── */
+  --brand: #00aeff; /* Nidaam blue */
+  --brand-ink: #0b0e11; /* brand near-black */
+
+  --background: #f3f7fa;
+  --foreground: #111111;
+  --card: #ffffff;
+  --card-foreground: #111111;
+  --popover: #ffffff;
+  --popover-foreground: #111111;
+  --primary: var(--brand);
+  --primary-foreground: #04121a;
+  --secondary: #e9f1f6;
+  --secondary-foreground: #111111;
+  --muted: #ebf1f5;
+  --muted-foreground: #5a6772;
+  --accent: #dff4ff;
+  --accent-foreground: #00527a;
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
+  --border: #dbe4ea;
+  --input: #dbe4ea;
+  --ring: var(--brand);
+  --chart-1: #00aeff;
+  --chart-2: #0070a8;
+  --chart-3: #70d3ff;
+  --chart-4: #003d5c;
+  --chart-5: #a8e4ff;
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-  --color-1: oklch(66.2% 0.225 25.9);
-  --color-2: oklch(60.4% 0.26 302);
-  --color-3: oklch(69.6% 0.165 251);
-  --color-4: oklch(80.2% 0.134 225);
-  --color-5: oklch(90.7% 0.231 133);
+  --sidebar: #ffffff;
+  --sidebar-foreground: #111111;
+  --sidebar-primary: var(--brand);
+  --sidebar-primary-foreground: #04121a;
+  --sidebar-accent: #dff4ff;
+  --sidebar-accent-foreground: #00527a;
+  --sidebar-border: #dbe4ea;
+  --sidebar-ring: var(--brand);
+  --color-1: #00aeff;
+  --color-2: #0070a8;
+  --color-3: #70d3ff;
+  --color-4: #33c0ff;
+  --color-5: #a8e4ff;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --background: #0b0e11;
+  --foreground: #f2f6f9;
+  --card: #13181d;
+  --card-foreground: #f2f6f9;
+  --popover: #13181d;
+  --popover-foreground: #f2f6f9;
+  --primary: var(--brand);
+  --primary-foreground: #04121a;
+  --secondary: #1b2229;
+  --secondary-foreground: #f2f6f9;
+  --muted: #1b2229;
+  --muted-foreground: #93a1ad;
+  --accent: #0d2a3a;
+  --accent-foreground: #8cdbff;
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
-  --color-1: oklch(66.2% 0.225 25.9);
-  --color-2: oklch(60.4% 0.26 302);
-  --color-3: oklch(69.6% 0.165 251);
-  --color-4: oklch(80.2% 0.134 225);
-  --color-5: oklch(90.7% 0.231 133);
+  --border: rgb(255 255 255 / 9%);
+  --input: rgb(255 255 255 / 14%);
+  --ring: var(--brand);
+  --chart-1: #00aeff;
+  --chart-2: #70d3ff;
+  --chart-3: #008fd6;
+  --chart-4: #d1f1ff;
+  --chart-5: #005580;
+  --sidebar: #0f1317;
+  --sidebar-foreground: #f2f6f9;
+  --sidebar-primary: var(--brand);
+  --sidebar-primary-foreground: #04121a;
+  --sidebar-accent: #0d2a3a;
+  --sidebar-accent-foreground: #8cdbff;
+  --sidebar-border: rgb(255 255 255 / 9%);
+  --sidebar-ring: var(--brand);
 }
 
 @layer base {
@@ -188,7 +212,7 @@
 }
 /* ── Liquid glass (mobile pill + expanders) — ported from the reference ── */
 :root {
-  --c-glass: #f4f4f5;
+  --c-glass: #eef4f8;
   --c-light: #fff;
   --c-dark: #000;
   --glass-reflex-light: 1;
@@ -197,7 +221,7 @@
   --glass-tint: 62%; /* how frosted the surface reads */
 }
 .dark {
-  --c-glass: #2e2e30;
+  --c-glass: #1b2229;
   --glass-reflex-light: 0.55;
   --glass-reflex-dark: 1.4;
   --glass-tint: 55%;

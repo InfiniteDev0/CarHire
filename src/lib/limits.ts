@@ -4,6 +4,16 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 export const FREE_LIMITS = { staff: 5, vehicles: 5, clients: 5, rentals: 5 } as const;
 export type LimitKey = keyof typeof FREE_LIMITS;
 
+// Pro caps. Only the fleet is capped on Pro; Business is unlimited.
+export const PRO_LIMITS = { vehicles: 20 } as const;
+
+/** The cap for `key` on `plan`, or null when that plan is unlimited for it. */
+export function planLimit(plan: OrgPlan, key: LimitKey): number | null {
+  if (plan === "FREE") return FREE_LIMITS[key];
+  if (plan === "PRO" && key === "vehicles") return PRO_LIMITS.vehicles;
+  return null;
+}
+
 export type OrgPlan = "FREE" | "PRO" | "BUSINESS";
 
 export const PLAN_LABELS: Record<OrgPlan, string> = {
@@ -114,7 +124,7 @@ export function isAnyLimitReached(usage: OrgUsage): boolean {
 
 /**
  * Throw a friendly limit error if `orgId` is already at the cap for `key`.
- * Paid plans (PRO/BUSINESS) are unlimited — the check short-circuits.
+ * Free caps everything; Pro caps only the fleet; Business is unlimited.
  */
 export async function assertUnderLimit(
   supabase: SupabaseClient,
@@ -122,12 +132,15 @@ export async function assertUnderLimit(
   key: LimitKey
 ): Promise<void> {
   const plan = await getOrgPlan(supabase, orgId);
-  if (plan !== "FREE") return;
+  const cap = planLimit(plan, key);
+  if (cap == null) return;
 
   const usage = await getOrgUsage(supabase, orgId);
-  if (usage[key] >= FREE_LIMITS[key]) {
+  if (usage[key] >= cap) {
     throw new Error(
-      `You've reached the free limit of ${FREE_LIMITS[key]} ${LIMIT_LABEL[key]}. Upgrade to Pro to add more.`
+      plan === "FREE"
+        ? `You've reached the free limit of ${cap} ${LIMIT_LABEL[key]}. Upgrade to Pro to add more.`
+        : `You've reached the Pro limit of ${cap} ${LIMIT_LABEL[key]}. Upgrade to Business to add more.`
     );
   }
 }

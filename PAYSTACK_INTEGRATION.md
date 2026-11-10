@@ -9,12 +9,12 @@ truth for the plan lifecycle; the checkout callback just gives instant feedback.
 1. **Create four Plans** (Plans → New Plan). Monthly and annual are separate
    plans because a Paystack Plan has a fixed interval.
 
-   | Plan | Interval | Amount (KES) |
+   | Plan | Interval | Amount (USD) |
    |------|----------|--------------|
-   | Pro Monthly | Monthly | 2,500 |
-   | Pro Annual | Annually | 24,000  (2500 × 12 − 20%) |
-   | Business Monthly | Monthly | 6,000 |
-   | Business Annual | Annually | 57,600  (6000 × 12 − 20%) |
+   | Pro Monthly | Monthly | 35 |
+   | Pro Annual | Annually | 336  (35 × 12 − 20%) |
+   | Business Monthly | Monthly | 69 |
+   | Business Annual | Annually | 662.40  (69 × 12 − 20%) |
 
 2. **Copy each `plan_code`** (`PLN_…`) into `.env.local`:
    ```

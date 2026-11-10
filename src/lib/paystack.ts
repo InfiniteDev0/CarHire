@@ -18,7 +18,7 @@ function secret(): string {
 
 export interface InitTransactionArgs {
   email: string;
-  /** Major currency units (e.g. KES 2500). One-time charge. Omit when `plan` is set. */
+  /** Major currency units (e.g. $2500). One-time charge. Omit when `plan` is set. */
   amount?: number;
   /**
    * Paystack plan code — turns the transaction into a recurring subscription.
@@ -48,7 +48,7 @@ export async function initializeTransaction(
 
   const body: Record<string, unknown> = {
     email: args.email,
-    currency: args.currency ?? "KES",
+    currency: args.currency ?? "USD",
     reference: args.reference,
     callback_url: args.callbackUrl,
     metadata: args.metadata,
@@ -59,7 +59,7 @@ export async function initializeTransaction(
   // Paystack requires `amount` on /transaction/initialize even when a `plan`
   // is set (the plan's own amount is what actually gets charged) — omitting it
   // fails with "Invalid Amount Sent". So always send the amount when we have it.
-  if (args.amount != null) body.amount = Math.round(args.amount * 100); // KES → cents
+  if (args.amount != null) body.amount = Math.round(args.amount * 100); // USD → cents
   if (args.plan) body.plan = args.plan;
 
   const res = await fetch(`${API}/transaction/initialize`, {

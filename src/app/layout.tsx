@@ -1,7 +1,8 @@
 import { Outfit } from "next/font/google";
-import { Toaster } from "sonner";
 import { ThemeProvider } from "next-themes";
 import { PwaRegister } from "@/components/pwa-register";
+import { ThemedToaster } from "@/components/theme-toggle";
+import { BRAND } from "@/lib/brand";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -12,19 +13,32 @@ const outfit = Outfit({
 
 
 export const metadata = {
-  title: "Lenzro CarHire",
-  description: "Fleet, clients and contracts — one workspace per business.",
-  applicationName: "Lenzro CarHire",
-  icons: { icon: "/logo.png", apple: "/logo.png" },
+  // Set NEXT_PUBLIC_SITE_URL in production so social previews get absolute URLs.
+  metadataBase: process.env.NEXT_PUBLIC_SITE_URL
+    ? new URL(process.env.NEXT_PUBLIC_SITE_URL)
+    : undefined,
+  title: `${BRAND.name} by ${BRAND.company}`,
+  description: BRAND.tagline,
+  applicationName: BRAND.name,
+  authors: [{ name: BRAND.company, url: BRAND.companyUrl }],
+  creator: BRAND.company,
+  publisher: BRAND.company,
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
   appleWebApp: {
     capable: true,
-    title: "Lenzro CarHire",
+    title: BRAND.name,
     statusBarStyle: "black-translucent",
   },
 };
 
 export const viewport = {
-  themeColor: "#000000",
+  themeColor: BRAND.ink,
 };
 
 export default function RootLayout({ children }) {
@@ -36,10 +50,10 @@ export default function RootLayout({ children }) {
     >
       <body className="min-h-full flex flex-col">
         <PwaRegister />
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           {children}
+          <ThemedToaster />
         </ThemeProvider>
-        <Toaster position="top-center" theme="dark" richColors />
       </body>
     </html>
   );

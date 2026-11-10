@@ -39,7 +39,7 @@ export function RevenueChart({ data }: { data: MonthMoney[] }) {
     <Card>
       <CardHeader>
         <CardTitle>Revenue vs expenses</CardTitle>
-        <CardDescription>Last 6 months, KES</CardDescription>
+        <CardDescription>Last 6 months, USD</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="max-h-64 w-full">

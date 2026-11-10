@@ -22,7 +22,7 @@ import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
 const chartConfig = {
   utilization: {
     label: "Utilization",
-    color: "#3b82f6", // blue
+    color: "#00AEFF", // Nidaam blue
   },
 } satisfies ChartConfig;
 

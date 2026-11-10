@@ -61,7 +61,9 @@ export async function updateSession(request) {
   const { pathname } = request.nextUrl;
 
   // Not signed in and trying to reach a protected page → send to /auth.
-  if (!user && !isPublic(pathname)) {
+  // "/" is the marketing landing page for visitors; signed-in users are
+  // routed onward by the page itself, so it is open either way.
+  if (!user && pathname !== "/" && !isPublic(pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = "/auth";
     return NextResponse.redirect(url);

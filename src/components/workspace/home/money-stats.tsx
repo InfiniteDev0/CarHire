@@ -2,6 +2,7 @@ import Link from "next/link";
 import { HandCoins, ReceiptText, TriangleAlert, Gauge } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { money } from "@/lib/money";
 
 export interface MoneyStatsData {
   monthRevenue: number;
@@ -11,7 +12,6 @@ export interface MoneyStatsData {
   utilization: number;
 }
 
-const kes = (n: number) => `KES ${Number(n).toLocaleString()}`;
 
 export function MoneyStats({
   orgId,
@@ -35,7 +35,7 @@ export function MoneyStats({
         </div>
         <div>
           <p className="truncate text-2xl font-semibold leading-none tabular-nums text-green-600 dark:text-green-400">
-            {kes(data.monthRevenue)}
+            {money(data.monthRevenue)}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">Collected this month</p>
         </div>
@@ -51,7 +51,7 @@ export function MoneyStats({
         </div>
         <div>
           <p className="truncate text-2xl font-semibold leading-none tabular-nums text-amber-600 dark:text-amber-400">
-            {kes(data.outstanding)}
+            {money(data.outstanding)}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">Unpaid balances</p>
         </div>
@@ -67,7 +67,7 @@ export function MoneyStats({
         </div>
         <div>
           <p className="truncate text-2xl font-semibold leading-none tabular-nums text-red-600 dark:text-red-400">
-            {kes(data.clientDebt)}
+            {money(data.clientDebt)}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">Client debt on file</p>
         </div>

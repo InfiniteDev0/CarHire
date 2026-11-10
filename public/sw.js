@@ -1,4 +1,4 @@
-/* Lenzro CarHire service worker — push notifications + PWA installability. */
+/* Socdal (by Nidaam Solutions) service worker — push notifications + PWA installability. */
 
 // Minimal fetch handler so browsers treat the app as installable.
 // Network-first passthrough — the app itself stays fully dynamic.
@@ -10,7 +10,7 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("push", (event) => {
-  let payload = { title: "CarHire", body: "", url: "/" };
+  let payload = { title: "Socdal", body: "", url: "/" };
   try {
     payload = { ...payload, ...event.data.json() };
   } catch {
@@ -20,8 +20,8 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(payload.title, {
       body: payload.body,
-      icon: "/favicon.ico",
-      badge: "/favicon.ico",
+      icon: "/icon-192.png",
+      badge: "/icon-192.png",
       data: { url: payload.url },
     })
   );

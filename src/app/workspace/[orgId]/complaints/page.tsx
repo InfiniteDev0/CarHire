@@ -7,7 +7,7 @@ import {
   type ComplaintCarPick,
 } from "@/features/complaints/components/complaints-view";
 
-export const metadata = { title: "Complaints · CarHire" };
+export const metadata = { title: "Complaints · Socdal" };
 
 export default async function ComplaintsPage({
   params,

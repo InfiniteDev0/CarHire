@@ -15,10 +15,10 @@ import {
   TRIP_STATUS_STYLE,
 } from "@/features/vehicles/trip-history";
 import { cn } from "@/lib/utils";
+import { money } from "@/lib/money";
 
-export const metadata = { title: "Vehicle · CarHire" };
+export const metadata = { title: "Vehicle · Socdal" };
 
-const kes = (n: number) => `KES ${n.toLocaleString()}`;
 const fmtDate = (iso: string) =>
   new Date(iso).toLocaleDateString("en-KE", { day: "numeric", month: "short", year: "numeric" });
 
@@ -91,7 +91,7 @@ export default async function VehiclePage({
           </div>
           <div className="flex items-end justify-between gap-3">
             <p className="text-xl font-bold">
-              {v.rate_per_day != null ? kes(v.rate_per_day) : "No rate"}
+              {v.rate_per_day != null ? money(v.rate_per_day) : "No rate"}
               {v.rate_per_day != null && (
                 <span className="text-sm font-normal text-muted-foreground"> /day</span>
               )}
@@ -173,7 +173,7 @@ export default async function VehiclePage({
                       <span>
                         {fmtDate(start)} · {t.duration_days} day{t.duration_days === 1 ? "" : "s"}
                       </span>
-                      <span>{t.total_amount != null ? kes(t.total_amount) : ""}</span>
+                      <span>{t.total_amount != null ? money(t.total_amount) : ""}</span>
                     </div>
                   </Link>
                 );

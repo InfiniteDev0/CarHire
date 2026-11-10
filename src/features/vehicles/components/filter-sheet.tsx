@@ -157,7 +157,7 @@ export function FilterSheet({
           <CheckboxGrid options={FUEL_TYPES} selected={filters.fuelTypes} onToggle={(v) => toggle("fuelTypes", v)} />
         </Section>
 
-        <Section title="Price range / day (KES)">
+        <Section title="Price range / day (USD)">
           <div className="flex items-center gap-2">
             <input
               type="number"

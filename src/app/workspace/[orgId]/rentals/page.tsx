@@ -4,7 +4,7 @@ import { RentalsView } from "@/features/rentals/components/rentals-view";
 import { CONTRACT_COLUMNS, type ContractRow } from "@/features/rentals/helpers";
 import type { PickClient, PickCar, OrgRules } from "@/features/rentals/components/new-rental-wizard";
 
-export const metadata = { title: "Rentals · CarHire" };
+export const metadata = { title: "Rentals · Socdal" };
 
 export default async function RentalsPage({
   params,

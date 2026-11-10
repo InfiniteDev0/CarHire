@@ -301,7 +301,7 @@ export function CheckinDialog({
               <FuelPicker value={fuel} onChange={pickFuel} disabled={isLoading} />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="ciPenalty">Refuel penalty (KES)</Label>
+              <Label htmlFor="ciPenalty">Refuel penalty (USD)</Label>
               <Input
                 id="ciPenalty"
                 type="number"
@@ -311,7 +311,7 @@ export function CheckinDialog({
                 disabled={isLoading}
               />
               <p className="text-xs text-muted-foreground">
-                Auto-suggested at KES {penaltyPerStep.toLocaleString()} per missing gauge
+                Auto-suggested at ${penaltyPerStep.toLocaleString()} per missing gauge
                 step (set by the admin in Settings → Operations). Penalties can&apos;t be
                 added after check-in, so record them now.
               </p>
@@ -383,7 +383,7 @@ export function ExtendDialog({
         <DialogHeader>
           <DialogTitle>Extend rental</DialogTitle>
           <DialogDescription>
-            Outstanding balance: KES {Math.max(0, balance).toLocaleString()}. The client must pay{" "}
+            Outstanding balance: ${Math.max(0, balance).toLocaleString()}. The client must pay{" "}
             {isAdmin ? "the required amount" : "half of it"} before an extension is authorized.
           </DialogDescription>
         </DialogHeader>
@@ -401,12 +401,11 @@ export function ExtendDialog({
               disabled={isLoading}
             />
             <p className="text-xs text-muted-foreground">
-              Adds KES {extraCost.toLocaleString()} at the contract rate (KES{" "}
-              {Number(contract.rate_per_day).toLocaleString()}/day).
+              Adds ${extraCost.toLocaleString()} at the contract rate (${Number(contract.rate_per_day).toLocaleString()}/day).
             </p>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="extRequired">Required payment (KES)</Label>
+            <Label htmlFor="extRequired">Required payment (USD)</Label>
             <Input
               id="extRequired"
               type="number"
@@ -423,7 +422,7 @@ export function ExtendDialog({
             </p>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="extPaid">Amount paid now (KES)</Label>
+            <Label htmlFor="extPaid">Amount paid now (USD)</Label>
             <Input
               id="extPaid"
               type="number"
@@ -484,7 +483,7 @@ export function PaymentDialog({
     CASH: { label: "Receipt no. (optional)", placeholder: "e.g. RCT-0042" },
     MPESA: {
       label: "M-Pesa code / message",
-      placeholder: "e.g. SFG3K1XQ2P Confirmed. KES 5,000 received…",
+      placeholder: "e.g. SFG3K1XQ2P Confirmed. $5,000 received…",
     },
     CARD: { label: "Card reference (optional)", placeholder: "Last 4 digits / auth code" },
     BANK: { label: "Bank reference (optional)", placeholder: "Transfer/slip reference" },
@@ -497,14 +496,14 @@ export function PaymentDialog({
         <DialogHeader>
           <DialogTitle>Record payment</DialogTitle>
           <DialogDescription>
-            Outstanding balance: KES {Math.max(0, balance).toLocaleString()}. Entered by staff
+            Outstanding balance: ${Math.max(0, balance).toLocaleString()}. Entered by staff
             when the client pays.
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-4 py-2">
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="payAmount">Amount received (KES)</Label>
+            <Label htmlFor="payAmount">Amount received (USD)</Label>
             <Input
               id="payAmount"
               type="number"

@@ -68,7 +68,7 @@ export function OnboardingLayout({
                 key={i}
                 className={cn(
                   "h-1 flex-1 rounded-full transition-colors",
-                  i < currentStep ? "bg-foreground" : "bg-muted",
+                  i < currentStep ? "bg-primary" : "bg-muted",
                 )}
               />
             ))}
@@ -125,7 +125,7 @@ export function OnboardingLayout({
       </div>
 
       {/* Right: per-step demonstration (desktop only) */}
-      <div className="relative hidden overflow-hidden rounded-2xl p-5 dark:bg-black md:block">
+      <div className="relative hidden overflow-hidden rounded-2xl bg-card p-5 md:block">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentStep}
@@ -135,8 +135,8 @@ export function OnboardingLayout({
             transition={{ duration: 0.25, ease: "easeOut" }}
             className="flex h-full w-full flex-col items-center justify-center gap-3"
           >
-            <p className="flex items-center gap-1.5 text-sm text-zinc-300">
-              <CircleCheck className="size-4 text-emerald-500" />
+            <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <CircleCheck className="size-4 text-primary" />
               {(STEP_PANELS[currentStep] ?? STEP_PANELS[1]).caption}
             </p>
 

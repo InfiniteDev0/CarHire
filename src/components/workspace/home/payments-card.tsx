@@ -18,6 +18,7 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 import { cn } from "@/lib/utils";
+import { money } from "@/lib/money";
 
 export interface PaymentPoint {
   amount: number;
@@ -29,7 +30,6 @@ export interface ExpensePoint {
   incurred_on: string;
 }
 
-const kes = (n: number) => `KES ${Number(n).toLocaleString()}`;
 const DAY = 86400_000;
 const RANGES = [7, 30, 90] as const;
 type Range = (typeof RANGES)[number];
@@ -38,7 +38,7 @@ type Range = (typeof RANGES)[number];
 const chartConfig = {
   collected: {
     label: "Collected",
-    color: "#38bdf8", // sky blue, like the reference dashboard
+    color: "#00AEFF", // Nidaam blue
   },
 } satisfies ChartConfig;
 
@@ -100,18 +100,18 @@ export function PaymentsCard({
           <div className="flex sm:flex-col">
             <div className="flex flex-col gap-0.5 border-l-2 border-sky-400 bg-muted/40 px-4 py-3">
               <span className="text-xs text-muted-foreground">Total income</span>
-              <span className="text-base font-bold leading-none sm:text-lg">{kes(income)}</span>
+              <span className="text-base font-bold leading-none sm:text-lg">{money(income)}</span>
             </div>
             <div className="flex flex-col gap-0.5 px-4 py-3">
               <span className="text-xs text-muted-foreground">Outstanding</span>
               <span className="text-base font-bold leading-none text-amber-600 dark:text-amber-400 sm:text-lg">
-                {kes(outstanding)}
+                {money(outstanding)}
               </span>
             </div>
             <div className="flex flex-col gap-0.5 px-4 py-3">
               <span className="text-xs text-muted-foreground">Expenses</span>
               <span className="text-base font-bold leading-none text-red-600 dark:text-red-400 sm:text-lg">
-                {kes(spent)}
+                {money(spent)}
               </span>
             </div>
           </div>

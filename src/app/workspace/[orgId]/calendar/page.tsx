@@ -5,6 +5,7 @@ import {
 } from "@/features/calendar/big/rental-calendar-mount";
 import type { IEvent, IUser } from "@cal/calendar/interfaces";
 import type { TBadgeVariant, TEventColor, TWorkingHours } from "@cal/calendar/types";
+import { money } from "@/lib/money";
 
 const DEFAULT_WORKING: TWorkingHours = {
   0: { from: 0, to: 0 },
@@ -16,7 +17,7 @@ const DEFAULT_WORKING: TWorkingHours = {
   6: { from: 9, to: 13 },
 };
 
-export const metadata = { title: "Calendar · CarHire" };
+export const metadata = { title: "Calendar · Socdal" };
 
 interface CalContract {
   id: string;
@@ -41,7 +42,6 @@ interface CalReminder {
   resolved: boolean;
 }
 
-const kes = (n: number) => `KES ${Number(n).toLocaleString()}`;
 const REMINDER_USER = "reminders";
 
 function colorFor(status: string, overdue: boolean): TEventColor {
@@ -85,8 +85,8 @@ function buildEvents(rows: CalContract[], reminders: CalReminder[]): IEvent[] {
       color: colorFor(c.status, overdue),
       description: [
         overdue ? "OVERDUE" : c.status,
-        c.total_amount != null ? `Total ${kes(c.total_amount)}` : null,
-        balance > 0 ? `Balance ${kes(balance)}` : "Fully paid",
+        c.total_amount != null ? `Total ${money(c.total_amount)}` : null,
+        balance > 0 ? `Balance ${money(balance)}` : "Fully paid",
       ]
         .filter(Boolean)
         .join(" · "),
@@ -104,7 +104,7 @@ function buildEvents(rows: CalContract[], reminders: CalReminder[]): IEvent[] {
         endDate: new Date(c.contract_expiration).toISOString(),
         title: `Payment due · ${clientLabel}`,
         color: "yellow",
-        description: `${kes(balance)} outstanding on ${carLabel}`,
+        description: `${money(balance)} outstanding on ${carLabel}`,
         user: clientUser,
         kind: "PAYMENT",
         contractId: c.id,

@@ -29,12 +29,15 @@ import { ChevronsUpDownIcon, SparklesIcon, BadgeCheckIcon, CreditCardIcon, BellI
 
 export function NavUser({
   user,
+  menuSide,
 }: {
   user: {
     name: string
     email: string
     avatar: string
   }
+  /** Where the menu opens. Defaults to beside the sidebar (below it on mobile). */
+  menuSide?: "top" | "right" | "bottom" | "left"
 }) {
   const { isMobile } = useSidebar()
   const router = useRouter()
@@ -74,7 +77,7 @@ export function NavUser({
           </DropdownMenuTrigger>
           <DropdownMenuContent
             className="w-fit bg-background"
-            side={isMobile ? "bottom" : "right"}
+            side={menuSide ?? (isMobile ? "bottom" : "right")}
             align="end"
             sideOffset={4}
           >

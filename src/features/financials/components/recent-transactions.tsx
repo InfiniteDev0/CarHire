@@ -15,6 +15,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { money } from "@/lib/money";
 
 export interface TransactionRow {
   id: string;
@@ -30,7 +31,6 @@ export interface TransactionRow {
   } | null;
 }
 
-const kes = (n: number) => `KES ${Number(n).toLocaleString()}`;
 const fmt = (iso: string) =>
   new Date(iso).toLocaleString("en-KE", {
     day: "numeric",
@@ -85,7 +85,7 @@ export function RecentTransactions({
   }, [transactions, tab, search]);
 
   function exportCsv() {
-    const header = "Date,Client,Vehicle,Type,Method,Amount (KES)";
+    const header = "Date,Client,Vehicle,Type,Method,Amount (USD)";
     const lines = filtered.map((t) =>
       [
         new Date(t.created_at).toLocaleString("en-KE"),
@@ -206,7 +206,7 @@ export function RecentTransactions({
                     {(t.recorded_by && staffNames?.[t.recorded_by]) || "—"}
                   </TableCell>
                   <TableCell className="text-right font-medium tabular-nums">
-                    {kes(t.amount)}
+                    {money(t.amount)}
                   </TableCell>
                 </TableRow>
               ))}

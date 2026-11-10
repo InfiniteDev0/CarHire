@@ -61,7 +61,7 @@ export async function initPaystackCheckout(
     plan: code,
     // Required by Paystack even with a plan; must match the plan's amount.
     amount: planAmount(plan, billing),
-    currency: "KES",
+    currency: "USD",
     callbackUrl,
     metadata: { orgId, plan, billing, userId: user.id },
   });

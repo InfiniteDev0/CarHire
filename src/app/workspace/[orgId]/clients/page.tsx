@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { ClientsView } from "@/features/clients/components/clients-view";
 import { CLIENT_COLUMNS, type ClientRow } from "@/features/clients/types";
 
-export const metadata = { title: "Clients · CarHire" };
+export const metadata = { title: "Clients · Socdal" };
 
 export default async function ClientsPage({
   params,

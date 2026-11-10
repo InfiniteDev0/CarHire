@@ -16,7 +16,7 @@ import {
 import { displayStatus, type ContractRow } from "@/features/rentals/helpers";
 import type { Rental, RentalStatus } from "@/lib/constants/rentals";
 
-export const metadata = { title: "Home · CarHire" };
+export const metadata = { title: "Home · Socdal" };
 
 // Impure Date.now() kept out of the component body (React Compiler purity rule).
 const daysAgoISO = (days: number) => new Date(Date.now() - days * 86400_000).toISOString();

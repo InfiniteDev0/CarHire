@@ -14,7 +14,7 @@ function ensureConfigured(): boolean {
   const pub = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
   const priv = process.env.VAPID_PRIVATE_KEY;
   if (!pub || !priv) return false;
-  webpush.setVapidDetails("mailto:notifications@carhire.app", pub, priv);
+  webpush.setVapidDetails("mailto:info@nidaam.co.ke", pub, priv);
   configured = true;
   return true;
 }

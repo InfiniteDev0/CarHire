@@ -17,8 +17,8 @@ import {
   TRIP_STATUS_STYLE,
   type VehicleTrip,
 } from "../trip-history";
+import { money } from "@/lib/money";
 
-const kes = (n: number) => `KES ${n.toLocaleString()}`;
 const fmtDate = (iso: string) =>
   new Date(iso).toLocaleDateString("en-KE", { day: "numeric", month: "short", year: "numeric" });
 
@@ -144,7 +144,7 @@ export function VehicleDetailsSheet({
         <div className="shrink-0 text-right">
           {vehicle.rate_per_day != null ? (
             <p className="text-xl font-bold">
-              {kes(vehicle.rate_per_day)}
+              {money(vehicle.rate_per_day)}
               <span className="text-xs font-normal text-zinc-500"> /day</span>
             </p>
           ) : (
@@ -179,7 +179,7 @@ export function VehicleDetailsSheet({
             <div className="rounded-md bg-zinc-900 p-3">
               <p className="text-xs text-zinc-500">Daily rate</p>
               <p className="mt-1 text-2xl font-bold text-white">
-                {vehicle.rate_per_day != null ? kes(vehicle.rate_per_day) : "—"}
+                {vehicle.rate_per_day != null ? money(vehicle.rate_per_day) : "—"}
                 <span className="text-sm font-normal text-zinc-500"> /day</span>
               </p>
             </div>
@@ -268,7 +268,7 @@ export function VehicleDetailsSheet({
                         <span>
                           {fmtDate(start)} · {t.duration_days} day{t.duration_days === 1 ? "" : "s"}
                         </span>
-                        <span>{t.total_amount != null ? kes(t.total_amount) : ""}</span>
+                        <span>{t.total_amount != null ? money(t.total_amount) : ""}</span>
                       </div>
                     </div>
                   );

@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Socdal promo templates</title>
+<!--
+  Socdal by Nidaam Solutions — promotional image templates.
+  Open with ?d=<design> (see marketing/README.md) and screenshot at the listed size,
+  or run `node marketing/render.mjs` to regenerate every PNG in marketing/promo/.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --blue:#00AEFF; --ink:#0B0E11; --card:#13181D; --line:rgba(255,255,255,.1); --mute:#93A1AD; --text:#F2F6F9; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { width:100%; height:100%; overflow:hidden; background:var(--ink); }
+  body { font-family:'Outfit',system-ui,sans-serif; color:var(--text); -webkit-font-smoothing:antialiased; }
+  .d { display:none; position:relative; width:100vw; height:100vh; overflow:hidden; flex-direction:column; }
+  .d.on { display:flex; }
+  .glow::before { content:""; position:absolute; inset:0; background:
+      radial-gradient(70% 45% at 50% 0%, rgba(0,174,255,.30), transparent 70%),
+      radial-gradient(60% 40% at 100% 100%, rgba(0,174,255,.16), transparent 70%); }
+  .grid::after { content:""; position:absolute; inset:0; opacity:.06;
+      background-image:linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px);
+      background-size:60px 60px; -webkit-mask-image:radial-gradient(80% 60% at 50% 0%,#000,transparent); }
+  .d > * { position:relative; z-index:1; }
+  .blue { color:var(--blue); }
+  .mark { fill:var(--blue); flex:none; }
+  .logo { white-space:nowrap; display:flex; align-items:center; gap:.5em; font-weight:600; letter-spacing:-.02em; line-height:1; }
+  .logo small { display:block; font-size:.42em; font-weight:400; opacity:.7; margin-top:.35em; letter-spacing:0; }
+  .logo svg { width:1.25em; height:1.25em; }
+  h1 { font-weight:600; letter-spacing:-.035em; line-height:1.02; text-wrap:balance; }
+  .pill { display:inline-flex; align-items:center; gap:.5em; border:1px solid rgba(0,174,255,.35); background:rgba(0,174,255,.12); color:var(--blue); border-radius:999px; padding:.5em 1.1em; font-weight:500; }
+  .cta { display:inline-flex; align-items:center; justify-content:center; background:var(--blue); color:#04121A; border-radius:999px; font-weight:600; padding:.75em 1.6em; }
+  .foot { color:var(--mute); }
+  .foot b { color:var(--text); font-weight:500; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:28px; }
+  .tick { flex:none; display:flex; align-items:center; justify-content:center; background:rgba(0,174,255,.14); color:var(--blue); border-radius:30%; font-weight:700; }
+  .row { display:flex; align-items:center; }
+  .bigmark { position:absolute !important; fill:rgba(0,174,255,.09); z-index:0 !important; }
+
+  /* mini product UI */
+  .ui { border-radius:32px; background:var(--card); border:1px solid var(--line); padding:36px; box-shadow:0 40px 120px rgba(0,174,255,.18); }
+  .ui .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+  .ui .stat { background:var(--ink); border:1px solid var(--line); border-radius:20px; padding:22px; }
+  .ui .stat p { font-size:22px; color:var(--mute); }
+  .ui .stat b { display:block; font-size:54px; font-weight:600; margin-top:6px; }
+  .ui .rev { margin-top:18px; background:var(--ink); border:1px solid var(--line); border-radius:20px; padding:24px; }
+  .ui .rev p { font-size:22px; color:var(--mute); } .ui .rev b { font-size:40px; font-weight:600; }
+  .bars { display:flex; align-items:flex-end; gap:12px; height:150px; margin-top:20px; }
+  .bars i { flex:1; background:rgba(0,174,255,.3); border-radius:6px; } .bars i:last-child { background:var(--blue); }
+  .rent { margin-top:18px; display:flex; align-items:center; gap:18px; background:var(--ink); border:1px solid var(--line); border-radius:20px; padding:20px 24px; font-size:24px; }
+  .rent span { color:var(--mute); font-size:20px; display:block; }
+  .rent em { margin-left:auto; font-style:normal; font-size:18px; background:rgba(0,174,255,.15); color:var(--blue); border-radius:999px; padding:6px 16px; font-weight:500; }
+
+  /* ── 1080×1920 stories / WhatsApp status ── */
+  .story { padding:120px 80px 110px; }
+  .story .logo { font-size:60px; }
+  .story h1 { font-size:104px; margin-top:80px; }
+  .story .sub { font-size:40px; color:var(--mute); margin-top:36px; line-height:1.3; font-weight:300; }
+  .story .pill { font-size:30px; margin-top:80px; align-self:flex-start; }
+  .story .bottom { margin-top:auto; padding-top:48px; }
+  .story .cta { font-size:42px; width:100%; }
+  .story .foot { font-size:30px; text-align:center; margin-top:34px; }
+  .story .list { margin-top:56px; display:flex; flex-direction:column; gap:20px; }
+  .story .item { gap:30px; padding:26px 34px; font-size:40px; font-weight:500; }
+  .story .item span { display:block; font-size:28px; color:var(--mute); font-weight:300; margin-top:6px; }
+  .story .tick { width:84px; height:84px; font-size:40px; }
+  .story .plan { padding:30px 44px; margin-top:22px; }
+  .story .plan h3 { font-size:36px; font-weight:500; color:var(--mute); }
+  .story .plan .price { font-size:76px; font-weight:600; letter-spacing:-.03em; margin-top:6px; }
+  .story .plan .price small { font-size:30px; font-weight:400; color:var(--mute); letter-spacing:0; }
+  .story .plan p { font-size:30px; color:var(--mute); margin-top:10px; font-weight:300; }
+  .story .plan.hot { border-color:var(--blue); background:rgba(0,174,255,.08); }
+  .story .plan.hot h3 { color:var(--blue); }
+
+  /* ── 1080×1080 square posts ── */
+  .sq { padding:80px; }
+  .sq .logo { font-size:46px; }
+  .sq h1 { font-size:92px; margin-top:auto; }
+  .sq .sub { font-size:34px; color:var(--mute); margin-top:28px; font-weight:300; line-height:1.3; }
+  .sq .bar { margin-top:56px; justify-content:space-between; }
+  .sq .cta { font-size:32px; }
+  .sq .foot { font-size:26px; }
+  .sq .gridlist { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:36px; }
+  .sq .gi { gap:20px; padding:19px 24px; font-size:29px; font-weight:500; }
+  .sq .tick { width:58px; height:58px; font-size:28px; }
+  .sq .huge { font-size:300px; font-weight:700; letter-spacing:-.06em; line-height:.85; color:var(--blue); margin-top:auto; }
+
+  /* ── 1200×630 link preview ── */
+  .og { padding:64px 72px; flex-direction:row !important; gap:48px; align-items:center; }
+  .og .l { flex:1.1; display:flex; flex-direction:column; height:100%; }
+  .og .logo { font-size:38px; }
+  .og h1 { font-size:64px; margin-top:auto; }
+  .og .sub { font-size:24px; color:var(--mute); margin-top:20px; font-weight:300; line-height:1.35; }
+  .og .foot { font-size:20px; margin-top:auto; }
+  .og .r { flex:1; } .og .ui { transform:scale(.62); transform-origin:center right; width:760px; margin-left:-290px; }
+
+  /* ── 1640×624 Facebook / wide cover ── */
+  .cover { padding:70px 110px; flex-direction:row !important; align-items:center; gap:70px; }
+  .cover .l { flex:1.2; } .cover .logo { font-size:46px; }
+  .cover h1 { font-size:78px; margin-top:44px; }
+  .cover .sub { font-size:28px; color:var(--mute); margin-top:22px; font-weight:300; }
+  .cover .r { flex:1; } .cover .ui { transform:scale(.7); transform-origin:center right; width:760px; margin-left:-230px; }
+
+  /* ── 1128×191 LinkedIn company cover ── */
+  .li { padding:0 70px 0 300px; flex-direction:row !important; align-items:center; justify-content:space-between; }
+  .li .logo { font-size:40px; } .li h1 { font-size:36px; font-weight:500; letter-spacing:-.02em; max-width:560px; text-align:right; line-height:1.15; }
+
+  /* ── 800×800 profile picture ── */
+  .avatar { align-items:center; justify-content:center; }
+  .avatar svg { width:46%; height:46%; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+  <path id="m" d="M45 0H121A10 10 0 0 1 131 10V83L98.5 130V46H40.5A6 6 0 0 0 34.5 52V123A8 8 0 0 1 26.5 131H8A8 8 0 0 1 0 123V45A9 9 0 0 1 9 36H29A6 6 0 0 0 35 30V10A10 10 0 0 1 45 0Z"/>
+</defs></svg>
+
+<template id="logo"><div class="logo"><svg class="mark" viewBox="0 0 131 131"><use href="#m"/></svg><div>Socdal<small>by Nidaam Solutions</small></div></div></template>
+<template id="ui"><div class="ui">
+  <div class="stats">
+    <div class="stat"><p>Available</p><b style="color:#34D399">12</b></div>
+    <div class="stat"><p>On rent</p><b class="blue">7</b></div>
+    <div class="stat"><p>In service</p><b style="color:#FBBF24">2</b></div>
+  </div>
+  <div class="rev"><p>Revenue this year</p><b>$184,500</b>
+    <div class="bars"><i style="height:38%"></i><i style="height:52%"></i><i style="height:44%"></i><i style="height:66%"></i><i style="height:58%"></i><i style="height:81%"></i><i style="height:72%"></i><i style="height:94%"></i><i style="height:70%"></i><i style="height:88%"></i><i style="height:76%"></i><i style="height:100%"></i></div>
+  </div>
+  <div class="rent"><div>Toyota Prado · KDG 214A<span>Amina W.</span></div><em>Returns today</em></div>
+</div></template>
+
+<!-- WhatsApp status / story 1 — launch -->
+<section class="d story glow grid" data-d="status-launch">
+  <div data-t="logo"></div>
+  <div class="pill">Car-hire management software</div>
+  <h1 style="margin-top:40px">Every car, contract and payment — <span class="blue">in one place.</span></h1>
+  <p class="sub">Know which vehicles are out, who has them and what they owe.</p>
+  <div data-t="ui" style="margin-top:50px"></div>
+  <div class="bottom">
+    <div class="cta">Start free — up to 5 vehicles</div>
+    <p class="foot">WhatsApp <b>+254 722 261 776</b> · info@nidaam.co.ke</p>
+  </div>
+</section>
+
+<!-- WhatsApp status / story 2 — features -->
+<section class="d story glow" data-d="status-features">
+  <svg class="bigmark" viewBox="0 0 131 131" style="width:900px;right:-260px;bottom:-200px"><use href="#m"/></svg>
+  <div data-t="logo"></div>
+  <h1 style="font-size:92px">Run your whole rental desk from <span class="blue">your phone.</span></h1>
+  <div class="list">
+    <div class="card row item"><div class="tick">✓</div><div>Fleet status<span>Available, on rent or in service</span></div></div>
+    <div class="card row item"><div class="tick">✓</div><div>Rentals &amp; contracts<span>Check-out, check-in and extensions</span></div></div>
+    <div class="card row item"><div class="tick">✓</div><div>Printable agreements<span>Ready to sign at the counter</span></div></div>
+    <div class="card row item"><div class="tick">✓</div><div>Payments &amp; expenses<span>Deposits, balances and revenue charts</span></div></div>
+    <div class="card row item"><div class="tick">✓</div><div>Availability calendar<span>See what is free before you promise it</span></div></div>
+    <div class="card row item"><div class="tick">✓</div><div>Staff &amp; roles<span>Know who did what, and when</span></div></div>
+  </div>
+  <div class="bottom">
+    <div class="cta">Try Socdal free</div>
+    <p class="foot">WhatsApp <b>+254 722 261 776</b> · info@nidaam.co.ke</p>
+  </div>
+</section>
+
+<!-- WhatsApp status / story 3 — pricing -->
+<section class="d story glow grid" data-d="status-pricing">
+  <div data-t="logo"></div>
+  <h1 style="font-size:96px">Start free. Upgrade when your <span class="blue">fleet grows.</span></h1>
+  <div style="margin-top:44px">
+    <div class="card plan"><h3>Free</h3><div class="price">$0 <small>forever</small></div><p>Up to 5 vehicles, clients, rentals and staff</p></div>
+    <div class="card plan hot"><h3>Pro · Most popular</h3><div class="price">$35 <small>/month</small></div><p>Up to 20 vehicles, unlimited staff and clients</p></div>
+    <div class="card plan"><h3>Business</h3><div class="price">$69 <small>/month</small></div><p>Unlimited vehicles, up to 6 workspaces, data export</p></div>
+  </div>
+  <p class="sub" style="font-size:32px;margin-top:36px">Save 20% when you pay annually.</p>
+  <div class="bottom">
+    <div class="cta">Order on WhatsApp</div>
+    <p class="foot">WhatsApp <b>+254 722 261 776</b> · info@nidaam.co.ke</p>
+  </div>
+</section>
+
+<!-- Square post 1 — launch -->
+<section class="d sq glow grid" data-d="square-launch">
+  <svg class="bigmark" viewBox="0 0 131 131" style="width:620px;right:-140px;top:-120px"><use href="#m"/></svg>
+  <div data-t="logo"></div>
+  <h1>Your car-hire business, <span class="blue">finally organised.</span></h1>
+  <p class="sub">Fleet, rentals, clients, staff and payments in one workspace.</p>
+  <div class="row bar"><div class="cta">Start free</div><p class="foot">WhatsApp <b>+254 722 261 776</b></p></div>
+</section>
+
+<!-- Square post 2 — features -->
+<section class="d sq glow" data-d="square-features">
+  <div data-t="logo"></div>
+  <h1 style="font-size:72px;margin-top:56px">One system for the <span class="blue">whole rental desk.</span></h1>
+  <div class="gridlist">
+    <div class="card row gi"><div class="tick">✓</div>Fleet status</div>
+    <div class="card row gi"><div class="tick">✓</div>Rental contracts</div>
+    <div class="card row gi"><div class="tick">✓</div>Client records</div>
+    <div class="card row gi"><div class="tick">✓</div>Payments &amp; expenses</div>
+    <div class="card row gi"><div class="tick">✓</div>Availability calendar</div>
+    <div class="card row gi"><div class="tick">✓</div>Staff &amp; roles</div>
+    <div class="card row gi"><div class="tick">✓</div>Complaints log</div>
+    <div class="card row gi"><div class="tick">✓</div>Works on your phone</div>
+  </div>
+  <div class="row bar" style="margin-top:auto"><div class="cta">Try it free</div><p class="foot">WhatsApp <b>+254 722 261 776</b></p></div>
+</section>
+
+<!-- Square post 3 — free plan -->
+<section class="d sq glow grid" data-d="square-free">
+  <div data-t="logo"></div>
+  <div class="huge">$0</div>
+  <h1 style="font-size:64px;margin-top:30px">to put your first 5 vehicles on Socdal.</h1>
+  <p class="sub">Up to 20 vehicles for $35 a month. Save 20% annually.</p>
+  <div class="row bar"><div class="cta">Create a free workspace</div><p class="foot">WhatsApp <b>+254 722 261 776</b></p></div>
+</section>
+
+<!-- Link preview / website share image -->
+<section class="d og glow grid" data-d="og">
+  <div class="l">
+    <div data-t="logo"></div>
+    <h1>Every car, contract and payment — <span class="blue">in one place.</span></h1>
+    <p class="sub">Car-hire management software. Free for up to 5 vehicles.</p>
+    <p class="foot">WhatsApp <b>+254 722 261 776</b> · info@nidaam.co.ke</p>
+  </div>
+  <div class="r"><div data-t="ui"></div></div>
+</section>
+
+<!-- Facebook / wide cover -->
+<section class="d cover glow grid" data-d="cover-wide">
+  <div class="l">
+    <div data-t="logo"></div>
+    <h1>Car-hire management, <span class="blue">made simple.</span></h1>
+    <p class="sub">WhatsApp +254 722 261 776 · info@nidaam.co.ke</p>
+  </div>
+  <div class="r"><div data-t="ui"></div></div>
+</section>
+
+<!-- LinkedIn company cover (left 300px left clear for the profile picture) -->
+<section class="d li glow" data-d="cover-linkedin">
+  <div data-t="logo"></div>
+  <h1>Car-hire management software, <span class="blue">made simple.</span></h1>
+</section>
+
+<!-- Profile picture -->
+<section class="d avatar" data-d="profile">
+  <svg class="mark" viewBox="0 0 131 131"><use href="#m"/></svg>
+</section>
+
+<script>
+  document.querySelectorAll("[data-t]").forEach((el) => {
+    el.replaceWith(Object.assign(document.createElement("div"), {
+      innerHTML: document.getElementById(el.dataset.t).innerHTML,
+      style: el.getAttribute("style") || "",
+    }));
+  });
+  const d = new URLSearchParams(location.search).get("d") || "status-launch";
+  document.querySelector(`[data-d="${d}"]`)?.classList.add("on");
+</script>
+</body>
+</html>

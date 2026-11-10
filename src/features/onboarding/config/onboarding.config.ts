@@ -33,23 +33,23 @@ export const PLAN_OPTIONS: PlanOption[] = [
   {
     id: "FREE",
     name: "Free",
-    price: "KES 0",
+    price: "$0",
     blurb: "5 vehicles, 5 staff, 5 clients — perfect to start",
     recommended: true,
   },
   {
     id: "PRO",
     name: "Pro",
-    price: "KES 2,500",
+    price: "$35",
     period: "/month",
-    blurb: "Unlimited vehicles, staff and clients",
+    blurb: "Up to 20 vehicles, unlimited staff and clients",
   },
   {
     id: "BUSINESS",
     name: "Business",
-    price: "KES 6,000",
+    price: "$69",
     period: "/month",
-    blurb: "Everything in Pro + multiple workspaces",
+    blurb: "Unlimited vehicles + multiple workspaces",
   },
 ];
 

@@ -16,6 +16,7 @@ import { createContractSchema, composeRouting, type RouteLeg } from "@/lib/valid
 import { createContract, uploadDriverDocs } from "../actions";
 import { isInCurfew } from "../helpers";
 import { photoError } from "@/lib/storage";
+import { money } from "@/lib/money";
 
 export interface PickClient {
   id: string;
@@ -52,7 +53,6 @@ const DOC_TYPES = [
 ] as const;
 
 const STEPS = ["Client", "Vehicle", "Driver", "Terms", "Review"] as const;
-const kes = (n: number) => `KES ${n.toLocaleString()}`;
 
 const inputClass =
   "h-9 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 text-sm text-white placeholder:text-zinc-600 outline-none focus:border-zinc-600";
@@ -350,7 +350,7 @@ export function NewRentalWizard({
                         )}
                         {!c.is_blocked && c.debt_owed > 0 && (
                           <Badge className="border border-amber-500/20 bg-amber-500/10 text-amber-400">
-                            Debt {kes(Number(c.debt_owed))}
+                            Debt {money(Number(c.debt_owed))}
                           </Badge>
                         )}
                         {clientId === c.id && <Check className="size-4 text-white" />}
@@ -397,7 +397,7 @@ export function NewRentalWizard({
                         </p>
                       </div>
                       <div className="flex shrink-0 items-center gap-2 text-sm text-zinc-300">
-                        {c.rate_per_day != null && <span>{kes(Number(c.rate_per_day))}/day</span>}
+                        {c.rate_per_day != null && <span>{money(Number(c.rate_per_day))}/day</span>}
                         {carId === c.id && <Check className="size-4 text-white" />}
                       </div>
                     </button>
@@ -554,17 +554,17 @@ export function NewRentalWizard({
                     <input type="number" min={1} className={inputClass} value={durationDays} onChange={(e) => setDurationDays(e.target.value)} />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <Label>Rate / day (KES)</Label>
+                    <Label>Rate / day (USD)</Label>
                     <input type="number" min={0} className={inputClass} value={ratePerDay} onChange={(e) => setRatePerDay(e.target.value)} />
                     {(rules.rate_floor != null || rules.rate_ceiling != null) && (
                       <span className={cn("text-xs", rateOutOfBounds ? "text-red-400" : "text-zinc-600")}>
-                        Allowed: {rules.rate_floor != null ? kes(Number(rules.rate_floor)) : "any"} –{" "}
-                        {rules.rate_ceiling != null ? kes(Number(rules.rate_ceiling)) : "any"}
+                        Allowed: {rules.rate_floor != null ? money(Number(rules.rate_floor)) : "any"} –{" "}
+                        {rules.rate_ceiling != null ? money(Number(rules.rate_ceiling)) : "any"}
                       </span>
                     )}
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <Label>Pickup deposit (KES)</Label>
+                    <Label>Pickup deposit (USD)</Label>
                     <input
                       type="number"
                       min={0}
@@ -625,11 +625,11 @@ export function NewRentalWizard({
                 </div>
                 <div className="rounded-md bg-zinc-900 p-3 text-sm">
                   <span className="text-zinc-500">Total: </span>
-                  <span className="font-bold text-white">{kes(total)}</span>
+                  <span className="font-bold text-white">{money(total)}</span>
                   <span className="text-zinc-500">
                     {" "}
-                    ({durationDays || 0} × {kes(Number(ratePerDay) || 0)}) · Deposit{" "}
-                    {kes(Number(depositAmount) || 0)}
+                    ({durationDays || 0} × {money(Number(ratePerDay) || 0)}) · Deposit{" "}
+                    {money(Number(depositAmount) || 0)}
                   </span>
                 </div>
               </div>
@@ -652,9 +652,9 @@ export function NewRentalWizard({
                     ["Vehicle", car ? `${car.reg_number} · ${[car.make, car.model].filter(Boolean).join(" ")}` : "—"],
                     ["Driver", isSelfDrive ? "Self-drive" : `${driverName} (DL ${driverDlNumber})`],
                     ["Duration", `${durationDays} days`],
-                    ["Rate", `${kes(Number(ratePerDay) || 0)}/day`],
-                    ["Total", kes(total)],
-                    ["Deposit", kes(Number(depositAmount) || 0)],
+                    ["Rate", `${money(Number(ratePerDay) || 0)}/day`],
+                    ["Total", money(total)],
+                    ["Deposit", money(Number(depositAmount) || 0)],
                     ["Routes", composeRouting(routeLegs) || "—"],
                     ["Domicile", domicile || "—"],
                   ] as const

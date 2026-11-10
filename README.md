@@ -1,36 +1,36 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Socdal
 
-## Getting Started
+**Socdal by [Nidaam Solutions](https://nidaam.co.ke)** — a multi-tenant car-hire
+management workspace: fleet, clients, rental contracts, payments and staff, with
+one fully isolated workspace per business.
 
-First, run the development server:
+Stack: Next.js 16 (App Router) · Supabase (auth, Postgres, storage, RLS) ·
+Tailwind v4 + shadcn/ui · Paystack billing.
+
+## Getting started
 
 ```bash
+npm install
+cp .env.example .env.local   # then fill in the Supabase / Paystack keys
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open <http://localhost:3000>. Full environment and database setup is in
+[SETUP.md](SETUP.md); billing is covered in
+[PAYSTACK_INTEGRATION.md](PAYSTACK_INTEGRATION.md).
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## Brand
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Token | Value | Where |
+|-------|-------|-------|
+| Nidaam blue | `#00AEFF` | `--brand` / `--primary` in `src/app/globals.css` |
+| Brand ink | `#0B0E11` | `--brand-ink`, dark background, PWA theme colour |
+| Text ink | `#111111` | light-theme foreground |
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Product name, company and tagline live in `src/lib/brand.ts`.
+- Logo components (`BrandMark`, `BrandLogo`, `BrandAttribution`) are in
+  `src/components/brand/logo.tsx`.
+- Source artwork is in `assets/` and `brand/`; the copies the app serves are in
+  `public/brand/`, alongside the generated `public/icon-*.png` app icons.
+- Tailwind's `blue-*` and `sky-*` scales are remapped to the Nidaam blue ramp, so
+  existing utilities stay on-brand.

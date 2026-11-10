@@ -12,7 +12,7 @@ export interface Rental {
   clientName: string;
   clientPhone: string;
   county: string;
-  ratePerDay: number; // KES / day
+  ratePerDay: number; // USD / day
   startDate: string; // ISO date
   dueDate: string; // ISO date
   status: RentalStatus;

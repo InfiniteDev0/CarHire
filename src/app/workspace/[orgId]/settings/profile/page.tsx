@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ProfileForm } from "@/features/settings/components/profile-form";
 
-export const metadata = { title: "Profile · Settings · CarHire" };
+export const metadata = { title: "Profile · Settings · Socdal" };
 
 export default async function ProfileSettingsPage() {
   const supabase = await createClient();

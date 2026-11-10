@@ -1,6 +1,6 @@
 export type OnboardingPlan = "FREE" | "PRO" | "BUSINESS";
 
-// Shape of everything the CarHire onboarding wizard collects.
+// Shape of everything the Socdal onboarding wizard collects.
 export interface OnboardingData {
   // Step 1 — identity
   name: string;

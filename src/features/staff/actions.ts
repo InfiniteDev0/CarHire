@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { assertUnderLimit } from "@/lib/limits";
 import { formFile, uploadPhoto } from "@/lib/storage";
 import { createStaffSchema } from "@/lib/validation/staff";
+import { money } from "@/lib/money";
 
 /** Throw unless the caller is an active admin of `orgId`. */
 async function assertAdmin(orgId: string) {
@@ -194,7 +195,6 @@ export interface StaffActivityItem {
   at: string; // ISO
 }
 
-const kesFmt = (n: number) => `KES ${Number(n).toLocaleString()}`;
 
 /**
  * Everything a member has done, newest first (admin only) — rentals created,
@@ -258,13 +258,13 @@ export async function getStaffActivity(
       id: `rental-${c.id}`,
       kind: "RENTAL" as const,
       title: `Created a rental — ${c.cars?.reg_number ?? "vehicle"}`,
-      detail: `${c.clients?.full_name ?? "client"} · ${c.duration_days} days @ ${kesFmt(c.rate_per_day)}/day`,
+      detail: `${c.clients?.full_name ?? "client"} · ${c.duration_days} days @ ${money(c.rate_per_day)}/day`,
       at: c.created_at,
     })),
     ...((payments.data ?? []) as any[]).map((p) => ({
       id: `pay-${p.id}`,
       kind: "PAYMENT" as const,
-      title: `Recorded ${kesFmt(p.amount)} (${String(p.method ?? "CASH").toLowerCase()})`,
+      title: `Recorded ${money(p.amount)} (${String(p.method ?? "CASH").toLowerCase()})`,
       detail: [p.contracts?.clients?.full_name, p.contracts?.cars?.reg_number]
         .filter(Boolean)
         .join(" · "),
@@ -301,7 +301,7 @@ export async function getStaffActivity(
     ...((expenses.data ?? []) as any[]).map((e) => ({
       id: `expense-${e.id}`,
       kind: "EXPENSE" as const,
-      title: `Issued expense ${kesFmt(e.amount)} (${String(e.category ?? "").toLowerCase()})`,
+      title: `Issued expense ${money(e.amount)} (${String(e.category ?? "").toLowerCase()})`,
       detail: [e.cars?.reg_number, e.note].filter(Boolean).join(" · "),
       at: e.created_at,
     })),

@@ -1,5 +1,5 @@
 -- ============================================================================
--- CarHire — Multi-tenant schema with Row Level Security (RLS)
+-- Socdal — Multi-tenant schema with Row Level Security (RLS)
 -- ============================================================================
 -- Model: one auth user can OWN many organizations. Every business record is
 -- scoped by org_id. Staff belong to exactly one org (one org_members row).

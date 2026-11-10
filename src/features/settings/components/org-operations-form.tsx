@@ -112,7 +112,7 @@ export function OrgOperationsForm({
       </div>
 
       <div>
-        <h2 className="text-sm font-medium">Daily rate guardrails (KES)</h2>
+        <h2 className="text-sm font-medium">Daily rate guardrails (USD)</h2>
         <p className="mb-3 text-xs text-muted-foreground">
           Contracts must be priced inside this range — stops unauthorized
           discounting. Leave empty to disable.
@@ -150,7 +150,7 @@ export function OrgOperationsForm({
       </div>
 
       <div>
-        <h2 className="text-sm font-medium">Refuel penalty (KES)</h2>
+        <h2 className="text-sm font-medium">Refuel penalty (USD)</h2>
         <p className="mb-3 text-xs text-muted-foreground">
           Charged per missing fuel-gauge step at check-in — staff see this as the
           suggested penalty and can adjust per return.

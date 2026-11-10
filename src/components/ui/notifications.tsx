@@ -7,7 +7,7 @@ import { AnimatedList } from "./animated-list";
 let notifications = [
   {
     name: "Payment received",
-    description: "KES 45,000 from Acme Studio",
+    description: "$45,000 from Acme Studio",
     time: "2m ago",
     icon: HandCoins,
     color: "#00C9A7",
@@ -42,7 +42,7 @@ let notifications = [
   },
   {
     name: "AI follow-up sent",
-    description: "Lenzro AI emailed 3 inactive leads",
+    description: "Socdal AI emailed 3 inactive leads",
     time: "1h ago",
     icon: Sparkles,
     color: "#8B5CF6",

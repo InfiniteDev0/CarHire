@@ -3,12 +3,20 @@ import { Crown } from "lucide-react";
 
 import { requireAdmin } from "@/lib/auth/membership";
 import { createClient } from "@/lib/supabase/server";
-import { getOrgUsage, getOrgPlan, FREE_LIMITS, PLAN_LABELS, type LimitKey } from "@/lib/limits";
+import {
+  getOrgUsage,
+  getOrgPlan,
+  planLimit,
+  FREE_LIMITS,
+  PRO_LIMITS,
+  PLAN_LABELS,
+  type LimitKey,
+} from "@/lib/limits";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 
-export const metadata = { title: "Billing · Settings · CarHire" };
+export const metadata = { title: "Billing · Settings · Socdal" };
 
 const USAGE_LABEL: Record<LimitKey, string> = {
   staff: "Staff members",
@@ -48,7 +56,9 @@ export default async function BillingSettingsPage({
           <span className="text-sm text-muted-foreground">
             {onFree
               ? `Up to ${FREE_LIMITS.staff} staff, ${FREE_LIMITS.vehicles} vehicles and ${FREE_LIMITS.clients} clients.`
-              : "Unlimited vehicles, staff and clients."}
+              : plan === "PRO"
+                ? `Up to ${PRO_LIMITS.vehicles} vehicles, unlimited staff and clients.`
+                : "Unlimited vehicles, staff and clients."}
           </span>
         </div>
         <Button asChild variant="outline" className="h-8 gap-1.5 rounded-sm text-xs">
@@ -64,7 +74,8 @@ export default async function BillingSettingsPage({
         {(Object.keys(FREE_LIMITS) as LimitKey[]).map((key) => {
           const used = usage[key];
           const cap = FREE_LIMITS[key];
-          const atLimit = onFree && used >= cap;
+          const planCap = planLimit(plan, key);
+          const atLimit = planCap != null && used >= planCap;
           return (
             <div key={key} className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between text-sm">
@@ -74,7 +85,7 @@ export default async function BillingSettingsPage({
                     atLimit ? "font-medium text-red-600 dark:text-red-400" : "text-muted-foreground"
                   }
                 >
-                  {onFree ? `${used} / ${cap}` : `${used} · Unlimited`}
+                  {planCap != null ? `${used} / ${planCap}` : `${used} · Unlimited`}
                 </span>
               </div>
               {/* Paid plans have no cap, so no meter — just the live count. */}

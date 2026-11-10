@@ -48,11 +48,6 @@ export function PricingSection({
 							<PricingCard.Price>
 								<PricingCard.MainPrice>{plan.price}</PricingCard.MainPrice>
 								<PricingCard.Period>{plan.period}</PricingCard.Period>
-								{plan.original && (
-									<PricingCard.OriginalPrice className="ml-auto">
-										{plan.original}
-									</PricingCard.OriginalPrice>
-								)}
 							</PricingCard.Price>
 							{plan.id === currentPlan ? (
 								<Button className="w-full font-semibold" variant="outline" disabled>
@@ -126,12 +121,11 @@ const plans = [
 		description: "For growing rental businesses",
 		name: "Pro",
 		badge: "Popular",
-		price: "KES 2,500",
-		original: "KES 3,500",
+		price: "$35",
 		period: "/month",
 		variant: "default",
 		features: [
-			"Unlimited vehicles",
+			"Up to 20 vehicles",
 			"Unlimited staff members",
 			"Unlimited clients & rentals",
 			"Up to 3 workspaces",
@@ -145,12 +139,12 @@ const plans = [
 		icon: <Building />,
 		name: "Business",
 		description: "For multi-branch operators",
-		price: "KES 6,000",
-		original: "KES 8,000",
+		price: "$69",
 		period: "/month",
 		variant: "outline",
 		features: [
 			"Everything in Pro",
+			"Unlimited vehicles",
 			"Up to 6 workspaces",
 			"Advanced reporting",
 			"Data export",

@@ -15,19 +15,19 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
+import { money } from "@/lib/money";
 
 export interface DayCollection {
   date: string; // "YYYY-MM-DD"
   collected: number;
 }
 
-const kes = (n: number) => `KES ${Number(n).toLocaleString()}`;
 
 // Explicit color — independent of the theme's --chart-* variables.
 const chartConfig = {
   collected: {
     label: "Collected",
-    color: "#38bdf8", // sky blue, like the reference dashboard
+    color: "#00AEFF", // Nidaam blue
   },
 } satisfies ChartConfig;
 
@@ -50,9 +50,9 @@ export function PaymentsChart({
           <div className="ml-auto flex sm:ml-0 sm:flex-col">
             {(
               [
-                ["Total income", kes(totals.income30d), "text-foreground"],
-                ["Outstanding", kes(totals.outstanding), "text-amber-600 dark:text-amber-400"],
-                ["Client debt", kes(totals.clientDebt), "text-red-600 dark:text-red-400"],
+                ["Total income", money(totals.income30d), "text-foreground"],
+                ["Outstanding", money(totals.outstanding), "text-amber-600 dark:text-amber-400"],
+                ["Client debt", money(totals.clientDebt), "text-red-600 dark:text-red-400"],
               ] as const
             ).map(([label, value, accent]) => (
               <div key={label} className="flex flex-col gap-0.5 px-4 py-3">

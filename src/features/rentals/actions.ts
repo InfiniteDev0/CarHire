@@ -126,16 +126,16 @@ export async function createContract(
   const deposit = Number(v.depositAmount);
   if (car.deposit != null && !isAdmin && deposit !== Number(car.deposit)) {
     throw new Error(
-      `The deposit for ${car.reg_number} is KES ${Number(car.deposit).toLocaleString()} — only an admin can change it.`
+      `The deposit for ${car.reg_number} is $${Number(car.deposit).toLocaleString()} — only an admin can change it.`
     );
   }
 
   const rate = Number(v.ratePerDay);
   if (org?.rate_floor != null && rate < Number(org.rate_floor)) {
-    throw new Error(`Rate is below the workspace minimum (KES ${Number(org.rate_floor).toLocaleString()}/day).`);
+    throw new Error(`Rate is below the workspace minimum ($${Number(org.rate_floor).toLocaleString()}/day).`);
   }
   if (org?.rate_ceiling != null && rate > Number(org.rate_ceiling)) {
-    throw new Error(`Rate is above the workspace maximum (KES ${Number(org.rate_ceiling).toLocaleString()}/day).`);
+    throw new Error(`Rate is above the workspace maximum ($${Number(org.rate_ceiling).toLocaleString()}/day).`);
   }
 
   const duration = Number(v.durationDays);
@@ -471,7 +471,7 @@ export async function extendContract(
 
   if (paid < required) {
     throw new Error(
-      `Extension not authorized — the client must pay at least KES ${required.toLocaleString()} of the outstanding balance first.`
+      `Extension not authorized — the client must pay at least $${required.toLocaleString()} of the outstanding balance first.`
     );
   }
 
@@ -504,7 +504,7 @@ export async function extendContract(
     type: "rental.extended",
     orgId,
     title: "Rental extended",
-    body: `${extra} extra day(s) authorized — KES ${paid.toLocaleString()} collected.`,
+    body: `${extra} extra day(s) authorized — $${paid.toLocaleString()} collected.`,
     href: `/workspace/${orgId}/rentals`,
     entityType: "contract",
     entityId: contractId,
@@ -570,7 +570,7 @@ export async function recordPayment(
     type: "payment.received",
     orgId,
     title: "Payment received",
-    body: `KES ${amount.toLocaleString()} was recorded.`,
+    body: `$${amount.toLocaleString()} was recorded.`,
     href: `/workspace/${orgId}/financials`,
     entityType: "contract",
     entityId: contractId,

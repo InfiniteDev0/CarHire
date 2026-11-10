@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getMembership } from "@/lib/auth/membership";
 
-export const metadata = { title: "Settings · CarHire" };
+export const metadata = { title: "Settings · Socdal" };
 
 /** /settings lands on the first section the member can actually use. */
 export default async function SettingsIndex({

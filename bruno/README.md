@@ -5,7 +5,7 @@ for confirming your project + keys work and for poking at edge cases.
 
 ## Setup
 1. Open [Bruno](https://www.usebruno.com/) → **Open Collection** → select
-   `admin/bruno/carhire-auth`.
+   `bruno/socdal-auth`.
 2. Top-right environment dropdown → **Local** → edit and fill in:
    - `supabaseUrl` — your project URL
    - `anonKey` — the anon/public key

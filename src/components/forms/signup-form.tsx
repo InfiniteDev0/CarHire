@@ -65,7 +65,7 @@ export function SignupForm({ className, onSwitch, ...props }: AuthFormProps) {
         return;
       }
 
-      toast.success("Welcome to CarHire!");
+      toast.success("Welcome to Socdal!");
       router.replace("/");
       router.refresh();
     } catch (err) {
@@ -86,7 +86,7 @@ export function SignupForm({ className, onSwitch, ...props }: AuthFormProps) {
         <div className="flex flex-col items-center gap-1 text-center">
           <h1 className="text-2xl font-bold">Create your account</h1>
           <p className="text-sm text-balance text-muted-foreground">
-            Get started with CarHire in under two minutes
+            Get started with Socdal in under two minutes
           </p>
         </div>
 

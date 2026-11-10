@@ -44,6 +44,7 @@ import {
   type ExpenseCategory,
 } from "@/lib/validation/expense";
 import { createExpense, updateExpense, deleteExpense } from "../actions";
+import { money } from "@/lib/money";
 
 export interface ExpenseRow {
   id: string;
@@ -62,7 +63,6 @@ export interface ExpenseCarPick {
 }
 
 const NONE = "__none";
-const kes = (n: number) => `KES ${Number(n).toLocaleString()}`;
 const shortDate = (iso: string) =>
   new Date(iso).toLocaleDateString("en-KE", { day: "numeric", month: "short", year: "numeric" });
 const today = () => new Date().toISOString().slice(0, 10);
@@ -178,7 +178,7 @@ export function ExpensesSection({
   }
 
   function exportCsv() {
-    const header = "Date,Category,Vehicle,Amount (KES),Note";
+    const header = "Date,Category,Vehicle,Amount (USD),Note";
     const lines = expenses.map((e) =>
       [
         e.incurred_on.slice(0, 10),
@@ -204,7 +204,7 @@ export function ExpensesSection({
         <div className="space-y-0.5">
           <h2 className="text-sm font-medium">Expenses</h2>
           <p className="text-xs text-muted-foreground">
-            {kes(monthTotal)} spent this month.
+            {money(monthTotal)} spent this month.
           </p>
         </div>
         <div className="ml-auto flex items-center gap-2">
@@ -265,7 +265,7 @@ export function ExpensesSection({
                   <TableCell className="hidden text-muted-foreground md:table-cell">
                     {(e.created_by && staffNames?.[e.created_by]) || "—"}
                   </TableCell>
-                  <TableCell className="tabular-nums font-medium">{kes(e.amount)}</TableCell>
+                  <TableCell className="tabular-nums font-medium">{money(e.amount)}</TableCell>
                   <TableCell>
                     <div className="flex justify-end gap-1">
                       <Button
@@ -354,7 +354,7 @@ export function ExpensesSection({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="eAmount">Amount (KES)</Label>
+              <Label htmlFor="eAmount">Amount (USD)</Label>
               <Input
                 id="eAmount"
                 type="number"
@@ -403,7 +403,7 @@ export function ExpensesSection({
             <AlertDialogTitle>Delete this expense?</AlertDialogTitle>
             <AlertDialogDescription>
               {deleteTarget &&
-                `${EXPENSE_CATEGORY_LABELS[deleteTarget.category]} · ${kes(deleteTarget.amount)} on ${shortDate(deleteTarget.incurred_on)}. This can't be undone.`}
+                `${EXPENSE_CATEGORY_LABELS[deleteTarget.category]} · ${money(deleteTarget.amount)} on ${shortDate(deleteTarget.incurred_on)}. This can't be undone.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

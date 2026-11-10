@@ -24,10 +24,10 @@ import {
   RecentTransactions,
   type TransactionRow,
 } from "@/features/financials/components/recent-transactions";
+import { money } from "@/lib/money";
 
-export const metadata = { title: "Finance · CarHire" };
+export const metadata = { title: "Finance · Socdal" };
 
-const kes = (n: number) => `KES ${Number(n).toLocaleString()}`;
 const shortDate = (iso: string | null) =>
   iso ? new Date(iso).toLocaleDateString("en-KE", { day: "numeric", month: "short" }) : "—";
 
@@ -168,18 +168,18 @@ export default async function FinancialsPage({
 
       {/* Summary tiles */}
       <div className="grid auto-rows-min gap-4 sm:grid-cols-2 md:grid-cols-3">
-        <Tile icon={Banknote} label="Collected (all time)" value={kes(collected)} />
-        <Tile icon={HandCoins} label="Revenue this month" value={kes(monthRevenue)} />
+        <Tile icon={Banknote} label="Collected (all time)" value={money(collected)} />
+        <Tile icon={HandCoins} label="Revenue this month" value={money(monthRevenue)} />
         <Tile
           icon={TrendingDown}
           label="Expenses this month"
-          value={kes(monthExpenses)}
+          value={money(monthExpenses)}
           accent={monthExpenses > 0 ? "text-amber-600 dark:text-amber-400" : undefined}
         />
         <Tile
           icon={Scale}
           label="Net this month"
-          value={kes(monthNet)}
+          value={money(monthNet)}
           accent={
             monthNet < 0
               ? "text-red-600 dark:text-red-400"
@@ -189,13 +189,13 @@ export default async function FinancialsPage({
         <Tile
           icon={ReceiptText}
           label="Outstanding balances"
-          value={kes(outstanding)}
+          value={money(outstanding)}
           accent={outstanding > 0 ? "text-amber-600 dark:text-amber-400" : undefined}
         />
         <Tile
           icon={TriangleAlert}
           label="Client debt on file"
-          value={kes(clientDebt)}
+          value={money(clientDebt)}
           accent={clientDebt > 0 ? "text-red-600 dark:text-red-400" : undefined}
         />
       </div>
@@ -245,14 +245,14 @@ export default async function FinancialsPage({
                     <TableCell className="hidden text-muted-foreground tabular-nums sm:table-cell">
                       {shortDate(c.contract_start ?? c.created_at)}
                     </TableCell>
-                    <TableCell className="tabular-nums">{kes(c.total_amount ?? 0)}</TableCell>
+                    <TableCell className="tabular-nums">{money(c.total_amount ?? 0)}</TableCell>
                     <TableCell className="hidden tabular-nums text-muted-foreground sm:table-cell">
-                      {c.refuel_penalty ? kes(c.refuel_penalty) : "—"}
+                      {c.refuel_penalty ? money(c.refuel_penalty) : "—"}
                     </TableCell>
-                    <TableCell className="tabular-nums">{kes(c.amount_paid ?? 0)}</TableCell>
+                    <TableCell className="tabular-nums">{money(c.amount_paid ?? 0)}</TableCell>
                     <TableCell className="tabular-nums">
                       {balance > 0 ? (
-                        <span className="font-medium text-red-500">{kes(balance)}</span>
+                        <span className="font-medium text-red-500">{money(balance)}</span>
                       ) : (
                         <span className="text-muted-foreground">—</span>
                       )}

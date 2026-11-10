@@ -9,8 +9,8 @@ import {
 import type { Rental } from "@/lib/constants/rentals";
 import { RentalStatusBadge } from "./widgets/rental-status-badge";
 import { RentalRowActions } from "./widgets/rental-row-actions";
+import { money } from "@/lib/money";
 
-const kes = (n: number) => `KES ${n.toLocaleString()}`;
 const shortDate = (iso: string) =>
   new Date(iso).toLocaleDateString("en-KE", { day: "numeric", month: "short" });
 
@@ -64,7 +64,7 @@ export function RentalsDataTable({
                   {r.county}
                 </TableCell>
                 <TableCell className="tabular-nums">
-                  {kes(r.ratePerDay)}
+                  {money(r.ratePerDay)}
                 </TableCell>
                 <TableCell className="hidden text-muted-foreground tabular-nums sm:table-cell">
                   {shortDate(r.startDate)} → {shortDate(r.dueDate)}

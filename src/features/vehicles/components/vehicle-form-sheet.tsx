@@ -264,11 +264,11 @@ export function VehicleFormSheet({
             <Input id="mileage" type="number" value={form.mileage} onChange={(e) => set("mileage", e.target.value)} placeholder="45350" disabled={isLoading} />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="ratePerDay">Rate / day (KES)</Label>
+            <Label htmlFor="ratePerDay">Rate / day (USD)</Label>
             <Input id="ratePerDay" type="number" value={form.ratePerDay} onChange={(e) => set("ratePerDay", e.target.value)} placeholder="3500" disabled={isLoading} />
           </div>
           <div className="col-span-2 flex flex-col gap-1.5">
-            <Label htmlFor="deposit">Pickup deposit (KES)</Label>
+            <Label htmlFor="deposit">Pickup deposit (USD)</Label>
             <Input id="deposit" type="number" value={form.deposit} onChange={(e) => set("deposit", e.target.value)} placeholder="10000" disabled={isLoading} />
             <span className="text-xs text-zinc-600">
               Collected when a rental for this car is created. Admin-only.
