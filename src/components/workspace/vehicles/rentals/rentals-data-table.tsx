@@ -24,7 +24,7 @@ export function RentalsDataTable({
   return (
     <div className="overflow-hidden rounded-lg border">
       <Table>
-        <TableHeader className="dark:bg-black bg-white">
+        <TableHeader className="bg-white dark:bg-neutral-900">
           <TableRow>
             <TableHead>Vehicle</TableHead>
             <TableHead>Client</TableHead>

@@ -62,28 +62,26 @@ export function WorkspaceSwitcher({
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <SidebarMenuButton size="lg" className="bg-accent">
-            <div className="flex aspect-square size-8 items-center justify-center rounded-sm bg-sidebar-primary text-sidebar-primary-foreground">
-              <Car className="size-4" />
-            </div>
-            <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-medium">{orgName}</span>
-              <span className="truncate text-xs text-muted-foreground">
-                {PLAN_LABELS[plan]} plan
-              </span>
-            </div>
-            <ChevronsUpDown className="ml-auto size-4" />
-          </SidebarMenuButton>
+          <button
+            type="button"
+            className="flex h-9 max-w-64 items-center gap-2 rounded-lg bg-black/5 pl-1 pr-2 transition-colors hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/15"
+          >
+            <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-blue-500 text-[13px] font-semibold uppercase text-white">
+              {orgName.charAt(0)}
+            </span>
+            <span className="truncate text-[15px] font-semibold">{orgName}</span>
+            <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground" />
+          </button>
         }
       />
       <DropdownMenuContent
         align="start"
         sideOffset={6}
-        className="w-72 rounded-sm bg-background backdrop-blur-3xl p-0"
+        className="w-80 rounded-xl border bg-popover p-0"
       >
         {/* Current business */}
         <div className="flex items-start gap-3 p-3">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-blue-500 text-white">
             <Car className="size-5" />
           </div>
           <div className="min-w-0 flex-1">

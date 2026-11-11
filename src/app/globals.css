@@ -1,9 +1,9 @@
-@import url(https://fonts.googleapis.com/css?family=Outfit:100,200,300,regular,500,600,700,800,900);
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&family=Outfit:wght@100..900&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:is(.dark *):not(:is(.light *)));
 
 @theme inline {
   --color-background: var(--background);
@@ -49,29 +49,10 @@
   --radius-4xl: calc(var(--radius) * 2.6);
   --color-brand: var(--brand);
   --color-brand-ink: var(--brand-ink);
-  /* Nidaam blue ramp — blue-* and sky-* utilities resolve to the brand scale. */
-  --color-blue-50: #ebf9ff;
-  --color-blue-100: #d1f1ff;
-  --color-blue-200: #a8e4ff;
-  --color-blue-300: #70d3ff;
-  --color-blue-400: #33c0ff;
-  --color-blue-500: #00aeff;
-  --color-blue-600: #008fd6;
-  --color-blue-700: #0070a8;
-  --color-blue-800: #005580;
-  --color-blue-900: #003d5c;
-  --color-blue-950: #00273d;
-  --color-sky-50: #ebf9ff;
-  --color-sky-100: #d1f1ff;
-  --color-sky-200: #a8e4ff;
-  --color-sky-300: #70d3ff;
-  --color-sky-400: #33c0ff;
-  --color-sky-500: #00aeff;
-  --color-sky-600: #008fd6;
-  --color-sky-700: #0070a8;
-  --color-sky-800: #005580;
-  --color-sky-900: #003d5c;
-  --color-sky-950: #00273d;
+  --color-canvas: var(--canvas);
+  --color-vivid-cyan: var(--brand); /* brand tint, used sparingly (avatar initials) */
+  --color-ocean-green: #00b894; /* positive money / success accents */
+  --color-ocean-blue: #32d1df;
   --animate-rainbow: rainbow var(--speed, 2s) infinite linear;
   --color-color-5: var(--color-5);
   --color-color-4: var(--color-4);
@@ -88,82 +69,140 @@
   }
 }
 
-:root {
-  /* ── Socdal by Nidaam Solutions — brand tokens ── */
-  --brand: #00aeff; /* Nidaam blue */
-  --brand-ink: #0b0e11; /* brand near-black */
-
-  --background: #f3f7fa;
-  --foreground: #111111;
-  --card: #ffffff;
-  --card-foreground: #111111;
-  --popover: #ffffff;
-  --popover-foreground: #111111;
-  --primary: var(--brand);
-  --primary-foreground: #04121a;
-  --secondary: #e9f1f6;
-  --secondary-foreground: #111111;
-  --muted: #ebf1f5;
-  --muted-foreground: #5a6772;
-  --accent: #dff4ff;
-  --accent-foreground: #00527a;
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: #dbe4ea;
-  --input: #dbe4ea;
-  --ring: var(--brand);
-  --chart-1: #00aeff;
-  --chart-2: #0070a8;
-  --chart-3: #70d3ff;
-  --chart-4: #003d5c;
-  --chart-5: #a8e4ff;
+:root,
+.light {
+  /* Socdal by Nidaam Solutions. Calm, neutral UI: colour only where it means
+     something. The brand blue lives in the logo and a few small accents. */
+  --brand: #00aeff;
+  --brand-ink: #0b0e11;
   --radius: 0.625rem;
-  --sidebar: #ffffff;
-  --sidebar-foreground: #111111;
-  --sidebar-primary: var(--brand);
-  --sidebar-primary-foreground: #04121a;
-  --sidebar-accent: #dff4ff;
-  --sidebar-accent-foreground: #00527a;
-  --sidebar-border: #dbe4ea;
-  --sidebar-ring: var(--brand);
-  --color-1: #00aeff;
-  --color-2: #0070a8;
-  --color-3: #70d3ff;
-  --color-4: #33c0ff;
-  --color-5: #a8e4ff;
+
+  --background: oklch(96.158% 0.00563 84.446); /* warm off-white */
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --canvas: #f4f4f5; /* the page panel behind white cards */
+  /* Navigation is a black card in both themes. */
+  --sidebar: #000000;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #ffffff;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: rgb(255 255 255 / 12%);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgb(255 255 255 / 10%);
+  --sidebar-ring: rgb(255 255 255 / 40%);
+  /* Category swatches: blue, green, orange, violet, pink. */
+  --chart-1: #3b82f6;
+  --chart-2: #10b981;
+  --chart-3: #f97316;
+  --chart-4: #8b5cf6;
+  --chart-5: #ec4899;
+  --color-1: #3b82f6;
+  --color-2: #8b5cf6;
+  --color-3: #ec4899;
+  --color-4: #f97316;
+  --color-5: #10b981;
 }
 
 .dark {
-  --background: #0b0e11;
-  --foreground: #f2f6f9;
-  --card: #13181d;
-  --card-foreground: #f2f6f9;
-  --popover: #13181d;
-  --popover-foreground: #f2f6f9;
-  --primary: var(--brand);
-  --primary-foreground: #04121a;
-  --secondary: #1b2229;
-  --secondary-foreground: #f2f6f9;
-  --muted: #1b2229;
-  --muted-foreground: #93a1ad;
-  --accent: #0d2a3a;
-  --accent-foreground: #8cdbff;
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: rgb(255 255 255 / 9%);
-  --input: rgb(255 255 255 / 14%);
-  --ring: var(--brand);
-  --chart-1: #00aeff;
-  --chart-2: #70d3ff;
-  --chart-3: #008fd6;
-  --chart-4: #d1f1ff;
-  --chart-5: #005580;
-  --sidebar: #0f1317;
-  --sidebar-foreground: #f2f6f9;
-  --sidebar-primary: var(--brand);
-  --sidebar-primary-foreground: #04121a;
-  --sidebar-accent: #0d2a3a;
-  --sidebar-accent-foreground: #8cdbff;
-  --sidebar-border: rgb(255 255 255 / 9%);
-  --sidebar-ring: var(--brand);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --canvas: #0a0a0a; /* neutral-950 */
+  /* Navigation is a black card in both themes. */
+  --sidebar: #000000;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #ffffff;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: rgb(255 255 255 / 12%);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgb(255 255 255 / 10%);
+  --sidebar-ring: rgb(255 255 255 / 40%);
+  /* Category swatches: blue, green, orange, violet, pink. */
+  --chart-1: #3b82f6;
+  --chart-2: #10b981;
+  --chart-3: #f97316;
+  --chart-4: #8b5cf6;
+  --chart-5: #ec4899;
+  --color-1: #3b82f6;
+  --color-2: #8b5cf6;
+  --color-3: #ec4899;
+  --color-4: #f97316;
+  --color-5: #10b981;
+}
+
+/* Inverse panel: shows the opposite theme (dark on a light page, light on a dark one).
+   Use theme tokens inside it, not dark: utilities. */
+.inverse-panel {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --canvas: #0a0a0a; /* neutral-950 */
+}
+.dark .inverse-panel {
+  --background: oklch(96.158% 0.00563 84.446); /* warm off-white */
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --canvas: #f4f4f5; /* the page panel behind white cards */
 }
 
 @layer base {
@@ -178,11 +217,18 @@
   }
 }
 
-*{
-  font-family: 'outfit';
+* {
+  font-family: 'Manrope', system-ui, sans-serif;
   box-sizing: border-box;
   scroll-behavior: smooth;
   user-select: none;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Manrope', system-ui, sans-serif;
+}
+p {
+  font-family: 'Outfit', system-ui, sans-serif;
 }
 
 /* Target the scrollbar specifically */
@@ -212,7 +258,7 @@
 }
 /* ── Liquid glass (mobile pill + expanders) — ported from the reference ── */
 :root {
-  --c-glass: #eef4f8;
+  --c-glass: #f4f4f5;
   --c-light: #fff;
   --c-dark: #000;
   --glass-reflex-light: 1;
@@ -221,7 +267,7 @@
   --glass-tint: 62%; /* how frosted the surface reads */
 }
 .dark {
-  --c-glass: #1b2229;
+  --c-glass: #2e2e30;
   --glass-reflex-light: 0.55;
   --glass-reflex-dark: 1.4;
   --glass-tint: 55%;
@@ -263,4 +309,38 @@
     inset -1px 2px 3px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent),
     inset 0px -4px 1px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent),
     0px 3px 6px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
+}
+
+/* ── Torn-ticket totals strip: half-circle notches on the tear line ── */
+.ticket-notch {
+  -webkit-mask-image:
+    radial-gradient(circle 7px at var(--tear, 33%) 0, transparent 98%, black 100%),
+    radial-gradient(circle 7px at var(--tear, 33%) 100%, transparent 98%, black 100%);
+  mask-image:
+    radial-gradient(circle 7px at var(--tear, 33%) 0, transparent 98%, black 100%),
+    radial-gradient(circle 7px at var(--tear, 33%) 100%, transparent 98%, black 100%);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── Navigation icons: grey at rest, gradient on hover and when active ── */
+.nav-icon svg {
+  stroke: rgb(255 255 255 / 0.5);
+  transition: stroke 150ms;
+}
+.nav-icon:hover svg {
+  stroke: url(#nav-grad-hover);
+}
+.nav-icon[data-current] svg {
+  stroke: url(#nav-grad-active);
 }

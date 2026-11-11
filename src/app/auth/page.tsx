@@ -78,7 +78,7 @@ export default function AuthPage() {
             <button
               type="button"
               onClick={() => setStarted(true)}
-              className="w-full rounded-full bg-primary py-3.5 text-center font-medium text-primary-foreground transition-opacity active:opacity-80"
+              className="w-full rounded-full bg-white py-3.5 text-center font-medium text-black transition-opacity active:opacity-80"
             >
               Get started
             </button>
@@ -124,7 +124,7 @@ export default function AuthPage() {
           />
           <div className="absolute inset-0 bg-linear-to-t from-brand-ink/85 via-brand-ink/20 to-transparent" />
           <div className="absolute bottom-8 left-8 right-8 space-y-4 text-white">
-            <span className="block h-1 w-12 rounded-full bg-primary" />
+            <span className="block h-1 w-12 rounded-full bg-white" />
             <p className="max-w-md text-3xl font-semibold leading-tight tracking-tight">
               Run your whole fleet from one place.
             </p>

@@ -46,11 +46,11 @@ export default function RootLayout({ children }) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${outfit.variable}  h-full antialiased dark`}
+      className={`${outfit.variable}  h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <PwaRegister />
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           {children}
           <ThemedToaster />
         </ThemeProvider>

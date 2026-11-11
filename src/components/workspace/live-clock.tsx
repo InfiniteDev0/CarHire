@@ -28,7 +28,7 @@ export function LiveClock({ className }: { className?: string }) {
   }, []);
 
   return (
-    <div className={cn("hidden md:flex items-center gap-1 tabular-nums", className)}>
+    <div className={cn("hidden md:flex items-center gap-1.5 whitespace-nowrap tabular-nums", className)}>
       <Clock className="size-4" />
       {time ?? "--:--"}
     </div>

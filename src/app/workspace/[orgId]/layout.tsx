@@ -1,15 +1,15 @@
+import type { CSSProperties } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AppSidebar } from "@/components/workspace/app-sidebar";
-import { TopNav } from "@/components/workspace/top-nav";
+import { NavGradients, TopNav } from "@/components/workspace/top-nav";
+import { cn } from "@/lib/utils";
 import { NavUser } from "@/components/workspace/nav-user";
-import { BrandMark } from "@/components/brand/logo";
 import { WorkspaceSwitcher } from "@/features/workspace/workspace-switcher";
 import { NavLayoutToggle } from "@/features/workspace/nav-layout-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { NAV_LAYOUT_COOKIE, parseNavLayout } from "@/lib/nav-layout";
-import { Separator } from "@/components/ui/separator";
 import {
   SidebarInset,
   SidebarProvider,
@@ -120,9 +120,17 @@ export default async function WorkspaceLayout({
   const displayName =
     (user.user_metadata?.full_name as string) || user.email || "User";
 
+  const isAdmin = role === "admin";
+  const account = { name: displayName, email: user.email ?? "", avatar: "" };
+
   return (
     <TooltipProvider>
-      <SidebarProvider>
+      <NavGradients />
+      {/* The frame never scrolls — only the main panel's content does. */}
+      <SidebarProvider
+        className="h-svh flex-col overflow-hidden bg-background"
+        style={{ "--sidebar-width": "18rem", "--sidebar-width-icon": "3.5rem" } as CSSProperties}
+      >
         <WorkspaceStoreHydrator
           orgId={org.id}
           orgName={org.name}
@@ -131,117 +139,94 @@ export default async function WorkspaceLayout({
           userEmail={user.email ?? ""}
         />
         <PresenceHeartbeat orgId={org.id} />
-        {useSidebarNav && (
-          <AppSidebar
-            orgId={org.id}
-            orgName={org.name}
-            user={{ name: displayName, email: user.email ?? "", avatar: "" }}
-            plan={plan}
-            staffCount={staffCount ?? 0}
-            isAdmin={role === "admin"}
-            workspaces={workspaces}
-            canCreateWorkspace={canCreateWorkspace}
-            workspaceMessage={workspaceMessage}
-          />
-        )}
-        <SidebarInset className="h-svh overflow-hidden">
-          <header className={`hidden md:flex ${useSidebarNav ? "h-12" : "h-14"} shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12`}>
-            <div className="flex items-center justify-between gap-2 w-full px-4">
-              {useSidebarNav ? (
-                <div className="flex items-center gap-2">
-                  <SidebarTrigger className="-ml-1" />
-                  <Separator
-                    orientation="vertical"
-                    className="mr-2 data-vertical:h-4 data-vertical:self-auto"
-                  />
-                  <WorkspaceBreadcrumb orgId={org.id} orgName={org.name} />
-                </div>
-              ) : (
-                <div className="flex items-center gap-3">
-                  <Link href={`/workspace/${org.id}`} aria-label="Workspace home">
-                    <BrandMark className="size-6" />
-                  </Link>
-                  <div className="w-56">
-                    <WorkspaceSwitcher
-                      orgId={org.id}
-                      orgName={org.name}
-                      plan={plan}
-                      staffCount={staffCount ?? 0}
-                      isAdmin={role === "admin"}
-                      workspaces={workspaces}
-                      canCreateWorkspace={canCreateWorkspace}
-                      workspaceMessage={workspaceMessage}
-                    />
-                  </div>
-                </div>
-              )}
-              <div className="flex items-center gap-5">
-                <LiveClock />
-                {/* cta */}
-                <div className="flex items-center gap-2">
-                  {plan === "FREE" ? (
-                    <RainbowButton
-                      asChild
-                      variant="outline"
-                      className="h-fit p-1 px-2 cursor-pointer rounded-sm text-xs"
-                    >
-                      <Link href={`/workspace/${orgId}/pricing`}>
-                        <Crown />
-                        Upgrade to Pro
-                      </Link>
-                    </RainbowButton>
-                  ) : (
-                    <Badge className="gap-1 bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300">
-                      <Crown className="size-3" />
-                      {PLAN_LABELS[plan]}
-                    </Badge>
-                  )}
-                  {/* notification trigger and sheet */}
-                  <NotificationSheet orgId={org.id} notifications={notifications} />
-                  <ThemeToggle />
-                  <NavLayoutToggle layout={navLayout} />
-                </div>
-                {!useSidebarNav && (
-                  <div className="w-52">
-                    <NavUser
-                      user={{ name: displayName, email: user.email ?? "", avatar: "" }}
-                      menuSide="bottom"
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-          </header>
-          {!useSidebarNav && <TopNav orgId={org.id} isAdmin={role === "admin"} />}
-          {/* banner — only when a free-plan limit is reached */}
-          {atLimit && (
-            <div className="flex h-7 w-full items-center justify-center gap-2 bg-red-400 text-sm text-red-950">
-              <p>Free plan limit reached.</p>
-              <Link
-                href={`/workspace/${orgId}/pricing`}
-                className="font-medium underline"
-              >
-                Upgrade to Pro
-              </Link>
-            </div>
-          )}
-          <MobileShell
-            orgId={org.id}
-            orgName={org.name}
-            plan={plan}
-            userName={displayName}
-            userEmail={user.email ?? ""}
-            isAdmin={role === "admin"}
-            vehicleCount={usage.vehicles}
-            workspaces={workspaces}
-            canCreateWorkspace={canCreateWorkspace}
-            workspaceMessage={workspaceMessage}
-            notifications={notifications}
-          />
-          <div className="flex flex-1 flex-col gap-4 overflow-y-auto scrollbar-pill p-4 pb-28 md:pb-4">
-            {children}
+
+        {/* Top bar — sits on the page background, not a card. */}
+        <header className="hidden h-12 shrink-0 items-center justify-between gap-3 px-3 md:flex">
+          <div className="flex min-w-0 items-center gap-3">
+            <WorkspaceSwitcher
+              orgId={org.id}
+              orgName={org.name}
+              plan={plan}
+              staffCount={staffCount ?? 0}
+              isAdmin={isAdmin}
+              workspaces={workspaces}
+              canCreateWorkspace={canCreateWorkspace}
+              workspaceMessage={workspaceMessage}
+            />
+            <WorkspaceBreadcrumb orgId={org.id} orgName={org.name} />
           </div>
-        </SidebarInset>
+          <div className="flex shrink-0 items-center gap-3">
+            <LiveClock className="text-base font-medium" />
+            {plan === "FREE" ? (
+              <RainbowButton
+                asChild
+                variant="outline"
+                className="h-fit cursor-pointer rounded-md p-1 px-2 text-xs"
+              >
+                <Link href={`/workspace/${orgId}/pricing`}>
+                  <Crown />
+                  Upgrade to Pro
+                </Link>
+              </RainbowButton>
+            ) : (
+              <Badge className="gap-1 bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300">
+                <Crown className="size-3" />
+                {PLAN_LABELS[plan]}
+              </Badge>
+            )}
+            <div className="flex items-center gap-0.5">
+              <NotificationSheet orgId={org.id} notifications={notifications} />
+              <ThemeToggle />
+              <NavLayoutToggle layout={navLayout} />
+            </div>
+            <NavUser user={account} menuSide="bottom" />
+          </div>
+        </header>
+
+        {/* Second nav row (top-navigation layout). */}
+        {!useSidebarNav && <TopNav orgId={org.id} isAdmin={isAdmin} />}
+
+        <div className="flex min-h-0 flex-1">
+          {useSidebarNav && (
+            <AppSidebar
+              orgId={org.id}
+              isAdmin={isAdmin}
+              className="!top-12 !h-[calc(100svh-3rem)] pt-0"
+            />
+          )}
+          <SidebarInset
+            className={cn(
+              "min-h-0 overflow-hidden bg-canvas md:mb-2 md:mr-2 md:rounded-lg md:border",
+              !useSidebarNav && "md:ml-2",
+            )}
+          >
+            {/* banner — only when a free-plan limit is reached */}
+            {atLimit && (
+              <div className="flex h-7 w-full shrink-0 items-center justify-center gap-2 bg-red-400 text-sm text-red-950">
+                <span>Free plan limit reached.</span>
+                <Link href={`/workspace/${orgId}/pricing`} className="font-medium underline">
+                  Upgrade to Pro
+                </Link>
+              </div>
+            )}
+            <MobileShell
+              orgId={org.id}
+              orgName={org.name}
+              plan={plan}
+              userName={displayName}
+              userEmail={user.email ?? ""}
+              isAdmin={role === "admin"}
+              vehicleCount={usage.vehicles}
+              workspaces={workspaces}
+              canCreateWorkspace={canCreateWorkspace}
+              workspaceMessage={workspaceMessage}
+              notifications={notifications}
+            />
+            <div className="@container/main flex flex-1 flex-col gap-4 overflow-y-auto scrollbar-pill px-4 py-4 pb-28 md:py-6 md:pb-6 lg:px-6">
+              {children}
+            </div>
+          </SidebarInset>
+        </div>
       </SidebarProvider>
     </TooltipProvider>
   );

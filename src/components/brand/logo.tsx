@@ -10,7 +10,7 @@ export function BrandMark({ className }: { className?: string }) {
     <svg
       viewBox="0 0 131 131"
       aria-hidden="true"
-      className={cn("size-7 shrink-0 text-primary", className)}
+      className={cn("size-7 shrink-0 text-brand", className)}
     >
       <path d={MARK_PATH} fill="currentColor" />
     </svg>

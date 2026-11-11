@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import {
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
@@ -43,6 +42,13 @@ export function NavUser({
   const router = useRouter()
   const orgId = useOrgId()
   const [pwOpen, setPwOpen] = useState(false)
+  const initials =
+    user.name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((w) => w[0])
+      .join("") || "U"
 
   async function handleSignOut() {
     const supabase = createClient()
@@ -57,23 +63,18 @@ export function NavUser({
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
-              <SidebarMenuButton size="lg" className="bg-black hover:bg-zinc-950 
-              text-white hover:text-gray-500 cursor-pointer" />
+              <button
+                type="button"
+                aria-label="Account menu"
+                className="flex h-9 cursor-pointer items-center gap-2 rounded-lg bg-black/5 pl-1 pr-2 transition-colors hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/15"
+              />
             }
           >
-            <Avatar>
-              <AvatarImage
-                src="https://heroui-assets.nyc3.cdn.digitaloceanspaces.com/avatars/purple.jpg"
-                className="size-8 rounded-lg"
-                alt={user.name}
-              />
-              <AvatarFallback>CN</AvatarFallback>
-            </Avatar>
-            <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-medium">{user.name}</span>
-              <span className="truncate text-xs">{user.email}</span>
-            </div>
-            <ChevronsUpDownIcon className="ml-auto size-4" />
+            <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-vivid-cyan/10 text-[11px] font-semibold uppercase text-vivid-cyan">
+              {initials}
+            </span>
+            <span className="max-w-28 truncate text-sm font-medium">{user.name.split(" ")[0]}</span>
+            <ChevronsUpDownIcon className="size-3.5 text-muted-foreground" />
           </DropdownMenuTrigger>
           <DropdownMenuContent
             className="w-fit bg-background"
@@ -86,7 +87,7 @@ export function NavUser({
                 <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                   <Avatar>
                     <AvatarImage src={user.avatar} alt={user.name} />
-                    <AvatarFallback>CN</AvatarFallback>
+                    <AvatarFallback>{initials.toUpperCase()}</AvatarFallback>
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-medium">{user.name}</span>
