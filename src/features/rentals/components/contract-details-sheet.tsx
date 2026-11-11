@@ -48,19 +48,19 @@ const fmt = (iso: string | null) =>
     : "—";
 
 export const STATUS_BADGE: Record<string, string> = {
-  DRAFT: "bg-zinc-800 text-zinc-300 border border-zinc-700",
-  ACTIVE: "border border-emerald-500/20 bg-emerald-500/10 text-emerald-400",
-  EXTENDED: "border border-purple-500/20 bg-purple-500/10 text-purple-400",
-  OVERDUE: "border border-red-500/20 bg-red-500/10 text-red-400",
-  COMPLETED: "border border-blue-500/20 bg-blue-500/10 text-blue-400",
-  CANCELLED: "bg-zinc-800 text-zinc-500 border border-zinc-700",
+  DRAFT: "bg-muted text-foreground border border-border",
+  ACTIVE: "border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+  EXTENDED: "border border-purple-500/20 bg-purple-500/10 text-purple-600 dark:text-purple-400",
+  OVERDUE: "border border-red-500/20 bg-red-500/10 text-red-600 dark:text-red-400",
+  COMPLETED: "border border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400",
+  CANCELLED: "bg-muted text-muted-foreground border border-border",
 };
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-3 border-b border-zinc-800/70 py-2 last:border-0">
-      <span className="shrink-0 text-zinc-500">{label}</span>
-      <span className="truncate text-right text-zinc-200">{value || "—"}</span>
+    <div className="flex items-center justify-between gap-3 border-b border-border/70 py-2 last:border-0">
+      <span className="shrink-0 text-muted-foreground">{label}</span>
+      <span className="truncate text-right text-foreground">{value || "—"}</span>
     </div>
   );
 }
@@ -118,7 +118,7 @@ export function ContractDetailsSheet({
       <div className="flex items-center justify-between">
         <Button
           onClick={() => onOpenChange(false)}
-          className="size-8 rounded-full bg-zinc-800 p-0 text-white hover:bg-zinc-700"
+          className="size-8 rounded-full bg-muted p-0 text-foreground hover:bg-muted"
         >
           <X className="size-4" />
         </Button>
@@ -126,31 +126,31 @@ export function ContractDetailsSheet({
       </div>
 
       {/* Header */}
-      <div className="border-b border-zinc-800 pb-4">
+      <div className="border-b border-border pb-4">
         <h1 className="text-xl font-bold tracking-tight">{contract.clients?.full_name ?? "Client"}</h1>
-        <p className="mt-0.5 text-xs text-zinc-500">{carLabel}</p>
+        <p className="mt-0.5 text-xs text-muted-foreground">{carLabel}</p>
       </div>
 
       {/* Financial tiles */}
       <div className="grid grid-cols-3 gap-2 text-center">
-        <div className="rounded-md bg-zinc-900 p-2.5">
-          <p className="text-xs text-zinc-500">Total</p>
+        <div className="rounded-md bg-muted p-2.5">
+          <p className="text-xs text-muted-foreground">Total</p>
           <p className="text-sm font-bold">{money(contract.total_amount ?? 0)}</p>
         </div>
-        <div className="rounded-md bg-zinc-900 p-2.5">
-          <p className="text-xs text-zinc-500">Paid</p>
-          <p className="text-sm font-bold text-emerald-400">{money(contract.amount_paid ?? 0)}</p>
+        <div className="rounded-md bg-muted p-2.5">
+          <p className="text-xs text-muted-foreground">Paid</p>
+          <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{money(contract.amount_paid ?? 0)}</p>
         </div>
-        <div className="rounded-md bg-zinc-900 p-2.5">
-          <p className="text-xs text-zinc-500">Balance</p>
-          <p className={`text-sm font-bold ${balance > 0 ? "text-red-400" : "text-zinc-300"}`}>
+        <div className="rounded-md bg-muted p-2.5">
+          <p className="text-xs text-muted-foreground">Balance</p>
+          <p className={`text-sm font-bold ${balance > 0 ? "text-red-600 dark:text-red-400" : "text-foreground"}`}>
             {money(Math.max(0, balance))}
           </p>
         </div>
       </div>
 
       {/* Details */}
-      <div className="flex-1 text-sm text-zinc-400">
+      <div className="flex-1 text-sm text-muted-foreground">
         <Row label="Period" value={`${fmt(contract.contract_start)} → ${fmt(contract.contract_expiration)}`} />
         <Row label="Duration" value={`${contract.duration_days} days`} />
         <Row label="Rate" value={`${money(Number(contract.rate_per_day))}/day`} />
@@ -175,31 +175,31 @@ export function ContractDetailsSheet({
         )}
 
         {/* Logs */}
-        <p className="mb-1 mt-4 text-xs font-medium uppercase tracking-wide text-zinc-500">
+        <p className="mb-1 mt-4 text-xs font-medium uppercase tracking-wide text-muted-foreground">
           Operational log
         </p>
         {logs === null ? (
           <div className="flex min-h-16 items-center justify-center">
-            <Loader2 className="size-4 animate-spin text-zinc-600" />
+            <Loader2 className="size-4 animate-spin text-muted-foreground" />
           </div>
         ) : (
           <>
             {logs.checkout ? (
-              <div className="rounded-md border border-zinc-800 bg-zinc-900/50 p-3 text-xs">
-                <p className="font-medium text-zinc-200">Checked out · {fmt(logs.checkout.created_at)}</p>
-                <p className="mt-1 text-zinc-500">
+              <div className="rounded-md border border-border bg-muted/50 p-3 text-xs">
+                <p className="font-medium text-foreground">Checked out · {fmt(logs.checkout.created_at)}</p>
+                <p className="mt-1 text-muted-foreground">
                   Mileage {logs.checkout.mileage?.toLocaleString() ?? "—"} km · Fuel{" "}
                   {logs.checkout.fuel_at_issue ? FUEL_LABELS[logs.checkout.fuel_at_issue] : "—"} ·
                   Signed “{logs.checkout.signature ?? "—"}”
                 </p>
               </div>
             ) : (
-              <p className="text-xs text-zinc-600">Not checked out yet.</p>
+              <p className="text-xs text-muted-foreground">Not checked out yet.</p>
             )}
             {logs.checkin && (
-              <div className="mt-2 rounded-md border border-zinc-800 bg-zinc-900/50 p-3 text-xs">
-                <p className="font-medium text-zinc-200">Checked in · {fmt(logs.checkin.created_at)}</p>
-                <p className="mt-1 text-zinc-500">
+              <div className="mt-2 rounded-md border border-border bg-muted/50 p-3 text-xs">
+                <p className="font-medium text-foreground">Checked in · {fmt(logs.checkin.created_at)}</p>
+                <p className="mt-1 text-muted-foreground">
                   Returned by {logs.checkin.returned_by ?? "—"} · Mileage{" "}
                   {logs.checkin.mileage?.toLocaleString() ?? "—"} km · Fuel{" "}
                   {logs.checkin.fuel_at_return ? FUEL_LABELS[logs.checkin.fuel_at_return] : "—"}
@@ -207,9 +207,9 @@ export function ContractDetailsSheet({
                     ` · Penalty ${money(logs.checkin.refuel_penalty)}`}
                 </p>
                 {logs.checkout?.mileage != null && logs.checkin.mileage != null && (
-                  <p className="mt-1 text-zinc-500">
+                  <p className="mt-1 text-muted-foreground">
                     Distance covered:{" "}
-                    <span className="text-zinc-300">
+                    <span className="text-foreground">
                       {Math.max(0, logs.checkin.mileage - logs.checkout.mileage).toLocaleString()} km
                     </span>{" "}
                     ({logs.checkout.mileage.toLocaleString()} → {logs.checkin.mileage.toLocaleString()})
@@ -222,12 +222,12 @@ export function ContractDetailsSheet({
       </div>
 
       {/* Actions by state */}
-      <div className="flex flex-col gap-2 border-t border-zinc-800 pt-3">
+      <div className="flex flex-col gap-2 border-t border-border pt-3">
         {status !== "CANCELLED" && (
           <Button
             asChild
             variant="outline"
-            className="w-full border-zinc-700 bg-transparent text-zinc-300 hover:bg-zinc-900"
+            className="w-full border-border bg-transparent text-foreground hover:bg-muted"
           >
             <Link href={`/print/${orgId}/contracts/${contract.id}`} target="_blank">
               <FileDown className="size-4" />
@@ -240,7 +240,7 @@ export function ContractDetailsSheet({
             <Button
               variant="outline"
               disabled={isPending}
-              className="flex-1 border-zinc-700 bg-transparent text-zinc-300 hover:bg-zinc-900"
+              className="flex-1 border-border bg-transparent text-foreground hover:bg-muted"
               onClick={doCancel}
             >
               {isPending ? <Loader2 className="size-4 animate-spin" /> : <Undo2 className="size-4" />}
@@ -256,7 +256,7 @@ export function ContractDetailsSheet({
           <div className="flex gap-2">
             <Button
               variant="outline"
-              className="flex-1 border-zinc-700 bg-transparent text-zinc-300 hover:bg-zinc-900"
+              className="flex-1 border-border bg-transparent text-foreground hover:bg-muted"
               onClick={() => setExtendOpen(true)}
             >
               <CalendarPlus className="size-4" />
@@ -264,7 +264,7 @@ export function ContractDetailsSheet({
             </Button>
             <Button
               variant="outline"
-              className="flex-1 border-zinc-700 bg-transparent text-zinc-300 hover:bg-zinc-900"
+              className="flex-1 border-border bg-transparent text-foreground hover:bg-muted"
               onClick={() => setPaymentOpen(true)}
             >
               <Banknote className="size-4" />
@@ -280,7 +280,7 @@ export function ContractDetailsSheet({
           <Button
             variant="outline"
             disabled={isPending}
-            className="w-full border-zinc-700 bg-transparent text-red-400 hover:bg-zinc-900"
+            className="w-full border-border bg-transparent text-red-600 dark:text-red-400 hover:bg-muted"
             onClick={doCancel}
           >
             {isPending ? <Loader2 className="size-4 animate-spin" /> : <Undo2 className="size-4" />}
@@ -297,7 +297,7 @@ export function ContractDetailsSheet({
             )}
             <Button
               variant="outline"
-              className="w-full border-zinc-700 bg-transparent text-zinc-300 hover:bg-zinc-900"
+              className="w-full border-border bg-transparent text-foreground hover:bg-muted"
               onClick={() => setReportOpen(true)}
             >
               <ClipboardList className="size-4" />

@@ -73,13 +73,6 @@ export default async function RentalsPage({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="space-y-1">
-        <h1 className="text-xl">Rentals</h1>
-        <p className="text-sm text-muted-foreground">
-          Agreements, checkouts and returns — {contracts.length} total.
-        </p>
-      </div>
-
       <RentalsView
         orgId={orgId}
         contracts={contracts}

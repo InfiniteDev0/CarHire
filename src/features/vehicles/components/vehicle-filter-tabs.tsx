@@ -1,21 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { Search, ArrowDownUp } from "lucide-react";
+import { Plus, SlidersHorizontal } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
+  ActionTray,
+  ListToolbar,
+  PRIMARY_ACTION,
+  TableSearch,
+} from "@/components/workspace/list";
+import { SortMenu, ToolbarButton } from "@/components/workspace/list/tools";
 import type { VehicleSort } from "../filtering";
 
 const SORT_OPTIONS: { value: VehicleSort; label: string }[] = [
@@ -25,6 +18,7 @@ const SORT_OPTIONS: { value: VehicleSort; label: string }[] = [
   { value: "MAKE", label: "Make (A → Z)" },
 ];
 
+/** The Vehicles toolbar: search, Sort, Filter and the add button. */
 export function VehicleFilterTabs({
   search,
   onSearchChange,
@@ -44,106 +38,25 @@ export function VehicleFilterTabs({
   isAdmin: boolean;
   onOpenAdd: () => void;
 }) {
-  const [searchOpen, setSearchOpen] = useState(false);
-
   return (
-    <div className="flex items-center justify-end gap-2">
-      {/* Search — icon expands into an input */}
-      {searchOpen || search ? (
-        <Input
-          autoFocus
-          value={search}
-          onChange={(e) => onSearchChange(e.target.value)}
-          onBlur={() => {
-            if (!search) setSearchOpen(false);
-          }}
-          placeholder="Search reg, make or model…"
-          className="h-7 w-56 rounded-sm"
-        />
-      ) : (
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <Button
-                variant="outline"
-                className="h-7 w-7 rounded-sm"
-                onClick={() => setSearchOpen(true)}
-              >
-                <Search />
-              </Button>
-            }
-          />
-          <TooltipContent>
-            <p>Search</p>
-          </TooltipContent>
-        </Tooltip>
-      )}
-
-      {/* Sort — dropdown */}
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button variant="outline" className="h-7 w-7 rounded-sm">
-              <ArrowDownUp />
-            </Button>
-          }
-        />
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuGroup>
-            <DropdownMenuLabel>Sort by</DropdownMenuLabel>
-          </DropdownMenuGroup>
-          <DropdownMenuSeparator />
-          <DropdownMenuRadioGroup value={sort} onValueChange={(v) => onSortChange(v as VehicleSort)}>
-            {SORT_OPTIONS.map((o) => (
-              <DropdownMenuRadioItem key={o.value} value={o.value}>
-                {o.label}
-              </DropdownMenuRadioItem>
-            ))}
-          </DropdownMenuRadioGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      {/* Filter — your SVG, opens the filter sheet */}
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Button
-              variant="outline"
-              className="relative h-7 w-7 rounded-sm"
-              onClick={onOpenFilter}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 20 20"
-                fill="none"
-                className="shrink-0"
-              >
-                <path d="M1 6L9 6" stroke="currentColor" strokeWidth="2" vectorEffect="non-scaling-stroke" />
-                <circle cx="15" cy="6" r="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-                <path d="M19 14L11 14" stroke="currentColor" strokeWidth="2" vectorEffect="non-scaling-stroke" />
-                <path d="M2 14C2 12.3431 3.34315 11 5 11C6.65685 11 8 12.3431 8 14C8 15.6569 6.65685 17 5 17C3.34315 17 2 15.6569 2 14Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-              </svg>
-              {activeFilterCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full bg-foreground text-[9px] font-medium text-background">
-                  {activeFilterCount}
-                </span>
-              )}
-            </Button>
-          }
-        />
-        <TooltipContent>
-          <p>Filter</p>
-        </TooltipContent>
-      </Tooltip>
-
-      {/* Add — opens the form sheet */}
+    <ListToolbar>
+      <TableSearch value={search} onChange={onSearchChange} placeholder="Search reg, make or model" />
+      <SortMenu options={SORT_OPTIONS} value={sort} onChange={onSortChange} defaultValue="NEW" />
+      <ToolbarButton
+        icon={<SlidersHorizontal />}
+        label="Filter"
+        count={activeFilterCount}
+        active={activeFilterCount > 0}
+        onClick={onOpenFilter}
+      />
       {isAdmin && (
-        <Button className="h-7 rounded-sm" onClick={onOpenAdd}>
-          Add
-        </Button>
+        <ActionTray>
+          <button type="button" className={PRIMARY_ACTION} onClick={onOpenAdd}>
+            <Plus className="size-4" />
+            Add vehicle
+          </button>
+        </ActionTray>
       )}
-    </div>
+    </ListToolbar>
   );
 }

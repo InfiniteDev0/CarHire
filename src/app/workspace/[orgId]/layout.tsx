@@ -9,6 +9,7 @@ import { NavUser } from "@/components/workspace/nav-user";
 import { WorkspaceSwitcher } from "@/features/workspace/workspace-switcher";
 import { NavLayoutToggle } from "@/features/workspace/nav-layout-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { CommandSearch, QuickCreate } from "@/features/workspace/command-search";
 import { NAV_LAYOUT_COOKIE, parseNavLayout } from "@/lib/nav-layout";
 import {
   SidebarInset,
@@ -54,7 +55,10 @@ export default async function WorkspaceLayout({
   params: Promise<{ orgId: string }>;
 }) {
   const { orgId } = await params;
-  const navLayout = parseNavLayout((await cookies()).get(NAV_LAYOUT_COOKIE)?.value);
+  const cookieStore = await cookies();
+  const navLayout = parseNavLayout(cookieStore.get(NAV_LAYOUT_COOKIE)?.value);
+  // The sidebar remembers whether it was folded.
+  const sidebarOpen = cookieStore.get("sidebar_state")?.value !== "false";
   const useSidebarNav = navLayout === "sidebar";
   const supabase = await createClient();
   
@@ -128,8 +132,9 @@ export default async function WorkspaceLayout({
       <NavGradients />
       {/* The frame never scrolls — only the main panel's content does. */}
       <SidebarProvider
+        defaultOpen={sidebarOpen}
         className="h-svh flex-col overflow-hidden bg-background"
-        style={{ "--sidebar-width": "18rem", "--sidebar-width-icon": "3.5rem" } as CSSProperties}
+        style={{ "--sidebar-width": "18rem", "--sidebar-width-icon": "4.5rem" } as CSSProperties}
       >
         <WorkspaceStoreHydrator
           orgId={org.id}
@@ -155,6 +160,7 @@ export default async function WorkspaceLayout({
             />
             <WorkspaceBreadcrumb orgId={org.id} orgName={org.name} />
           </div>
+          <CommandSearch orgId={org.id} isAdmin={isAdmin} />
           <div className="flex shrink-0 items-center gap-3">
             <LiveClock className="text-base font-medium" />
             {plan === "FREE" ? (
@@ -175,6 +181,7 @@ export default async function WorkspaceLayout({
               </Badge>
             )}
             <div className="flex items-center gap-0.5">
+              <QuickCreate orgId={org.id} isAdmin={isAdmin} />
               <NotificationSheet orgId={org.id} notifications={notifications} />
               <ThemeToggle />
               <NavLayoutToggle layout={navLayout} />

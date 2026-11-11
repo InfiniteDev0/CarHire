@@ -19,14 +19,14 @@ export default async function SettingsLayout({
   return (
     <div className="flex flex-col">
       <div
-        className="space-y-1 rounded-t-2xl p-2 text-white"
+        className="space-y-1 rounded-t-2xl p-2 text-foreground"
         style={{
           backgroundImage: "url('/banner.png')",
           backgroundSize: "cover",
           backgroundPosition: "top",
         }}
       >
-        <h1 className="text-xl text-black dark:text-white">Settings</h1>
+        <h1 className="text-xl text-foreground">Settings</h1>
         <p className="text-sm text-muted-foreground">
           Workspace configuration and your account.
         </p>

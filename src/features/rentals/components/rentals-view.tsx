@@ -1,11 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, FileText, Plus, ChevronRight } from "lucide-react";
+import { FileText, Plus } from "lucide-react";
 
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableHeader,
@@ -14,6 +11,33 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
+import {
+  ActionTray,
+  CardStatus,
+  CardsEmpty,
+  FolderTabs,
+  ListCard,
+  ListToolbar,
+  MiniPill,
+  PageHeading,
+  PersonCell,
+  PRIMARY_ACTION,
+  RecordCard,
+  StatusPill,
+  TableSearch,
+  TotalsStrip,
+  TrayDivider,
+  ViewSwitch,
+  type ListView,
+} from "@/components/workspace/list";
+import {
+  ExportAction,
+  RowCheck,
+  SelectionBar,
+  SortMenu,
+  exportCsv,
+  useSelection,
+} from "@/components/workspace/list/tools";
 import { cn } from "@/lib/utils";
 import { getContractLogs } from "../actions";
 import {
@@ -24,7 +48,7 @@ import {
   type CheckinLog,
 } from "../helpers";
 import { NewRentalWizard, type PickClient, type PickCar, type OrgRules } from "./new-rental-wizard";
-import { ContractDetailsSheet, STATUS_BADGE } from "./contract-details-sheet";
+import { ContractDetailsSheet } from "./contract-details-sheet";
 import { money } from "@/lib/money";
 
 const shortDate = (iso: string | null) =>
@@ -32,6 +56,24 @@ const shortDate = (iso: string | null) =>
 
 const FILTERS = ["ALL", "DRAFT", "ACTIVE", "EXTENDED", "OVERDUE", "COMPLETED", "CANCELLED"] as const;
 type Filter = (typeof FILTERS)[number];
+
+type Sort = "NEW" | "RETURN" | "BALANCE";
+const SORTS: { value: Sort; label: string }[] = [
+  { value: "NEW", label: "Newest first" },
+  { value: "RETURN", label: "Return date (soonest)" },
+  { value: "BALANCE", label: "Balance (highest)" },
+];
+
+// Folder-tab order and colours: all → waiting → running → late → done → refused.
+const STATUS: Record<Filter, { label: string; color: string }> = {
+  ALL: { label: "All", color: "#3b82f6" },
+  DRAFT: { label: "Draft", color: "#f59e0b" },
+  ACTIVE: { label: "Active", color: "#10b981" },
+  EXTENDED: { label: "Extended", color: "#8b5cf6" },
+  OVERDUE: { label: "Overdue", color: "#ef4444" },
+  COMPLETED: { label: "Completed", color: "#14b8a6" },
+  CANCELLED: { label: "Cancelled", color: "#a1a1aa" },
+};
 
 export function RentalsView({
   orgId,
@@ -56,6 +98,8 @@ export function RentalsView({
 }) {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Filter>("ALL");
+  const [view, setView] = useState<ListView>("table");
+  const [sort, setSort] = useState<Sort>("NEW");
   const [wizardOpen, setWizardOpen] = useState(openNewOnLoad);
   const [detailsTarget, setDetailsTarget] = useState<ContractRow | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -77,7 +121,7 @@ export function RentalsView({
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return contracts.filter((c) => {
+    const rows = contracts.filter((c) => {
       if (filter !== "ALL" && displayStatus(c) !== filter) return false;
       if (!q) return true;
       return [
@@ -90,7 +134,50 @@ export function RentalsView({
         .filter(Boolean)
         .some((v) => v!.toLowerCase().includes(q));
     });
-  }, [contracts, search, filter]);
+    if (sort === "RETURN") {
+      const end = (c: ContractRow) =>
+        c.contract_expiration ? new Date(c.contract_expiration).getTime() : Number.MAX_SAFE_INTEGER;
+      return [...rows].sort((a, b) => end(a) - end(b));
+    }
+    if (sort === "BALANCE") return [...rows].sort((a, b) => contractBalance(b) - contractBalance(a));
+    return rows;
+  }, [contracts, search, filter, sort]);
+
+  const selection = useSelection(filtered.map((c) => c.id));
+
+  function exportSelected() {
+    const rows = filtered.filter((c) => selection.has(c.id));
+    exportCsv(
+      "rentals.csv",
+      ["Client", "Phone", "Vehicle", "Registration", "Start", "End", "Total (USD)", "Paid (USD)", "Balance (USD)", "Status"],
+      rows.map((c) => [
+        c.clients?.full_name,
+        c.clients?.phone,
+        [c.cars?.make, c.cars?.model].filter(Boolean).join(" "),
+        c.cars?.reg_number,
+        (c.contract_start ?? c.created_at ?? "").slice(0, 10),
+        (c.contract_expiration ?? "").slice(0, 10),
+        Number(c.total_amount ?? 0),
+        Number(c.amount_paid ?? 0),
+        Math.max(0, contractBalance(c)),
+        STATUS[displayStatus(c) as Filter].label,
+      ]),
+    );
+  }
+
+  // Totals for the rows showing (cancelled agreements are not money owed).
+  const totals = useMemo(() => {
+    let billed = 0;
+    let collected = 0;
+    let owed = 0;
+    for (const c of filtered) {
+      if (c.status === "CANCELLED") continue;
+      billed += Number(c.total_amount ?? 0);
+      collected += Number(c.amount_paid ?? 0);
+      owed += Math.max(0, contractBalance(c));
+    }
+    return { billed, collected, owed };
+  }, [filtered]);
 
   function openDetails(c: ContractRow) {
     setDetailsTarget(c);
@@ -101,112 +188,181 @@ export function RentalsView({
       .catch(() => setLogs({ checkout: null, checkin: null }));
   }
 
+  const carLabel = (c: ContractRow) =>
+    [c.cars?.make, c.cars?.model].filter(Boolean).join(" ") || "Vehicle";
+
+  const tabs = FILTERS.filter((f) => f === "ALL" || counts[f] > 0 || f === filter).map((f) => ({
+    id: f,
+    label: STATUS[f].label,
+    count: counts[f],
+    color: STATUS[f].color,
+  }));
+
+  const cards = (
+    <div className="flex flex-col gap-3 md:grid md:grid-cols-2 md:gap-5 xl:grid-cols-3">
+      {filtered.map((c) => {
+        const status = displayStatus(c) as Filter;
+        const balance = contractBalance(c);
+        return (
+          <RecordCard
+            key={c.id}
+            name={c.clients?.full_name ?? "Client"}
+            overline={`${carLabel(c)} · ${c.cars?.reg_number ?? "—"}`}
+            status={<CardStatus color={STATUS[status].color}>{STATUS[status].label}</CardStatus>}
+            details={`${shortDate(c.contract_start ?? c.created_at)} → ${shortDate(c.contract_expiration)}${
+              balance > 0 ? ` · owes ${money(balance)}` : ""
+            }`}
+            amount={money(c.total_amount ?? 0)}
+            onClick={() => openDetails(c)}
+          />
+        );
+      })}
+    </div>
+  );
+
   return (
     <div className="flex flex-col gap-4">
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="relative w-full max-w-xs">
-          <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search client or vehicle…"
-            className="h-8 pl-8"
-          />
-        </div>
-        <div className="ml-auto">
-          <Button className="h-8 gap-1.5 rounded-sm" onClick={() => setWizardOpen(true)}>
+      <PageHeading
+        title="Rentals"
+        description="Every rental agreement, from draft to return: who has which car, until when, and what is still owed."
+        count={filtered.length}
+        noun="rental"
+      />
+
+      <ListToolbar>
+        <TableSearch value={search} onChange={setSearch} placeholder="Search client or vehicle" />
+        <SortMenu<Sort> options={SORTS} value={sort} onChange={setSort} defaultValue="NEW" />
+        <ActionTray>
+          <ViewSwitch view={view} onChange={setView} />
+          <span className="hidden md:block">
+            <TrayDivider />
+          </span>
+          <button type="button" className={PRIMARY_ACTION} onClick={() => setWizardOpen(true)}>
             <Plus className="size-4" />
             New rental
-          </Button>
-        </div>
-      </div>
-
-      {/* Status filter pills */}
-      <div className="flex flex-wrap gap-1.5">
-        {FILTERS.map((f) => (
-          <button
-            key={f}
-            type="button"
-            onClick={() => setFilter(f)}
-            className={cn(
-              "rounded-full border px-3 py-1 text-xs transition-colors",
-              filter === f
-                ? "border-foreground bg-foreground text-background"
-                : "border-input text-muted-foreground hover:text-foreground"
-            )}
-          >
-            {f === "ALL" ? "All" : f.charAt(0) + f.slice(1).toLowerCase()}
-            <span className="ml-1 opacity-60">{counts[f]}</span>
           </button>
-        ))}
-      </div>
+        </ActionTray>
+      </ListToolbar>
 
-      {/* Table */}
-      {filtered.length === 0 ? (
-        <div className="flex min-h-60 flex-col items-center justify-center gap-2 rounded-xl border border-dashed text-center">
-          <FileText className="size-8 text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">
-            {contracts.length === 0
-              ? "No rentals yet. Create your first agreement."
-              : "No rentals match this filter."}
-          </p>
-        </div>
+      {contracts.length === 0 ? (
+        <CardsEmpty
+          kind="first"
+          icon={<FileText />}
+          title="No rentals yet"
+          hint="Create your first rental agreement to see it here."
+          action={
+            <button
+              type="button"
+              className={cn(PRIMARY_ACTION, "h-11 rounded-md px-6 text-[15px]")}
+              onClick={() => setWizardOpen(true)}
+            >
+              Start a rental
+            </button>
+          }
+        />
       ) : (
-        <div className="overflow-hidden rounded-lg border">
-          <Table>
-            <TableHeader className="bg-muted/50">
-              <TableRow>
-                <TableHead>Client</TableHead>
-                <TableHead>Vehicle</TableHead>
-                <TableHead className="hidden md:table-cell">Period</TableHead>
-                <TableHead className="hidden sm:table-cell">Total</TableHead>
-                <TableHead>Balance</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-8" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((c) => {
-                const status = displayStatus(c);
-                const balance = contractBalance(c);
-                return (
-                  <TableRow key={c.id} className="cursor-pointer" onClick={() => openDetails(c)}>
-                    <TableCell>
-                      <div className="font-medium">{c.clients?.full_name ?? "—"}</div>
-                      <div className="text-xs text-muted-foreground">{c.clients?.phone ?? ""}</div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="font-medium">{c.cars?.reg_number ?? "—"}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {[c.cars?.make, c.cars?.model].filter(Boolean).join(" ")}
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden text-muted-foreground tabular-nums md:table-cell">
-                      {shortDate(c.contract_start ?? c.created_at)} → {shortDate(c.contract_expiration)}
-                    </TableCell>
-                    <TableCell className="hidden tabular-nums sm:table-cell">
-                      {money(c.total_amount ?? 0)}
-                    </TableCell>
-                    <TableCell className="tabular-nums">
-                      {balance > 0 ? (
-                        <span className="font-medium text-red-500">{money(balance)}</span>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={STATUS_BADGE[status]}>{status}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <ChevronRight className="size-4 text-muted-foreground" />
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
+        <>
+          <SelectionBar count={selection.count} onClear={selection.clear}>
+            <ExportAction onClick={exportSelected} />
+          </SelectionBar>
+
+          <FolderTabs<Filter> tabs={tabs} value={filter} onChange={setFilter} />
+
+          {filtered.length === 0 ? (
+            filter === "OVERDUE" && !search ? (
+              <CardsEmpty kind="empty" title="No rental is overdue" hint="Anything late shows up here." />
+            ) : (
+              <CardsEmpty
+                kind="no-match"
+                title="No rentals match"
+                hint="Try another word, or pick a different tab."
+              />
+            )
+          ) : (
+            <>
+              {/* Phones always get cards; desktop follows the view switch. */}
+              <div className={cn("pt-4", view === "table" && "md:hidden")}>{cards}</div>
+              {view === "table" && (
+                <ListCard tabbed={filter === tabs[0].id} className="hidden md:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-10">
+                          <RowCheck checked={selection.allSelected} onChange={selection.toggleAll} label="Select all" />
+                        </TableHead>
+                        <TableHead>Client</TableHead>
+                        <TableHead>Vehicle</TableHead>
+                        <TableHead>Period</TableHead>
+                        <TableHead className="text-right">Total</TableHead>
+                        <TableHead className="text-right">Balance</TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filtered.map((c) => {
+                        const status = displayStatus(c) as Filter;
+                        const balance = contractBalance(c);
+                        return (
+                          <TableRow
+                            key={c.id}
+                            className="cursor-pointer"
+                            data-state={selection.has(c.id) ? "selected" : undefined}
+                            onClick={() => openDetails(c)}
+                          >
+                            <TableCell className="w-10">
+                              <RowCheck
+                                checked={selection.has(c.id)}
+                                onChange={() => selection.toggle(c.id)}
+                                label={`Select ${c.clients?.full_name ?? "rental"}`}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <PersonCell
+                                name={c.clients?.full_name ?? "—"}
+                                sub={c.clients?.phone ?? undefined}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <div className="font-medium">{c.cars?.reg_number ?? "—"}</div>
+                              <div className="text-xs text-muted-foreground">{carLabel(c)}</div>
+                            </TableCell>
+                            <TableCell className="tabular-nums text-muted-foreground">
+                              {shortDate(c.contract_start ?? c.created_at)} → {shortDate(c.contract_expiration)}
+                            </TableCell>
+                            <TableCell className="text-right tabular-nums">
+                              {money(c.total_amount ?? 0)}
+                            </TableCell>
+                            <TableCell className="text-right tabular-nums">
+                              {balance > 0 ? (
+                                <span className="inline-flex items-center gap-2 font-medium text-red-600 dark:text-red-400">
+                                  {status === "OVERDUE" && <MiniPill>Late</MiniPill>}
+                                  {money(balance)}
+                                </span>
+                              ) : (
+                                <span className="text-muted-foreground">—</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <StatusPill color={STATUS[status].color}>{STATUS[status].label}</StatusPill>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </ListCard>
+              )}
+
+              <TotalsStrip
+                stub={{ label: "Total billed", value: money(totals.billed) }}
+                items={[
+                  { label: "Collected", value: money(totals.collected), tone: "in" },
+                  { label: "Owed", value: money(totals.owed), tone: totals.owed > 0 ? "owed" : "neutral" },
+                ]}
+              />
+            </>
+          )}
+        </>
       )}
 
       {/* Sheets */}

@@ -55,7 +55,7 @@ const DOC_TYPES = [
 const STEPS = ["Client", "Vehicle", "Driver", "Terms", "Review"] as const;
 
 const inputClass =
-  "h-9 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 text-sm text-white placeholder:text-zinc-600 outline-none focus:border-zinc-600";
+  "h-9 w-full rounded-md border border-border bg-muted px-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-border";
 
 export function NewRentalWizard({
   orgId,
@@ -268,13 +268,13 @@ export function NewRentalWizard({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold">New rental</h2>
-          <p className="text-xs text-zinc-500">
+          <p className="text-xs text-muted-foreground">
             Step {step + 1} of {STEPS.length} — {STEPS[step]}
           </p>
         </div>
         <Button
           onClick={() => onOpenChange(false)}
-          className="size-8 rounded-full bg-zinc-800 p-0 text-white hover:bg-zinc-700"
+          className="size-8 rounded-full bg-muted p-0 text-foreground hover:bg-muted"
         >
           <X className="size-4" />
         </Button>
@@ -287,7 +287,7 @@ export function NewRentalWizard({
             key={s}
             className={cn(
               "h-1 flex-1 rounded-full transition-colors",
-              i <= step ? "bg-white" : "bg-zinc-800"
+              i <= step ? "bg-white" : "bg-muted"
             )}
           />
         ))}
@@ -307,7 +307,7 @@ export function NewRentalWizard({
             {step === 0 && (
               <>
                 <div className="relative">
-                  <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-zinc-600" />
+                  <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                   <input
                     value={clientSearch}
                     onChange={(e) => setClientSearch(e.target.value)}
@@ -317,7 +317,7 @@ export function NewRentalWizard({
                 </div>
                 <div className="flex flex-col gap-1.5">
                   {filteredClients.length === 0 && (
-                    <p className="py-6 text-center text-xs text-zinc-600">
+                    <p className="py-6 text-center text-xs text-muted-foreground">
                       No clients found — add them on the Clients page first.
                     </p>
                   )}
@@ -331,29 +331,29 @@ export function NewRentalWizard({
                         "flex items-center justify-between rounded-md border p-3 text-left transition-colors",
                         clientId === c.id
                           ? "border-white bg-white/5"
-                          : "border-zinc-800 hover:border-zinc-600",
+                          : "border-border hover:border-border",
                         c.is_blocked && "cursor-not-allowed opacity-50"
                       )}
                     >
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-medium text-zinc-100">{c.full_name}</p>
-                        <p className="text-xs text-zinc-500">
+                        <p className="truncate text-sm font-medium text-foreground">{c.full_name}</p>
+                        <p className="text-xs text-muted-foreground">
                           {c.phone || "no phone"}
                           {c.national_id ? ` · ${c.national_id}` : ""}
                         </p>
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
                         {c.is_blocked && (
-                          <Badge className="border border-red-500/20 bg-red-500/10 text-red-400">
+                          <Badge className="border border-red-500/20 bg-red-500/10 text-red-600 dark:text-red-400">
                             Blocked
                           </Badge>
                         )}
                         {!c.is_blocked && c.debt_owed > 0 && (
-                          <Badge className="border border-amber-500/20 bg-amber-500/10 text-amber-400">
+                          <Badge className="border border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400">
                             Debt {money(Number(c.debt_owed))}
                           </Badge>
                         )}
-                        {clientId === c.id && <Check className="size-4 text-white" />}
+                        {clientId === c.id && <Check className="size-4 text-foreground" />}
                       </div>
                     </button>
                   ))}
@@ -364,7 +364,7 @@ export function NewRentalWizard({
             {step === 1 && (
               <>
                 <div className="relative">
-                  <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-zinc-600" />
+                  <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                   <input
                     value={carSearch}
                     onChange={(e) => setCarSearch(e.target.value)}
@@ -374,7 +374,7 @@ export function NewRentalWizard({
                 </div>
                 <div className="flex flex-col gap-1.5">
                   {filteredCars.length === 0 && (
-                    <p className="py-6 text-center text-xs text-zinc-600">
+                    <p className="py-6 text-center text-xs text-muted-foreground">
                       No available vehicles — only cars with status AVAILABLE can be rented.
                     </p>
                   )}
@@ -387,18 +387,18 @@ export function NewRentalWizard({
                         "flex items-center justify-between rounded-md border p-3 text-left transition-colors",
                         carId === c.id
                           ? "border-white bg-white/5"
-                          : "border-zinc-800 hover:border-zinc-600"
+                          : "border-border hover:border-border"
                       )}
                     >
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-medium text-zinc-100">{c.reg_number}</p>
-                        <p className="text-xs text-zinc-500">
+                        <p className="truncate text-sm font-medium text-foreground">{c.reg_number}</p>
+                        <p className="text-xs text-muted-foreground">
                           {[c.make, c.model].filter(Boolean).join(" ") || "Vehicle"}
                         </p>
                       </div>
-                      <div className="flex shrink-0 items-center gap-2 text-sm text-zinc-300">
+                      <div className="flex shrink-0 items-center gap-2 text-sm text-foreground">
                         {c.rate_per_day != null && <span>{money(Number(c.rate_per_day))}/day</span>}
-                        {carId === c.id && <Check className="size-4 text-white" />}
+                        {carId === c.id && <Check className="size-4 text-foreground" />}
                       </div>
                     </button>
                   ))}
@@ -424,7 +424,7 @@ export function NewRentalWizard({
                           "flex-1 rounded-md border px-3 py-2 text-sm transition-colors",
                           isSelfDrive === o.v
                             ? "border-white bg-white text-black"
-                            : "border-zinc-800 text-zinc-300 hover:border-zinc-600",
+                            : "border-border text-foreground hover:border-border",
                           disabled && "cursor-not-allowed opacity-40"
                         )}
                       >
@@ -434,13 +434,13 @@ export function NewRentalWizard({
                   })}
                 </div>
                 {needsExtraDriver && (
-                  <p className="text-xs text-amber-400">
+                  <p className="text-xs text-amber-600 dark:text-amber-400">
                     {client?.full_name || "This client"} is already on a trip — the extra
                     vehicle needs its own driver with ID on file.
                   </p>
                 )}
                 {isSelfDrive ? (
-                  <p className="text-xs text-zinc-500">
+                  <p className="text-xs text-muted-foreground">
                     {client?.full_name || "The client"} drives. Their ID is already on file.
                   </p>
                 ) : (
@@ -465,7 +465,7 @@ export function NewRentalWizard({
                         />
                       </div>
                     </div>
-                    <p className="text-xs text-zinc-600">
+                    <p className="text-xs text-muted-foreground">
                       Expired licences are blocked at creation.
                     </p>
 
@@ -491,7 +491,7 @@ export function NewRentalWizard({
                               "flex-1 rounded-md border px-2 py-1.5 text-xs transition-colors",
                               driverDocType === d.v
                                 ? "border-white bg-white text-black"
-                                : "border-zinc-800 text-zinc-300 hover:border-zinc-600"
+                                : "border-border text-foreground hover:border-border"
                             )}
                           >
                             {d.label}
@@ -505,7 +505,7 @@ export function NewRentalWizard({
                         <div
                           className={cn(
                             "flex h-16 items-center justify-center rounded-md border border-dashed text-xs",
-                            docFront ? "border-emerald-600 text-emerald-400" : "border-zinc-700 text-zinc-500"
+                            docFront ? "border-emerald-600 text-emerald-600 dark:text-emerald-400" : "border-border text-muted-foreground"
                           )}
                         >
                           {docFront ? "Selected ✓" : "Upload photo"}
@@ -522,7 +522,7 @@ export function NewRentalWizard({
                         <div
                           className={cn(
                             "flex h-16 items-center justify-center rounded-md border border-dashed text-xs",
-                            docBack ? "border-emerald-600 text-emerald-400" : "border-zinc-700 text-zinc-500"
+                            docBack ? "border-emerald-600 text-emerald-600 dark:text-emerald-400" : "border-border text-muted-foreground"
                           )}
                         >
                           {docBack ? "Selected ✓" : "Upload photo"}
@@ -536,7 +536,7 @@ export function NewRentalWizard({
                       </label>
                     </div>
                     {needsExtraDriver && (
-                      <p className="text-xs text-zinc-600">
+                      <p className="text-xs text-muted-foreground">
                         The driver&apos;s ID number and one document (front &amp; back) are
                         required — the client already has a vehicle out.
                       </p>
@@ -557,7 +557,7 @@ export function NewRentalWizard({
                     <Label>Rate / day (USD)</Label>
                     <input type="number" min={0} className={inputClass} value={ratePerDay} onChange={(e) => setRatePerDay(e.target.value)} />
                     {(rules.rate_floor != null || rules.rate_ceiling != null) && (
-                      <span className={cn("text-xs", rateOutOfBounds ? "text-red-400" : "text-zinc-600")}>
+                      <span className={cn("text-xs", rateOutOfBounds ? "text-red-600 dark:text-red-400" : "text-muted-foreground")}>
                         Allowed: {rules.rate_floor != null ? money(Number(rules.rate_floor)) : "any"} –{" "}
                         {rules.rate_ceiling != null ? money(Number(rules.rate_ceiling)) : "any"}
                       </span>
@@ -574,7 +574,7 @@ export function NewRentalWizard({
                       placeholder="10000"
                       readOnly={depositLocked}
                     />
-                    <span className="text-xs text-zinc-600">
+                    <span className="text-xs text-muted-foreground">
                       {depositLocked
                         ? "Set by the admin for this car — required to create the rental."
                         : "Required — collected when the agreement is created."}
@@ -604,7 +604,7 @@ export function NewRentalWizard({
                           <button
                             type="button"
                             onClick={() => setRouteLegs((legs) => legs.filter((_, idx) => idx !== i))}
-                            className="flex size-8 shrink-0 items-center justify-center rounded-md border border-zinc-800 text-zinc-500 hover:border-zinc-600 hover:text-white"
+                            className="flex size-8 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground hover:border-border hover:text-foreground"
                           >
                             <Minus className="size-3.5" />
                           </button>
@@ -615,7 +615,7 @@ export function NewRentalWizard({
                       <button
                         type="button"
                         onClick={() => setRouteLegs((legs) => [...legs, { from: "", to: "" }])}
-                        className="flex w-fit items-center gap-1.5 rounded-md border border-dashed border-zinc-700 px-2.5 py-1.5 text-xs text-zinc-400 hover:border-zinc-500 hover:text-white"
+                        className="flex w-fit items-center gap-1.5 rounded-md border border-dashed border-border px-2.5 py-1.5 text-xs text-muted-foreground hover:border-border hover:text-foreground"
                       >
                         <Plus className="size-3.5" />
                         Add another route
@@ -623,10 +623,10 @@ export function NewRentalWizard({
                     )}
                   </div>
                 </div>
-                <div className="rounded-md bg-zinc-900 p-3 text-sm">
-                  <span className="text-zinc-500">Total: </span>
-                  <span className="font-bold text-white">{money(total)}</span>
-                  <span className="text-zinc-500">
+                <div className="rounded-md bg-muted p-3 text-sm">
+                  <span className="text-muted-foreground">Total: </span>
+                  <span className="font-bold text-foreground">{money(total)}</span>
+                  <span className="text-muted-foreground">
                     {" "}
                     ({durationDays || 0} × {money(Number(ratePerDay) || 0)}) · Deposit{" "}
                     {money(Number(depositAmount) || 0)}
@@ -638,7 +638,7 @@ export function NewRentalWizard({
             {step === 4 && (
               <div className="flex flex-col gap-2 text-sm">
                 {curfewNow && (
-                  <div className="flex items-start gap-2 rounded-md border border-amber-500/20 bg-amber-500/10 p-3 text-xs text-amber-400">
+                  <div className="flex items-start gap-2 rounded-md border border-amber-500/20 bg-amber-500/10 p-3 text-xs text-amber-600 dark:text-amber-400">
                     <TriangleAlert className="mt-0.5 size-4 shrink-0" />
                     <span>
                       You&apos;re inside the curfew window — you can create this draft now, but
@@ -659,12 +659,12 @@ export function NewRentalWizard({
                     ["Domicile", domicile || "—"],
                   ] as const
                 ).map(([k, v]) => (
-                  <div key={k} className="flex items-center justify-between border-b border-zinc-800/70 py-2 last:border-0">
-                    <span className="text-zinc-500">{k}</span>
-                    <span className="text-right text-zinc-200">{v}</span>
+                  <div key={k} className="flex items-center justify-between border-b border-border/70 py-2 last:border-0">
+                    <span className="text-muted-foreground">{k}</span>
+                    <span className="text-right text-foreground">{v}</span>
                   </div>
                 ))}
-                <p className="pt-1 text-xs text-zinc-600">
+                <p className="pt-1 text-xs text-muted-foreground">
                   Creates a DRAFT agreement. Dispatch the car from the contract with
                   “Check out” — that&apos;s when the clock starts.
                 </p>
@@ -680,8 +680,8 @@ export function NewRentalWizard({
           className={cn(
             "flex items-start gap-2 rounded-md border p-3 text-xs",
             concurrentBlocked
-              ? "border-red-500/20 bg-red-500/10 text-red-400"
-              : "border-amber-500/20 bg-amber-500/10 text-amber-400"
+              ? "border-red-500/20 bg-red-500/10 text-red-600 dark:text-red-400"
+              : "border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400"
           )}
         >
           <TriangleAlert className="mt-0.5 size-4 shrink-0" />
@@ -696,10 +696,10 @@ export function NewRentalWizard({
       )}
 
       {/* Footer nav */}
-      <div className="flex items-center justify-between border-t border-zinc-800 pt-3">
+      <div className="flex items-center justify-between border-t border-border pt-3">
         <Button
           variant="ghost"
-          className={cn("text-zinc-400 hover:text-white", step === 0 && "invisible")}
+          className={cn("text-muted-foreground hover:text-foreground", step === 0 && "invisible")}
           onClick={() => setStep((s) => Math.max(0, s - 1))}
           disabled={isLoading}
         >
@@ -707,7 +707,7 @@ export function NewRentalWizard({
         </Button>
         {step < STEPS.length - 1 ? (
           <Button
-            className="bg-white text-black hover:bg-zinc-200"
+            className="bg-white text-black hover:bg-muted"
             disabled={!canAdvance()}
             onClick={() => setStep((s) => s + 1)}
           >
@@ -715,7 +715,7 @@ export function NewRentalWizard({
           </Button>
         ) : (
           <Button
-            className="bg-white text-black hover:bg-zinc-200"
+            className="bg-white text-black hover:bg-muted"
             disabled={isLoading || concurrentBlocked}
             onClick={handleCreate}
           >

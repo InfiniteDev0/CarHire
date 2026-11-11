@@ -202,7 +202,7 @@ export function VehicleFormSheet({
         <h2 className="text-lg font-semibold">{editing ? "Edit vehicle" : "Add a vehicle"}</h2>
         <Button
           onClick={() => onOpenChange(false)}
-          className="size-8 rounded-full bg-zinc-800 p-0 text-white hover:bg-zinc-700"
+          className="size-8 rounded-full bg-muted p-0 text-foreground hover:bg-muted"
         >
           <X className="size-4" />
         </Button>
@@ -214,17 +214,17 @@ export function VehicleFormSheet({
           <div className="col-span-2 flex flex-col gap-1.5">
             <Label htmlFor="regNumber">Registration *</Label>
             <Input id="regNumber" value={form.regNumber} onChange={(e) => set("regNumber", e.target.value)} placeholder="KDA 421J" disabled={isLoading} aria-invalid={!!errors.regNumber} />
-            {errors.regNumber && <span className="text-xs text-red-400">{errors.regNumber}</span>}
+            {errors.regNumber && <span className="text-xs text-red-600 dark:text-red-400">{errors.regNumber}</span>}
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="make">Make *</Label>
             <Input id="make" value={form.make} onChange={(e) => set("make", e.target.value)} placeholder="Toyota" disabled={isLoading} aria-invalid={!!errors.make} />
-            {errors.make && <span className="text-xs text-red-400">{errors.make}</span>}
+            {errors.make && <span className="text-xs text-red-600 dark:text-red-400">{errors.make}</span>}
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="model">Model *</Label>
             <Input id="model" value={form.model} onChange={(e) => set("model", e.target.value)} placeholder="Land Cruiser" disabled={isLoading} aria-invalid={!!errors.model} />
-            {errors.model && <span className="text-xs text-red-400">{errors.model}</span>}
+            {errors.model && <span className="text-xs text-red-600 dark:text-red-400">{errors.model}</span>}
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="year">Year</Label>
@@ -270,7 +270,7 @@ export function VehicleFormSheet({
           <div className="col-span-2 flex flex-col gap-1.5">
             <Label htmlFor="deposit">Pickup deposit (USD)</Label>
             <Input id="deposit" type="number" value={form.deposit} onChange={(e) => set("deposit", e.target.value)} placeholder="10000" disabled={isLoading} />
-            <span className="text-xs text-zinc-600">
+            <span className="text-xs text-muted-foreground">
               Collected when a rental for this car is created. Admin-only.
             </span>
           </div>

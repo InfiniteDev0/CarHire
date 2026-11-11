@@ -109,7 +109,7 @@ export function RecentTransactions({
     <div className="flex flex-col gap-3">
       {/* Header row */}
       <div className="flex flex-wrap items-center gap-2">
-        <h2 className="text-sm font-medium">Recent transactions</h2>
+        <h2 className="text-2xl font-semibold tracking-tight">Recent transactions</h2>
         <div className="ml-auto flex items-center gap-2">
           <div className="relative w-full max-w-56">
             <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -117,7 +117,7 @@ export function RecentTransactions({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search client or vehicle…"
-              className="h-8 pl-8"
+              className="h-9 rounded-lg border-0 bg-card pl-8 shadow-none"
             />
           </div>
           {filtered.length > 0 && (
@@ -152,7 +152,7 @@ export function RecentTransactions({
 
       {/* Rows */}
       {filtered.length === 0 ? (
-        <div className="flex min-h-32 flex-col items-center justify-center gap-2 rounded-xl border border-dashed text-center">
+        <div className="flex min-h-32 flex-col items-center justify-center gap-2 rounded-xl bg-card text-center">
           <Banknote className="size-6 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">
             {transactions.length === 0
@@ -161,9 +161,9 @@ export function RecentTransactions({
           </p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-lg border">
+        <div className="overflow-hidden rounded-xl bg-card">
           <Table>
-            <TableHeader className="bg-muted/50">
+            <TableHeader>
               <TableRow>
                 <TableHead>Date</TableHead>
                 <TableHead>Client</TableHead>

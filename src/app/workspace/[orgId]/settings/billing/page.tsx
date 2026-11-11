@@ -61,7 +61,7 @@ export default async function BillingSettingsPage({
                 : "Unlimited vehicles, staff and clients."}
           </span>
         </div>
-        <Button asChild variant="outline" className="h-8 gap-1.5 rounded-sm text-xs">
+        <Button asChild variant="outline" className="h-9 gap-1.5 rounded-lg px-3">
           <Link href={`/workspace/${orgId}/pricing`}>
             <Crown className="size-3.5" />
             {onFree ? "Upgrade to Pro" : "Manage plan"}

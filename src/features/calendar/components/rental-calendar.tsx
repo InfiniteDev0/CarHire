@@ -121,7 +121,7 @@ export function RentalCalendar({
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-lg border">
+        <div className="overflow-hidden rounded-xl bg-card">
           <div className="grid grid-cols-7 border-b bg-muted/50">
             {WEEKDAYS.map((d) => (
               <div key={d} className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
@@ -192,7 +192,7 @@ export function RentalCalendar({
       <div className="flex flex-col gap-2">
         <h2 className="text-sm font-medium">{selectedLabel}</h2>
         {selectedEvents.length === 0 ? (
-          <div className="flex min-h-32 flex-col items-center justify-center gap-2 rounded-xl border border-dashed text-center">
+          <div className="flex min-h-32 flex-col items-center justify-center gap-2 rounded-xl bg-card text-center">
             <CalendarDays className="size-6 text-muted-foreground" />
             <p className="text-xs text-muted-foreground">Nothing scheduled this day.</p>
           </div>

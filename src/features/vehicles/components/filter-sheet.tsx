@@ -16,8 +16,8 @@ const STATUS_LABELS: Record<CarStatus, string> = {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="border-b border-zinc-800 pb-4">
-      <p className="mb-3 text-xs font-medium uppercase tracking-wide text-zinc-500">{title}</p>
+    <div className="border-b border-border pb-4">
+      <p className="mb-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">{title}</p>
       {children}
     </div>
   );
@@ -43,7 +43,7 @@ function Segmented<T extends string>({
             "rounded-md border px-3 py-1.5 text-sm transition-colors",
             value === o.value
               ? "border-white bg-white text-black"
-              : "border-zinc-800 text-zinc-300 hover:border-zinc-600"
+              : "border-border text-foreground hover:border-border"
           )}
         >
           {o.label}
@@ -71,12 +71,12 @@ function CheckboxGrid({
             key={o}
             type="button"
             onClick={() => onToggle(o)}
-            className="flex items-center gap-2 text-left text-sm text-zinc-300"
+            className="flex items-center gap-2 text-left text-sm text-foreground"
           >
             <span
               className={cn(
                 "flex size-4 items-center justify-center rounded border",
-                on ? "border-white bg-white text-black" : "border-zinc-700"
+                on ? "border-white bg-white text-black" : "border-border"
               )}
             >
               {on && <Check className="size-3" strokeWidth={3} />}
@@ -116,13 +116,13 @@ export function FilterSheet({
           <button
             type="button"
             onClick={() => onChange(EMPTY_FILTERS)}
-            className="text-sm text-zinc-400 hover:text-white"
+            className="text-sm text-muted-foreground hover:text-foreground"
           >
             Reset all
           </button>
           <Button
             onClick={() => onOpenChange(false)}
-            className="size-8 rounded-full bg-zinc-800 p-0 text-white hover:bg-zinc-700"
+            className="size-8 rounded-full bg-muted p-0 text-foreground hover:bg-muted"
           >
             <X className="size-4" />
           </Button>
@@ -164,15 +164,15 @@ export function FilterSheet({
               value={filters.minRate}
               onChange={(e) => patch({ minRate: e.target.value })}
               placeholder="Min"
-              className="h-9 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 text-sm text-white placeholder:text-zinc-600 outline-none focus:border-zinc-600"
+              className="h-9 w-full rounded-md border border-border bg-muted px-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-border"
             />
-            <span className="text-zinc-600">–</span>
+            <span className="text-muted-foreground">–</span>
             <input
               type="number"
               value={filters.maxRate}
               onChange={(e) => patch({ maxRate: e.target.value })}
               placeholder="Max"
-              className="h-9 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 text-sm text-white placeholder:text-zinc-600 outline-none focus:border-zinc-600"
+              className="h-9 w-full rounded-md border border-border bg-muted px-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-border"
             />
           </div>
         </Section>

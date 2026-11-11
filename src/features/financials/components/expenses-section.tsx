@@ -202,7 +202,7 @@ export function ExpensesSection({
       {/* Section header */}
       <div className="flex flex-wrap items-center gap-2">
         <div className="space-y-0.5">
-          <h2 className="text-sm font-medium">Expenses</h2>
+          <h2 className="text-2xl font-semibold tracking-tight">Expenses</h2>
           <p className="text-xs text-muted-foreground">
             {money(monthTotal)} spent this month.
           </p>
@@ -211,14 +211,14 @@ export function ExpensesSection({
           {expenses.length > 0 && (
             <Button
               variant="outline"
-              className="h-8 gap-1.5 rounded-sm text-xs"
+              className="h-9 gap-1.5 rounded-lg px-3"
               onClick={exportCsv}
             >
               <Download className="size-3.5" />
               Export CSV
             </Button>
           )}
-          <Button className="h-8 gap-1.5 rounded-sm" onClick={openAdd}>
+          <Button className="h-9 gap-1.5 rounded-lg px-3" onClick={openAdd}>
             <Plus className="size-4" />
             Add expense
           </Button>
@@ -227,16 +227,16 @@ export function ExpensesSection({
 
       {/* Table */}
       {expenses.length === 0 ? (
-        <div className="flex min-h-40 flex-col items-center justify-center gap-2 rounded-xl border border-dashed text-center">
+        <div className="flex min-h-40 flex-col items-center justify-center gap-2 rounded-xl bg-card text-center">
           <ReceiptText className="size-8 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">
             No expenses recorded — fuel, service and repairs land here.
           </p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-lg border">
+        <div className="overflow-hidden rounded-xl bg-card">
           <Table>
-            <TableHeader className="bg-muted/50">
+            <TableHeader>
               <TableRow>
                 <TableHead>Date</TableHead>
                 <TableHead>Category</TableHead>
@@ -301,7 +301,7 @@ export function ExpensesSection({
           <h2 className="text-lg font-semibold">{editing ? "Edit expense" : "Add expense"}</h2>
           <Button
             onClick={() => setPanelOpen(false)}
-            className="size-8 rounded-full bg-zinc-800 p-0 text-white hover:bg-zinc-700"
+            className="size-8 rounded-full bg-muted p-0 text-foreground hover:bg-muted"
           >
             <X className="size-4" />
           </Button>
@@ -347,7 +347,7 @@ export function ExpensesSection({
                 ))}
               </SelectContent>
             </Select>
-            <span className="text-xs text-zinc-600">
+            <span className="text-xs text-muted-foreground">
               Tie it to a car to track per-vehicle profitability.
             </span>
           </div>

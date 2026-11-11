@@ -25,6 +25,14 @@ import {
   type TransactionRow,
 } from "@/features/financials/components/recent-transactions";
 import { money } from "@/lib/money";
+import { StatusPill, TotalsStrip } from "@/components/workspace/list";
+
+const LEDGER_COLORS: Record<string, string> = {
+  DRAFT: "#f59e0b",
+  ACTIVE: "#10b981",
+  COMPLETED: "#14b8a6",
+  CANCELLED: "#a1a1aa",
+};
 
 export const metadata = { title: "Finance · Socdal" };
 
@@ -159,10 +167,9 @@ export default async function FinancialsPage({
   return (
     <div className="flex flex-col gap-4">
       <div className="space-y-1">
-        <h1 className="text-xl">Finance</h1>
-        <p className="text-sm text-muted-foreground">
-          Collections, balances and per-rental money — payments are staff-entered
-          for MVP.
+        <h1 className="text-3xl font-semibold tracking-tight">Finance</h1>
+        <p className="hidden max-w-3xl text-sm text-muted-foreground md:block">
+          What came in, what went out and what is still owed, rental by rental.
         </p>
       </div>
 
@@ -210,23 +217,23 @@ export default async function FinancialsPage({
       <RecentTransactions transactions={transactions} staffNames={staffNames} />
 
       {/* Ledger */}
-      <h2 className="mt-2 text-sm font-medium">Rental ledger</h2>
+      <h2 className="mt-4 text-2xl font-semibold tracking-tight">Rental ledger</h2>
       {contracts.length === 0 ? (
-        <div className="flex min-h-40 items-center justify-center rounded-xl border border-dashed text-sm text-muted-foreground">
+        <div className="flex min-h-40 items-center justify-center rounded-xl bg-card text-sm text-muted-foreground">
           No rentals yet — money shows up here once contracts exist.
         </div>
       ) : (
-        <div className="overflow-hidden rounded-lg border">
+        <div className="overflow-hidden rounded-xl bg-card">
           <Table>
-            <TableHeader className="bg-muted/50">
+            <TableHeader>
               <TableRow>
                 <TableHead>Client</TableHead>
                 <TableHead>Vehicle</TableHead>
                 <TableHead className="hidden sm:table-cell">Start</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead className="hidden sm:table-cell">Penalty</TableHead>
-                <TableHead>Paid</TableHead>
-                <TableHead>Balance</TableHead>
+                <TableHead className="text-right">Total</TableHead>
+                <TableHead className="hidden text-right sm:table-cell">Penalty</TableHead>
+                <TableHead className="text-right">Paid</TableHead>
+                <TableHead className="text-right">Balance</TableHead>
                 <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
@@ -245,12 +252,12 @@ export default async function FinancialsPage({
                     <TableCell className="hidden text-muted-foreground tabular-nums sm:table-cell">
                       {shortDate(c.contract_start ?? c.created_at)}
                     </TableCell>
-                    <TableCell className="tabular-nums">{money(c.total_amount ?? 0)}</TableCell>
-                    <TableCell className="hidden tabular-nums text-muted-foreground sm:table-cell">
+                    <TableCell className="text-right tabular-nums">{money(c.total_amount ?? 0)}</TableCell>
+                    <TableCell className="hidden text-right tabular-nums text-muted-foreground sm:table-cell">
                       {c.refuel_penalty ? money(c.refuel_penalty) : "—"}
                     </TableCell>
-                    <TableCell className="tabular-nums">{money(c.amount_paid ?? 0)}</TableCell>
-                    <TableCell className="tabular-nums">
+                    <TableCell className="text-right tabular-nums">{money(c.amount_paid ?? 0)}</TableCell>
+                    <TableCell className="text-right tabular-nums">
                       {balance > 0 ? (
                         <span className="font-medium text-red-500">{money(balance)}</span>
                       ) : (
@@ -258,7 +265,9 @@ export default async function FinancialsPage({
                       )}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="secondary">{c.status}</Badge>
+                      <StatusPill color={LEDGER_COLORS[c.status] ?? "#a1a1aa"}>
+                        {c.status.charAt(0) + c.status.slice(1).toLowerCase()}
+                      </StatusPill>
                     </TableCell>
                   </TableRow>
                 );
@@ -266,6 +275,22 @@ export default async function FinancialsPage({
             </TableBody>
           </Table>
         </div>
+      )}
+      {contracts.length > 0 && (
+        <TotalsStrip
+          stub={{
+            label: "Total billed",
+            value: money(contracts.reduce((t, c) => t + Number(c.total_amount ?? 0) + Number(c.refuel_penalty ?? 0), 0)),
+          }}
+          items={[
+            {
+              label: "Collected",
+              value: money(contracts.reduce((t, c) => t + Number(c.amount_paid ?? 0), 0)),
+              tone: "in",
+            },
+            { label: "Owed", value: money(outstanding), tone: outstanding > 0 ? "owed" : "neutral" },
+          ]}
+        />
       )}
 
       {/* Expenses */}

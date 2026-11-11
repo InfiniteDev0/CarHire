@@ -33,8 +33,8 @@ type TabId = (typeof TABS)[number]["id"];
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between border-b  py-2 last:border-0">
-      <span className="text-black dark:text-zinc-500">{label}</span>
-      <span className="text-right dark:text-zinc-200">{value || "—"}</span>
+      <span className="text-black dark:text-muted-foreground">{label}</span>
+      <span className="text-right dark:text-foreground">{value || "—"}</span>
     </div>
   );
 }
@@ -110,7 +110,7 @@ export function VehicleDetailsSheet({
       <div className="flex items-center justify-between">
         <Button
           onClick={() => onOpenChange(false)}
-          className="size-8 rounded-full bg-zinc-800 p-0 text-white hover:bg-zinc-700"
+          className="size-8 rounded-full bg-muted p-0 text-foreground hover:bg-muted"
         >
           <X className="size-4" />
         </Button>
@@ -119,7 +119,7 @@ export function VehicleDetailsSheet({
             type="button"
             aria-label="Open full page"
             onClick={() => router.push(`/workspace/${orgId}/vehicles/${vehicle.id}`)}
-            className="flex size-8 cursor-pointer items-center justify-center rounded-full bg-zinc-800 text-white transition-colors hover:bg-zinc-700"
+            className="flex size-8 cursor-pointer items-center justify-center rounded-full bg-muted text-foreground transition-colors hover:bg-muted"
           >
             <Maximize2 className="size-3.5" />
           </button>
@@ -134,10 +134,10 @@ export function VehicleDetailsSheet({
       </div>
 
       {/* Name + rate */}
-      <div className="flex items-end justify-between border-b dark:border-zinc-800">
+      <div className="flex items-end justify-between border-b dark:border-border">
         <div className="min-w-0">
           <h1 className="truncate text-xl font-bold tracking-tight">{title}</h1>
-          <p className="mt-0.5 text-xs text-zinc-500">
+          <p className="mt-0.5 text-xs text-muted-foreground">
             {vehicle.engine || [vehicle.year, vehicle.body_type].filter(Boolean).join(" · ") || vehicle.reg_number}
           </p>
         </div>
@@ -145,23 +145,23 @@ export function VehicleDetailsSheet({
           {vehicle.rate_per_day != null ? (
             <p className="text-xl font-bold">
               {money(vehicle.rate_per_day)}
-              <span className="text-xs font-normal text-zinc-500"> /day</span>
+              <span className="text-xs font-normal text-muted-foreground"> /day</span>
             </p>
           ) : (
-            <p className="text-xs text-zinc-500">No rate</p>
+            <p className="text-xs text-muted-foreground">No rate</p>
           )}
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex  items-center gap-4 border-b dark:border-zinc-800 pb-px no-scrollbar">
+      <div className="flex  items-center gap-4 border-b dark:border-border pb-px no-scrollbar">
         {TABS.map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
             className={cn(
               "relative whitespace-nowrap pb-2 text-sm font-medium transition-colors",
-              tab === t.id ? "text-black dark:text-white" : "text-zinc-500 md:hover:text-zinc-300"
+              tab === t.id ? "text-foreground" : "text-muted-foreground md:hover:text-foreground"
             )}
           >
             {t.label}
@@ -173,14 +173,14 @@ export function VehicleDetailsSheet({
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-scroll scrollbar-pill px-2  text-sm text-zinc-400">
+      <div className="flex-1 overflow-y-scroll scrollbar-pill px-2  text-sm text-muted-foreground">
         {tab === "rent" && (
           <div className="space-y-5">
-            <div className="rounded-md bg-zinc-900 p-3">
-              <p className="text-xs text-zinc-500">Daily rate</p>
-              <p className="mt-1 text-2xl font-bold text-white">
+            <div className="rounded-md bg-muted p-3">
+              <p className="text-xs text-muted-foreground">Daily rate</p>
+              <p className="mt-1 text-2xl font-bold text-foreground">
                 {vehicle.rate_per_day != null ? money(vehicle.rate_per_day) : "—"}
-                <span className="text-sm font-normal text-zinc-500"> /day</span>
+                <span className="text-sm font-normal text-muted-foreground"> /day</span>
               </p>
             </div>
             <Button
@@ -190,7 +190,7 @@ export function VehicleDetailsSheet({
             >
               {canRent ? "Rent out now" : `Unavailable · ${vehicle.status === "TRIP" ? "on a trip" : "in maintenance"}`}
             </Button>
-            <p className="text-center text-xs text-zinc-600">
+            <p className="text-center text-xs text-muted-foreground">
               Opens the new-rental flow with this car preselected.
             </p>
           </div>
@@ -221,8 +221,8 @@ export function VehicleDetailsSheet({
             )}
             {vehicle.notes && (
               <div className="pt-3">
-                <p className="mb-1 text-zinc-500">Notes</p>
-                <p className="text-zinc-300">{vehicle.notes}</p>
+                <p className="mb-1 text-muted-foreground">Notes</p>
+                <p className="text-foreground">{vehicle.notes}</p>
               </div>
             )}
           </div>
@@ -234,12 +234,12 @@ export function VehicleDetailsSheet({
 
             {tripsLoading && (
               <div className="flex justify-center py-6">
-                <Loader2 className="size-4 animate-spin text-zinc-500" />
+                <Loader2 className="size-4 animate-spin text-muted-foreground" />
               </div>
             )}
 
             {!tripsLoading && trips && trips.length === 0 && (
-              <p className="py-6 text-center text-xs text-zinc-600">
+              <p className="py-6 text-center text-xs text-muted-foreground">
                 No trips recorded for this vehicle yet.
               </p>
             )}
@@ -250,9 +250,9 @@ export function VehicleDetailsSheet({
                   const st = tripDisplayStatus(t);
                   const start = t.contract_start ?? t.created_at;
                   return (
-                    <div key={t.id} className="rounded-lg border border-zinc-800 p-2.5">
+                    <div key={t.id} className="rounded-lg border border-border p-2.5">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="truncate text-sm font-medium text-zinc-200">
+                        <span className="truncate text-sm font-medium text-foreground">
                           {t.clientName ?? "—"}
                         </span>
                         <span
@@ -264,7 +264,7 @@ export function VehicleDetailsSheet({
                           {st}
                         </span>
                       </div>
-                      <div className="mt-1 flex items-center justify-between text-xs text-zinc-500">
+                      <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
                         <span>
                           {fmtDate(start)} · {t.duration_days} day{t.duration_days === 1 ? "" : "s"}
                         </span>
@@ -291,11 +291,11 @@ export function VehicleDetailsSheet({
 
       {/* Admin actions */}
       {isAdmin && (
-        <div className="flex flex-col gap-1.5 border-t border-zinc-800 pt-3">
+        <div className="flex flex-col gap-1.5 border-t border-border pt-3">
           <div className="flex gap-2">
             <Button
               variant="outline"
-              className="flex-1 bg-transparent text-red-400 hover:bg-zinc-900 disabled:opacity-40"
+              className="flex-1 bg-transparent text-red-600 dark:text-red-400 hover:bg-muted disabled:opacity-40"
               disabled={vehicle.status === "TRIP"}
               onClick={() => onDecommission(vehicle)}
             >
@@ -308,7 +308,7 @@ export function VehicleDetailsSheet({
             </Button>
           </div>
           {vehicle.status === "TRIP" && (
-            <p className="text-center text-xs text-zinc-500">
+            <p className="text-center text-xs text-muted-foreground">
               On a trip — check it in before decommissioning.
             </p>
           )}

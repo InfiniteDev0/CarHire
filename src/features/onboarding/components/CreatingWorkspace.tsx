@@ -62,33 +62,33 @@ export function CreatingWorkspace({ api }: { api: OnboardingApi }) {
   }, []);
 
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-zinc-950 p-6 text-center text-white">
+    <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-card p-6 text-center text-foreground">
       {error ? (
         <>
-          <AlertCircle className="size-10 text-red-400" />
+          <AlertCircle className="size-10 text-red-600 dark:text-red-400" />
           <div className="space-y-1">
             <h1 className="text-xl font-semibold">Couldn&apos;t create your workspace</h1>
-            <p className="max-w-sm text-sm text-zinc-400">{error}</p>
+            <p className="max-w-sm text-sm text-muted-foreground">{error}</p>
           </div>
           <div className="flex gap-3">
             <Button
               variant="ghost"
-              className="text-zinc-300 hover:text-white"
+              className="text-foreground hover:text-foreground"
               onClick={() => api.goBack()}
             >
               Edit details
             </Button>
-            <Button className="bg-white text-black hover:bg-zinc-200" onClick={run}>
+            <Button className="bg-white text-black hover:bg-muted" onClick={run}>
               Try again
             </Button>
           </div>
         </>
       ) : (
         <>
-          <Loader className="size-10 animate-spin text-white" />
+          <Loader className="size-10 animate-spin text-foreground" />
           <div className="space-y-1">
             <h1 className="text-xl font-semibold">Creating {api.name || "your workspace"}…</h1>
-            <p className="text-sm text-zinc-400">Setting things up. This takes a moment.</p>
+            <p className="text-sm text-muted-foreground">Setting things up. This takes a moment.</p>
           </div>
         </>
       )}

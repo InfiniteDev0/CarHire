@@ -9,7 +9,7 @@ import { WorkspaceSwitcherDemo } from "./demoswitcher";
 /* Small, non-interactive mockups that show what each onboarding step sets up.
    They live in the striped panel on the right of the desktop layout. */
 
-const card = "w-64 rounded-xl border border-zinc-800 bg-zinc-950/80 p-4 shadow-xl backdrop-blur";
+const card = "w-64 rounded-xl border border-border bg-card/80 p-4 shadow-xl backdrop-blur";
 
 function initials(name: string) {
   return name
@@ -28,16 +28,16 @@ function LocationDemo() {
           <Car className="size-4" />
         </span>
         <div>
-          <p className="text-sm font-semibold text-zinc-100">Acme Rentals</p>
-          <p className="text-xs text-zinc-500">Car hire business</p>
+          <p className="text-sm font-semibold text-foreground">Acme Rentals</p>
+          <p className="text-xs text-muted-foreground">Car hire business</p>
         </div>
       </div>
-      <div className="mt-3 space-y-2 border-t border-zinc-800 pt-3">
-        <div className="flex items-center gap-2 text-xs text-zinc-300">
-          <MapPin className="size-3.5 text-zinc-500" /> Nairobi County
+      <div className="mt-3 space-y-2 border-t border-border pt-3">
+        <div className="flex items-center gap-2 text-xs text-foreground">
+          <MapPin className="size-3.5 text-muted-foreground" /> Nairobi County
         </div>
-        <div className="flex items-center gap-2 text-xs text-zinc-300">
-          <Phone className="size-3.5 text-zinc-500" /> +254 712 345 678
+        <div className="flex items-center gap-2 text-xs text-foreground">
+          <Phone className="size-3.5 text-muted-foreground" /> +254 712 345 678
         </div>
       </div>
     </div>
@@ -70,20 +70,20 @@ function MembersDemo() {
   ];
   return (
     <div className={card}>
-      <p className="mb-3 text-sm font-semibold text-zinc-100">Team</p>
+      <p className="mb-3 text-sm font-semibold text-foreground">Team</p>
       <div className="space-y-2.5">
         {members.map((m) => (
           <div key={m.name} className="flex items-center gap-2.5">
-            <span className="flex size-8 items-center justify-center rounded-full bg-zinc-800 text-[11px] font-bold text-zinc-300">
+            <span className="flex size-8 items-center justify-center rounded-full bg-muted text-[11px] font-bold text-foreground">
               {initials(m.name)}
             </span>
-            <span className="flex-1 text-xs text-zinc-200">{m.name}</span>
+            <span className="flex-1 text-xs text-foreground">{m.name}</span>
             <span
               className={cn(
                 "rounded-full px-2 py-0.5 text-[10px] font-medium",
                 m.role === "Admin"
-                  ? "bg-blue-500/15 text-blue-400"
-                  : "bg-zinc-700/40 text-zinc-400"
+                  ? "bg-blue-500/15 text-blue-600 dark:text-blue-400"
+                  : "bg-muted/40 text-muted-foreground"
               )}
             >
               {m.role}
@@ -111,19 +111,19 @@ function PlanDemo() {
             "flex items-center justify-between rounded-xl border p-3 shadow-lg backdrop-blur",
             p.popular
               ? "border-emerald-600 bg-emerald-600/10"
-              : "border-zinc-800 bg-zinc-950/80"
+              : "border-border bg-card/80"
           )}
         >
           <div className="flex items-center gap-2">
-            {p.popular && <Crown className="size-3.5 text-emerald-400" />}
-            <span className="text-sm font-medium text-zinc-100">{p.name}</span>
+            {p.popular && <Crown className="size-3.5 text-emerald-600 dark:text-emerald-400" />}
+            <span className="text-sm font-medium text-foreground">{p.name}</span>
             {p.popular && (
               <span className="rounded-full bg-emerald-600 px-1.5 py-0.5 text-[9px] font-semibold text-white">
                 Popular
               </span>
             )}
           </div>
-          <span className="text-xs text-zinc-400">{p.price}</span>
+          <span className="text-xs text-muted-foreground">{p.price}</span>
         </div>
       ))}
     </div>

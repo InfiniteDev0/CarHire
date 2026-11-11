@@ -22,7 +22,7 @@ export function RentalsDataTable({
   orgId?: string;
 }) {
   return (
-    <div className="overflow-hidden rounded-lg border">
+    <div className="overflow-hidden rounded-xl bg-card">
       <Table>
         <TableHeader className="bg-white dark:bg-neutral-900">
           <TableRow>

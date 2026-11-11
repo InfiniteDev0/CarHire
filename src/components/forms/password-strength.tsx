@@ -44,7 +44,7 @@ export function PasswordStrength({
             key={i}
             className={cn(
               "h-1 flex-1 rounded transition-colors",
-              i < strength.bars ? BAR_COLORS[strength.bars - 1] : "bg-zinc-700"
+              i < strength.bars ? BAR_COLORS[strength.bars - 1] : "bg-muted"
             )}
           />
         ))}

@@ -182,8 +182,8 @@ export default async function CalendarPage({
   return (
     <div className="flex flex-col gap-4">
       <div className="space-y-1">
-        <h1 className="text-xl">Calendar</h1>
-        <p className="text-sm text-muted-foreground">
+        <h1 className="text-3xl font-semibold tracking-tight">Calendar</h1>
+        <p className="hidden max-w-3xl text-sm text-muted-foreground md:block">
           Every rental, payment due and reminder across your fleet.
         </p>
       </div>

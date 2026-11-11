@@ -7,6 +7,7 @@ import {
   type StaffMember,
   type StaffPhotoUrls,
 } from "@/features/staff/components/staff-table";
+import { PageHeading } from "@/components/workspace/list";
 
 export const metadata = { title: "Staff · Socdal" };
 
@@ -42,16 +43,15 @@ export default async function StaffPage({
   );
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h1 className="text-xl">Staff</h1>
-          <p className="text-sm text-muted-foreground">
-            Invite and manage the people who run this workspace.
-          </p>
-        </div>
+    <div className="flex flex-col gap-4">
+      <PageHeading
+        title="Staff"
+        description="The people who run this workspace: who can sign in, what role they have and when they were last active."
+        count={rows.length}
+        noun="member"
+      >
         <AddStaffDialog orgId={orgId} />
-      </div>
+      </PageHeading>
 
       <StaffTable
         orgId={orgId}

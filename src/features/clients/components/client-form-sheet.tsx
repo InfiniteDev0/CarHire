@@ -52,7 +52,7 @@ function initialKins(c: ClientRow | null): NextOfKin[] {
 
 const inputWrap = "flex flex-col gap-1.5";
 const fileInputClass =
-  "text-xs text-zinc-500 file:mr-2 file:rounded-md file:border file:border-zinc-700 file:bg-zinc-900 file:px-2.5 file:py-1 file:text-xs file:text-zinc-200";
+  "text-xs text-muted-foreground file:mr-2 file:rounded-md file:border file:border-border file:bg-muted file:px-2.5 file:py-1 file:text-xs file:text-foreground";
 
 export function ClientFormSheet({
   orgId,
@@ -172,7 +172,7 @@ export function ClientFormSheet({
         <h2 className="text-lg font-semibold">{editing ? "Edit client" : "New client"}</h2>
         <Button
           onClick={() => onOpenChange(false)}
-          className="size-8 rounded-full bg-zinc-800 p-0 text-white hover:bg-zinc-700"
+          className="size-8 rounded-full bg-muted p-0 text-foreground hover:bg-muted"
         >
           <X className="size-4" />
         </Button>
@@ -183,36 +183,36 @@ export function ClientFormSheet({
           <div className={`${inputWrap} col-span-2`}>
             <Label htmlFor="fullName">Full name *</Label>
             <Input id="fullName" value={form.fullName} onChange={(e) => set("fullName", e.target.value)} placeholder="John Kamau" disabled={isLoading} aria-invalid={!!errors.fullName} />
-            {errors.fullName && <span className="text-xs text-red-400">{errors.fullName}</span>}
+            {errors.fullName && <span className="text-xs text-red-600 dark:text-red-400">{errors.fullName}</span>}
           </div>
           <div className={inputWrap}>
             <Label htmlFor="nationalId">ID number</Label>
             <Input id="nationalId" value={form.nationalId} onChange={(e) => set("nationalId", e.target.value)} placeholder="12345678" disabled={isLoading} aria-invalid={!!errors.nationalId} />
             {errors.nationalId ? (
-              <span className="text-xs text-red-400">{errors.nationalId}</span>
+              <span className="text-xs text-red-600 dark:text-red-400">{errors.nationalId}</span>
             ) : (
-              <span className="text-xs text-zinc-600">Old ID, Maisha UPI, or alien card.</span>
+              <span className="text-xs text-muted-foreground">Old ID, Maisha UPI, or alien card.</span>
             )}
           </div>
           <div className={inputWrap}>
             <Label htmlFor="dlNumber">Driving licence (Smart DL)</Label>
             <Input id="dlNumber" value={form.dlNumber} onChange={(e) => set("dlNumber", e.target.value)} placeholder="DL-ABC1234" disabled={isLoading} aria-invalid={!!errors.dlNumber} />
-            {errors.dlNumber && <span className="text-xs text-red-400">{errors.dlNumber}</span>}
+            {errors.dlNumber && <span className="text-xs text-red-600 dark:text-red-400">{errors.dlNumber}</span>}
           </div>
           <div className={inputWrap}>
             <Label htmlFor="phone">Primary phone *</Label>
             <PhoneInput id="phone" value={(form.phone || undefined) as never} onChange={(value) => set("phone", value ?? "")} defaultCountry="KE" placeholder="7XX XXX XXX" disabled={isLoading} aria-invalid={!!errors.phone} />
-            {errors.phone && <span className="text-xs text-red-400">{errors.phone}</span>}
+            {errors.phone && <span className="text-xs text-red-600 dark:text-red-400">{errors.phone}</span>}
           </div>
           <div className={inputWrap}>
             <Label htmlFor="secondaryPhone">Secondary phone</Label>
             <PhoneInput id="secondaryPhone" value={(form.secondaryPhone || undefined) as never} onChange={(value) => set("secondaryPhone", value ?? "")} defaultCountry="KE" placeholder="Fallback contact" disabled={isLoading} aria-invalid={!!errors.secondaryPhone} />
-            {errors.secondaryPhone && <span className="text-xs text-red-400">{errors.secondaryPhone}</span>}
+            {errors.secondaryPhone && <span className="text-xs text-red-600 dark:text-red-400">{errors.secondaryPhone}</span>}
           </div>
           <div className={inputWrap}>
             <Label htmlFor="email">Email</Label>
             <Input id="email" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="client@example.com" disabled={isLoading} aria-invalid={!!errors.email} />
-            {errors.email && <span className="text-xs text-red-400">{errors.email}</span>}
+            {errors.email && <span className="text-xs text-red-600 dark:text-red-400">{errors.email}</span>}
           </div>
           <div className={inputWrap}>
             <Label htmlFor="address">Residential address</Label>
@@ -221,7 +221,7 @@ export function ClientFormSheet({
         </div>
 
         {/* Next of kin */}
-        <div className="flex flex-col gap-3 border-t border-zinc-800 pt-4">
+        <div className="flex flex-col gap-3 border-t border-border pt-4">
           <Label>Next of kin</Label>
           {kins.map((kin, i) => (
             <div key={i} className="flex items-start gap-2">
@@ -235,7 +235,7 @@ export function ClientFormSheet({
                   type="button"
                   disabled={isLoading}
                   onClick={() => setKins((list) => list.filter((_, idx) => idx !== i))}
-                  className="flex size-9 shrink-0 items-center justify-center rounded-md border border-zinc-800 text-zinc-500 hover:border-zinc-600 hover:text-white"
+                  className="flex size-9 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground hover:border-border hover:text-foreground"
                 >
                   <Minus className="size-3.5" />
                 </button>
@@ -247,7 +247,7 @@ export function ClientFormSheet({
               type="button"
               disabled={isLoading}
               onClick={() => setKins((list) => [...list, emptyKin()])}
-              className="flex w-fit items-center gap-1.5 rounded-md border border-dashed border-zinc-700 px-2.5 py-1.5 text-xs text-zinc-400 hover:border-zinc-500 hover:text-white"
+              className="flex w-fit items-center gap-1.5 rounded-md border border-dashed border-border px-2.5 py-1.5 text-xs text-muted-foreground hover:border-border hover:text-foreground"
             >
               <Plus className="size-3.5" />
               Add next of kin
@@ -256,30 +256,30 @@ export function ClientFormSheet({
         </div>
 
         {/* ID photos */}
-        <div className="grid grid-cols-2 gap-3 border-t border-zinc-800 pt-4">
+        <div className="grid grid-cols-2 gap-3 border-t border-border pt-4">
           <div className={inputWrap}>
             <Label htmlFor="cIdFront">ID photo — front</Label>
             <input id="cIdFront" type="file" accept="image/*" disabled={isLoading} onChange={(e) => pickFile(e, setIdFront, "idFront")} className={fileInputClass} />
-            {errors.idFront && <span className="text-xs text-red-400">{errors.idFront}</span>}
+            {errors.idFront && <span className="text-xs text-red-600 dark:text-red-400">{errors.idFront}</span>}
             {editing?.id_front_url && !idFront && (
-              <span className="text-xs text-zinc-600">Already uploaded — pick a file to replace.</span>
+              <span className="text-xs text-muted-foreground">Already uploaded — pick a file to replace.</span>
             )}
           </div>
           <div className={inputWrap}>
             <Label htmlFor="cIdBack">ID photo — back</Label>
             <input id="cIdBack" type="file" accept="image/*" disabled={isLoading} onChange={(e) => pickFile(e, setIdBack, "idBack")} className={fileInputClass} />
-            {errors.idBack && <span className="text-xs text-red-400">{errors.idBack}</span>}
+            {errors.idBack && <span className="text-xs text-red-600 dark:text-red-400">{errors.idBack}</span>}
             {editing?.id_back_url && !idBack && (
-              <span className="text-xs text-zinc-600">Already uploaded — pick a file to replace.</span>
+              <span className="text-xs text-muted-foreground">Already uploaded — pick a file to replace.</span>
             )}
           </div>
         </div>
 
         {/* Optional documents — DL + passport */}
-        <div className="flex flex-col gap-3 border-t border-zinc-800 pt-4">
+        <div className="flex flex-col gap-3 border-t border-border pt-4">
           <div>
             <Label>Optional documents</Label>
-            <p className="text-xs text-zinc-600">
+            <p className="text-xs text-muted-foreground">
               Driving licence and passport — good to have for self-drive hires.
             </p>
           </div>
@@ -287,25 +287,25 @@ export function ClientFormSheet({
             <div className={inputWrap}>
               <Label htmlFor="cDlFront">DL — front</Label>
               <input id="cDlFront" type="file" accept="image/*" disabled={isLoading} onChange={(e) => pickFile(e, setDlFront, "dlFront")} className={fileInputClass} />
-              {errors.dlFront && <span className="text-xs text-red-400">{errors.dlFront}</span>}
+              {errors.dlFront && <span className="text-xs text-red-600 dark:text-red-400">{errors.dlFront}</span>}
               {editing?.dl_front_url && !dlFront && (
-                <span className="text-xs text-zinc-600">Already uploaded — pick a file to replace.</span>
+                <span className="text-xs text-muted-foreground">Already uploaded — pick a file to replace.</span>
               )}
             </div>
             <div className={inputWrap}>
               <Label htmlFor="cDlBack">DL — back</Label>
               <input id="cDlBack" type="file" accept="image/*" disabled={isLoading} onChange={(e) => pickFile(e, setDlBack, "dlBack")} className={fileInputClass} />
-              {errors.dlBack && <span className="text-xs text-red-400">{errors.dlBack}</span>}
+              {errors.dlBack && <span className="text-xs text-red-600 dark:text-red-400">{errors.dlBack}</span>}
               {editing?.dl_back_url && !dlBack && (
-                <span className="text-xs text-zinc-600">Already uploaded — pick a file to replace.</span>
+                <span className="text-xs text-muted-foreground">Already uploaded — pick a file to replace.</span>
               )}
             </div>
             <div className={`${inputWrap} col-span-2`}>
               <Label htmlFor="cPassport">Passport</Label>
               <input id="cPassport" type="file" accept="image/*" disabled={isLoading} onChange={(e) => pickFile(e, setPassport, "passport")} className={fileInputClass} />
-              {errors.passport && <span className="text-xs text-red-400">{errors.passport}</span>}
+              {errors.passport && <span className="text-xs text-red-600 dark:text-red-400">{errors.passport}</span>}
               {editing?.passport_url && !passport && (
-                <span className="text-xs text-zinc-600">Already uploaded — pick a file to replace.</span>
+                <span className="text-xs text-muted-foreground">Already uploaded — pick a file to replace.</span>
               )}
             </div>
           </div>

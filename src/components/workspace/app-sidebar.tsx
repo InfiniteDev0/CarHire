@@ -26,7 +26,7 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 }
 
 const ITEM =
-  "nav-icon h-10 gap-3 px-3 text-[15px] text-white/70 hover:bg-white/10 hover:text-white active:bg-white/15 active:text-white data-[current]:bg-white/20 data-[current]:font-medium data-[current]:text-white [&_svg]:size-[18px]";
+  "nav-icon h-10 gap-3 px-3 text-[15px] text-white/70 hover:bg-white/10 hover:text-white active:bg-white/15 active:text-white data-[current]:bg-white/20 data-[current]:font-medium data-[current]:text-white [&_svg]:size-[18px] group-data-[collapsible=icon]:h-[3.25rem]! group-data-[collapsible=icon]:w-full! group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-1 group-data-[collapsible=icon]:p-1! group-data-[collapsible=icon]:text-[11px] group-data-[collapsible=icon]:leading-none";
 
 /**
  * The black navigation card. Order: fold toggle → main nav → Settings pinned
@@ -51,7 +51,6 @@ export function AppSidebar({ orgId, isAdmin, ...props }: AppSidebarProps) {
     return (
       <SidebarMenuItem key={item.title}>
         <SidebarMenuButton
-          tooltip={item.title}
           isActive={active}
           data-current={active || undefined}
           render={<Link href={item.url} />}

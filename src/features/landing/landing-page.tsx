@@ -391,10 +391,10 @@ export function LandingPage() {
   );
 
   return (
-    <div className="flex min-h-svh flex-col bg-background text-foreground">
+    <div className="flex min-h-svh flex-col overflow-x-clip bg-background text-foreground">
       {/* ── Top bar ─────────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 lg:px-6">
+        <div className="mx-auto flex h-14 max-w-[96rem] items-center justify-between gap-4 px-4 lg:px-10">
           <Link href="/" aria-label={`${BRAND.name} home`}>
             <BrandLogo byline />
           </Link>
@@ -430,45 +430,53 @@ export function LandingPage() {
       </header>
 
       <main className="flex-1">
-        {/* ── Hero ──────────────────────────────────────────────────────── */}
-        <section className="mx-auto max-w-6xl px-4 pt-14 text-center lg:px-6 md:pt-20">
-          <span className="inline-flex h-7 items-center gap-2 rounded-full bg-card px-3 text-[13px] font-medium">
-            <BrandMark className="size-3.5" />
-            Car-hire management by {BRAND.company}
-          </span>
-          <h1 className="mx-auto mt-6 max-w-4xl text-4xl font-semibold leading-[1.05] tracking-tight text-balance sm:text-6xl md:text-7xl">
-            <span className="block">Every car accounted for.</span>
-            <span className="block text-muted-foreground">Every payment, too.</span>
-          </h1>
-          <p className="mx-auto mt-5 max-w-xl text-lg text-muted-foreground">
-            {BRAND.name} runs your car-hire business end to end: which vehicles are out, who has
-            them, what they owe and when they are due back.
-          </p>
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link href="/auth" className={cn(btnPrimary, "h-11 w-full px-6 sm:w-auto")}>
-              Start free
-              <ArrowRight className="size-4" />
-            </Link>
-            <a
-              href={waGeneral}
-              target="_blank"
-              rel="noreferrer"
-              className={cn(btnOutline, "h-11 w-full px-6 sm:w-auto")}
-            >
-              <MessageCircle className="size-4" />
-              Talk to us on WhatsApp
-            </a>
+        {/* ── Hero: copy on the left, the product on the right running off the edge ── */}
+        <section className="mx-auto grid max-w-[96rem] items-center gap-10 px-4 pt-10 lg:grid-cols-12 lg:gap-8 lg:px-10 lg:pt-14">
+          <div className="lg:col-span-6">
+            <span className="inline-flex h-7 items-center gap-2 rounded-full bg-card px-3 text-[13px] font-medium">
+              <BrandMark className="size-3.5" />
+              Car-hire management by {BRAND.company}
+            </span>
+            <h1 className="mt-6 text-[2.6rem] font-semibold leading-[1.02] tracking-tight sm:text-6xl lg:text-[2.6rem] xl:text-[3.25rem] 2xl:text-6xl">
+              <span className="block lg:whitespace-nowrap">Every car accounted for.</span>
+              <span className="block text-muted-foreground lg:whitespace-nowrap">Every payment, too.</span>
+            </h1>
+            <p className="mt-5 max-w-lg text-lg text-muted-foreground">
+              {BRAND.name} runs your car-hire business end to end: which vehicles are out, who has
+              them, what they owe and when they are due back.
+            </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Link href="/auth" className={cn(btnPrimary, "h-11 px-6")}>
+                Start free
+                <ArrowRight className="size-4" />
+              </Link>
+              <a href={waGeneral} target="_blank" rel="noreferrer" className={cn(btnOutline, "h-11 px-6")}>
+                <MessageCircle className="size-4" />
+                Talk to us on WhatsApp
+              </a>
+            </div>
+            <dl className="mt-10 grid max-w-lg grid-cols-3 gap-4 border-t pt-5 text-sm">
+              {[
+                [`${FREE_LIMITS.vehicles} vehicles`, "free, forever"],
+                ["No card", "needed to start"],
+                ["2 minutes", "to set up"],
+              ].map(([k, v]) => (
+                <div key={k}>
+                  <dt className="font-semibold">{k}</dt>
+                  <dd className="text-muted-foreground">{v}</dd>
+                </div>
+              ))}
+            </dl>
           </div>
-          <p className="mt-4 text-sm text-muted-foreground">
-            Free for up to {FREE_LIMITS.vehicles} vehicles · No card needed · Set up in two minutes
-          </p>
 
-          <DashboardMock className="mt-12 md:mt-16" />
-          <p className="mt-3 text-xs text-muted-foreground">Product preview with sample data.</p>
+          <div className="lg:col-span-6">
+            <DashboardMock className="lg:-mr-40 xl:-mr-56 2xl:-mr-72" />
+            <p className="mt-3 text-xs text-muted-foreground">Product preview with sample data.</p>
+          </div>
         </section>
 
         {/* ── Facts as stat cards ───────────────────────────────────────── */}
-        <section className="mx-auto max-w-6xl px-4 pt-16 lg:px-6 md:pt-24">
+        <section className="mx-auto max-w-[96rem] px-4 pt-16 lg:px-10 md:pt-24">
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             {FACTS.map((f) => (
               <div key={f.label} className="flex h-28 flex-col justify-between rounded-xl bg-card p-3">
@@ -493,7 +501,7 @@ export function LandingPage() {
         </section>
 
         {/* ── Features ──────────────────────────────────────────────────── */}
-        <section id="features" className="mx-auto max-w-6xl scroll-mt-16 px-4 pt-20 lg:px-6 md:pt-28">
+        <section id="features" className="mx-auto max-w-[96rem] scroll-mt-16 px-4 pt-20 lg:px-10 md:pt-28">
           <SectionHead
             title="Everything a rental desk does, minus the paperwork"
             body="From the moment a car joins your fleet to the day a client hands back the keys, it is all in one workspace."
@@ -553,7 +561,7 @@ export function LandingPage() {
         </section>
 
         {/* ── How it works ──────────────────────────────────────────────── */}
-        <section id="how-it-works" className="mx-auto max-w-6xl scroll-mt-16 px-4 pt-20 lg:px-6 md:pt-28">
+        <section id="how-it-works" className="mx-auto max-w-[96rem] scroll-mt-16 px-4 pt-20 lg:px-10 md:pt-28">
           <SectionHead title="From sign-up to your first rental in one sitting" />
           <ol className="mt-8 grid gap-4 md:grid-cols-3">
             {STEPS.map((s, i) => (
@@ -570,7 +578,7 @@ export function LandingPage() {
         </section>
 
         {/* ── Pricing ───────────────────────────────────────────────────── */}
-        <section id="pricing" className="mx-auto max-w-6xl scroll-mt-16 px-4 pt-20 lg:px-6 md:pt-28">
+        <section id="pricing" className="mx-auto max-w-[96rem] scroll-mt-16 px-4 pt-20 lg:px-10 md:pt-28">
           <SectionHead
             title="Start free. Upgrade when your fleet grows."
             body={`Simple pricing in US dollars. Pay annually and save ${annualPct}%.`}
@@ -645,7 +653,7 @@ export function LandingPage() {
         </section>
 
         {/* ── FAQ ───────────────────────────────────────────────────────── */}
-        <section id="faq" className="mx-auto max-w-6xl scroll-mt-16 px-4 pt-20 lg:px-6 md:pt-28">
+        <section id="faq" className="mx-auto max-w-[96rem] scroll-mt-16 px-4 pt-20 lg:px-10 md:pt-28">
           <div className="grid gap-8 lg:grid-cols-12">
             <div className="lg:col-span-4">
               <SectionHead
@@ -690,7 +698,7 @@ export function LandingPage() {
         </section>
 
         {/* ── Closing call to action: a black card, like the app's nav ──── */}
-        <section className="mx-auto max-w-6xl px-4 py-20 lg:px-6 md:py-28">
+        <section className="mx-auto max-w-[96rem] px-4 py-20 lg:px-10 md:py-28">
           <div className="flex flex-col gap-8 rounded-xl bg-black p-8 text-white md:flex-row md:items-end md:justify-between md:p-12">
             <div>
               <BrandMark className="size-8" />
@@ -725,7 +733,7 @@ export function LandingPage() {
       </main>
 
       {/* ── Footer ──────────────────────────────────────────────────────── */}
-      <footer className="mx-auto w-full max-w-6xl px-4 pb-10 lg:px-6">
+      <footer className="mx-auto w-full max-w-[96rem] px-4 pb-10 lg:px-10">
         <div className="grid gap-8 border-t pt-8 md:grid-cols-12">
           <div className="space-y-3 md:col-span-5">
             <BrandLogo byline />

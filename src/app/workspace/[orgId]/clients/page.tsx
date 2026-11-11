@@ -32,14 +32,6 @@ export default async function ClientsPage({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="space-y-1">
-        <h1 className="text-xl">Clients</h1>
-        <p className="text-sm text-muted-foreground">
-          {rows.length} {rows.length === 1 ? "hirer" : "hirers"} — KYC, debts and
-          rental history.
-        </p>
-      </div>
-
       <ClientsView
         orgId={orgId}
         clients={rows}

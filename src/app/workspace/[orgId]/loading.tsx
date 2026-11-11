@@ -24,7 +24,7 @@ export default function WorkspaceLoading() {
       </div>
 
       {/* Table / list */}
-      <div className="overflow-hidden rounded-lg border">
+      <div className="overflow-hidden rounded-xl bg-card">
         <Skeleton className="h-9 w-full rounded-none" />
         {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="flex items-center gap-4 border-t px-4 py-3">

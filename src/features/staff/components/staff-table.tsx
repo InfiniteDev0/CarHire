@@ -1,5 +1,6 @@
 "use client";
 
+import { PersonCell, StatusPill } from "@/components/workspace/list";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -135,9 +136,9 @@ export function StaffTable({
   const idUrls = idTarget ? photoUrls[idTarget.user_id] : undefined;
 
   return (
-    <div className="overflow-hidden rounded-lg border">
+    <div className="overflow-hidden rounded-xl bg-card">
       <Table>
-        <TableHeader className="bg-muted/50">
+        <TableHeader>
           <TableRow>
             <TableHead>Name</TableHead>
             <TableHead>Email</TableHead>
@@ -165,29 +166,23 @@ export function StaffTable({
               const presence = presenceOf(m);
               return (
                 <TableRow key={m.user_id} className={m.is_active ? "" : "opacity-60"}>
-                  <TableCell className="font-medium">
-                    {m.full_name || "—"}
-                    {isSelf && <span className="ml-1 text-xs text-muted-foreground">(you)</span>}
+                  <TableCell>
+                    <PersonCell
+                      name={m.full_name || "—"}
+                      sub={isSelf ? "You" : undefined}
+                    />
                   </TableCell>
                   <TableCell className="text-muted-foreground">{m.email || "—"}</TableCell>
                   <TableCell className="hidden text-muted-foreground sm:table-cell">
                     {m.phone || "—"}
                   </TableCell>
                   <TableCell>
-                    <Badge variant={isAdmin ? "default" : "secondary"}>
-                      {isAdmin ? "Admin" : "Staff"}
-                    </Badge>
+                    <StatusPill color={isAdmin ? "#8b5cf6" : "#3b82f6"}>{isAdmin ? "Admin" : "Staff"}</StatusPill>
                   </TableCell>
                   <TableCell>
-                    {m.is_active ? (
-                      <Badge className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
-                        Active
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-muted-foreground">
-                        Inactive
-                      </Badge>
-                    )}
+                    <StatusPill color={m.is_active ? "#10b981" : "#a1a1aa"}>
+                      {m.is_active ? "Active" : "Inactive"}
+                    </StatusPill>
                   </TableCell>
                   <TableCell className="hidden md:table-cell">
                     <span className="flex items-center gap-1.5 text-xs">

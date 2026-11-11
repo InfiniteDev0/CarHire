@@ -390,7 +390,7 @@ export function NotificationSheet({
       {unread > 0 && (
         <span
           className={cn(
-            "absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full text-[9px] font-bold text-white",
+            "absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full text-[9px] font-bold text-foreground",
             urgent ? "bg-red-500" : "bg-blue-500"
           )}
         >

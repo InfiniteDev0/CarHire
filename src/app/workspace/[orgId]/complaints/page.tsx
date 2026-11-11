@@ -67,13 +67,6 @@ export default async function ComplaintsPage({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="space-y-1">
-        <h1 className="text-xl">Complaints</h1>
-        <p className="text-sm text-muted-foreground">
-          Incident log — {openCount} open of {complaints.length} filed.
-        </p>
-      </div>
-
       <ComplaintsView
         orgId={orgId}
         complaints={complaints}

@@ -38,7 +38,7 @@ export function SidePanel({
       {open && (
         <>
           <motion.div
-            className="fixed inset-0 z-40  bg-black/50"
+            className="fixed inset-0 z-40 bg-black/20 backdrop-blur-xs"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -49,7 +49,7 @@ export function SidePanel({
             <motion.div
               role="dialog"
               aria-modal="true"
-              className={`scrollbar-pill fixed inset-x-0 bottom-0 z-50 flex max-h-[92svh] flex-col gap-5 overflow-y-auto rounded-t-2xl border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 pb-8 text-black dark:text-white shadow-2xl ${className}`}
+              className={`scrollbar-pill fixed inset-x-0 bottom-0 z-50 flex max-h-[94dvh] flex-col gap-5 overflow-y-auto rounded-t-[1.75rem] bg-popover p-4 pb-8 text-popover-foreground shadow-2xl ring-1 ring-foreground/10 ${className}`}
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
@@ -66,7 +66,7 @@ export function SidePanel({
                 className="mx-auto -mb-2 flex w-full shrink-0 cursor-grab touch-none justify-center py-1 active:cursor-grabbing"
                 onPointerDown={(e) => dragControls.start(e)}
               >
-                <div className="h-1.5 w-12 rounded-full bg-zinc-300 dark:bg-zinc-700" />
+                <div className="h-1.5 w-10 rounded-full bg-muted-foreground/30" />
               </div>
               {children}
             </motion.div>
@@ -74,7 +74,7 @@ export function SidePanel({
             <motion.div
               role="dialog"
               aria-modal="true"
-              className={`scrollbar-pill fixed right-1 top-1 z-50 flex h-[calc(100svh-0.5rem)] w-110 max-w-[calc(100vw-0.5rem)] flex-col gap-5 overflow-y-auto rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 text-black dark:text-white shadow-2xl ${className}`}
+              className={`scrollbar-pill fixed right-2 top-2 z-50 flex h-[calc(100svh-1rem)] w-110 max-w-[calc(100vw-0.5rem)] flex-col gap-5 overflow-y-auto rounded-xl bg-popover p-4 text-popover-foreground shadow-2xl ring-1 ring-foreground/10 ${className}`}
               initial={{ x: "110%" }}
               animate={{ x: 0 }}
               exit={{ x: "110%" }}

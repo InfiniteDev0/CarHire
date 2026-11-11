@@ -155,7 +155,7 @@ export function TripReportDialog({
                       className={cn(
                         "size-6 transition-colors",
                         n <= clientRating
-                          ? "fill-amber-400 text-amber-400"
+                          ? "fill-amber-400 text-amber-600 dark:text-amber-400"
                           : "text-muted-foreground/40"
                       )}
                     />

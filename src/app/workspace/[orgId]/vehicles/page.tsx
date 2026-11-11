@@ -33,13 +33,6 @@ export default async function VehiclesPage({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="space-y-1 flex justify-between items-center w-full">
-        <h1 className="text-xl">Vehicles</h1>
-        <p className="text-sm text-muted-foreground">
-          Your total fleet is {fleet.length}.
-        </p>
-      </div>
-
       <VehiclesGrid
         orgId={orgId}
         isAdmin={isAdmin}

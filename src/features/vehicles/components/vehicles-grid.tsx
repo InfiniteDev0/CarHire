@@ -25,6 +25,8 @@ import {
   type VehicleFilters,
   type VehicleSort,
 } from "../filtering";
+import { CardsEmpty, PageHeading, PRIMARY_ACTION } from "@/components/workspace/list";
+import { cn } from "@/lib/utils";
 import { VehicleCard } from "./vehicle-card";
 import { VehicleFilterTabs } from "./vehicle-filter-tabs";
 import { FilterSheet } from "./filter-sheet";
@@ -97,6 +99,12 @@ export function VehiclesGrid({
 
   return (
     <div className="flex flex-col gap-4">
+      <PageHeading
+        title="Vehicles"
+        description="Your fleet: what is available, what is out with a client and what is in for service."
+        count={filtered.length}
+        noun="vehicle"
+      />
       <VehicleFilterTabs
         search={search}
         onSearchChange={setSearch}
@@ -110,16 +118,25 @@ export function VehiclesGrid({
 
       {/* Grid */}
       {filtered.length === 0 ? (
-        <div className="flex min-h-60 flex-col items-center justify-center gap-2 rounded-xl border border-dashed text-center">
-          <Car className="size-8 text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">
-            {cars.length === 0
-              ? "No vehicles yet. Add your first car to the fleet."
-              : "No vehicles match these filters."}
-          </p>
-        </div>
+        cars.length === 0 ? (
+          <CardsEmpty
+            kind="first"
+            icon={<Car />}
+            title="No vehicles yet"
+            hint="Add your first car to start renting it out."
+            action={
+              isAdmin ? (
+                <button type="button" className={cn(PRIMARY_ACTION, "h-11 rounded-md px-6 text-[15px]")} onClick={openAdd}>
+                  Add a vehicle
+                </button>
+              ) : undefined
+            }
+          />
+        ) : (
+          <CardsEmpty kind="no-match" title="No vehicles match" hint="Try another word, or clear the filters." />
+        )
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 ">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-5 xl:grid-cols-3">
           {filtered.map((v) => (
             <VehicleCard
               key={v.id}

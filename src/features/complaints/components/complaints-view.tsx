@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { X, Plus, TriangleAlert, CheckCheck, Undo2, Loader2, Search } from "lucide-react";
+import { X, Plus, CheckCheck, Undo2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,16 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { SidePanel } from "@/components/workspace/side-panel";
+import {
+  ActionTray,
+  CardStatus,
+  CardsEmpty,
+  FolderTabs,
+  ListToolbar,
+  PageHeading,
+  PRIMARY_ACTION,
+  TableSearch,
+} from "@/components/workspace/list";
 import {
   COMPLAINT_TYPES,
   COMPLAINT_TYPE_LABELS,
@@ -139,19 +149,17 @@ export function ComplaintsView({
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="relative w-full max-w-xs">
-          <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search description, car, client…"
-            className="h-8 pl-8"
-          />
-        </div>
+      <PageHeading
+        title="Complaints"
+        description="Incidents on a rental or a car: damage, disputes and breakdowns, from filed to resolved."
+        count={filtered.length}
+        noun="complaint"
+      />
+
+      <ListToolbar>
+        <TableSearch value={search} onChange={setSearch} placeholder="Search description, car or client" />
         <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as "ALL" | ComplaintType)}>
-          <SelectTrigger size="sm">
+          <SelectTrigger className="h-9 rounded-lg border-0 bg-card shadow-none">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -163,48 +171,40 @@ export function ComplaintsView({
             ))}
           </SelectContent>
         </Select>
-        <div className="ml-auto">
-          <Button className="h-8 gap-1.5 rounded-sm" onClick={() => setFormOpen(true)}>
+        <ActionTray>
+          <button type="button" className={PRIMARY_ACTION} onClick={() => setFormOpen(true)}>
             <Plus className="size-4" />
             New complaint
-          </Button>
-        </div>
-      </div>
-
-      {/* Open/Resolved pills */}
-      <div className="flex gap-1.5">
-        {(["OPEN", "RESOLVED", "ALL"] as const).map((f) => (
-          <button
-            key={f}
-            type="button"
-            onClick={() => setFilter(f)}
-            className={cn(
-              "rounded-full border px-3 py-1 text-xs transition-colors",
-              filter === f
-                ? "border-foreground bg-foreground text-background"
-                : "border-input text-muted-foreground hover:text-foreground"
-            )}
-          >
-            {f.charAt(0) + f.slice(1).toLowerCase()}
           </button>
-        ))}
-      </div>
+        </ActionTray>
+      </ListToolbar>
+
+      <FolderTabs<"OPEN" | "RESOLVED" | "ALL">
+        tabs={[
+          { id: "OPEN", label: "Open", count: complaints.filter((c) => !c.is_resolved).length, color: "#f59e0b" },
+          { id: "RESOLVED", label: "Resolved", count: complaints.filter((c) => c.is_resolved).length, color: "#10b981" },
+          { id: "ALL", label: "All", count: complaints.length, color: "#3b82f6" },
+        ]}
+        value={filter}
+        onChange={setFilter}
+      />
 
       {/* List */}
       {filtered.length === 0 ? (
-        <div className="flex min-h-60 flex-col items-center justify-center gap-2 rounded-xl border border-dashed text-center">
-          <TriangleAlert className="size-8 text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">
-            {complaints.length === 0 ? "No complaints filed — smooth operations." : "Nothing matches this filter."}
-          </p>
+        <div className="pt-4">
+          {filter === "OPEN" && !search && typeFilter === "ALL" ? (
+            <CardsEmpty kind="empty" title="No open complaints" hint="Anything new shows up here." />
+          ) : (
+            <CardsEmpty kind="no-match" title="No complaints match" hint="Try another word, or pick a different tab." />
+          )}
         </div>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3 pt-4">
           {filtered.map((c) => (
-            <div key={c.id} className="flex items-start justify-between gap-3 rounded-lg border bg-card p-3">
+            <div key={c.id} className="flex items-start justify-between gap-3 rounded-xl bg-card p-4">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="secondary">{COMPLAINT_TYPE_LABELS[c.type]}</Badge>
+                  <CardStatus color={c.is_resolved ? "#10b981" : "#f59e0b"}>{COMPLAINT_TYPE_LABELS[c.type]}</CardStatus>
                   {c.cars && (
                     <span className="text-sm font-medium">{c.cars.reg_number}</span>
                   )}
@@ -254,7 +254,7 @@ export function ComplaintsView({
           <h2 className="text-lg font-semibold">New complaint</h2>
           <Button
             onClick={() => setFormOpen(false)}
-            className="size-8 rounded-full bg-zinc-800 p-0 text-white hover:bg-zinc-700"
+            className="size-8 rounded-full bg-muted p-0 text-foreground hover:bg-muted"
           >
             <X className="size-4" />
           </Button>
@@ -280,7 +280,7 @@ export function ComplaintsView({
                 ))}
               </SelectContent>
             </Select>
-            <span className="text-xs text-zinc-600">Picking a rental links the car automatically.</span>
+            <span className="text-xs text-muted-foreground">Picking a rental links the car automatically.</span>
           </div>
 
           {!contractId && (
